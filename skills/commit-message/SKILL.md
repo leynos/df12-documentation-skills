@@ -94,12 +94,12 @@ These are non-negotiable. Violating any of them means the message is wrong.
 
 ### Why a file, not a string
 
-It is tempting to "oneline" the message into `git commit -m` or to pipe a
-heredoc into `git commit -F -`. Resist. Both approaches reliably produce
-embarrassing artefacts: the shell expands backticked code spans as command
-substitutions, `$variable` references get interpolated, nested quotes break in
-ways that depend on the outer quoting style, and attempts to embed literal
-newlines scatter `\n\n` through the log.
+It is tempting to squeeze the message into a single line with `git commit -m`
+or to pipe a heredoc into `git commit -F -`. Resist. Both approaches reliably
+produce embarrassing artefacts: the shell expands backticked code spans as
+command substitutions, `$variable` references get interpolated, nested quotes
+break in ways that depend on the outer quoting style, and attempts to embed
+literal newlines scatter `\n\n` through the log.
 
 A here-document with a quoted delimiter (`<< 'EOF'`) avoids *some* of these,
 but still leaves the message buried in a pipeline where it cannot be inspected
