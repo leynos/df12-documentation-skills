@@ -199,7 +199,7 @@ The roadmap hierarchy maps directly to the GIST framework:
 |Roadmap layer|GIST element|Purpose|
 |-|-|-|
 |Phase|Idea|Testable hypothesis about the product.|
-|Step|Step|Workstream that validates or falsifies the idea.|
+|Step|Workstream|Workstream that validates or falsifies the idea.|
 |Task|Task|Concrete, measurable execution unit.|
 
 ### What makes a good idea (phase)
