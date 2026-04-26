@@ -134,6 +134,36 @@ Adapt headings to local conventions, but keep the same information order:
 summary first, reviewer entrypoints next, validation evidence after that, and
 notes or caveats last.
 
+## Body file creation
+
+Write pull request descriptions to a temporary file with an inert
+single-quoted heredoc delimiter, then pass that file to the pull request tool.
+Do not pass long descriptions as shell arguments.
+
+```bash
+PR_BODY_DIR=$(mktemp -d)
+cat > "$PR_BODY_DIR/body.md" << 'ENDOFPR'
+## Summary
+
+This branch ...
+
+## Review walkthrough
+
+- Start with [path/to/file.ext](...) to see ...
+
+## Validation
+
+- `command`: result
+ENDOFPR
+
+gh pr create --draft --title "<title>" --body-file "$PR_BODY_DIR/body.md"
+rm -rf "$PR_BODY_DIR"
+```
+
+The quoted `ENDOFPR` marker is mandatory. It prevents shell expansion from
+dumping variables, command output, backticked code spans, or escape sequences
+into the pull request description.
+
 ## File links
 
 Use Markdown file links, not bare paths, for every file mentioned in the pull

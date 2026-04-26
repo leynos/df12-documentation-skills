@@ -89,6 +89,13 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Learn more
+
+- [Users' Guide](docs/users-guide.md) — how documentation practitioners combine
+  the workflow skills.
+
+______________________________________________________________________
+
 ## Maintaining skills
 
 Keep each skill focused on the information another Codex instance needs at the
@@ -98,8 +105,9 @@ only when the detail would otherwise bloat the main skill.
 Validate edited skills before committing:
 
 ```bash
+SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
-  /home/leynos/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
+  "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
 git diff --check
 markdownlint-cli2 README.md skills/<skill-name>/SKILL.md
