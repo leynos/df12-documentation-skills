@@ -15,7 +15,7 @@ Documentation quality depends on repeatable judgement. These skills collect
 the house rules in a form Codex can load at the right moment:
 
 - **Consistent workflow artefacts**: Commit messages, draft pull requests,
-  README files, roadmaps and design documents follow durable structures.
+  README files, roadmaps, and design documents follow durable structures.
 - **df12 voice in one place**: Public-facing prose can use the same compressed,
   precise, dry, grounded and playful register across projects.
 - **British Oxford spelling by default**: The language rule is explicit, so
