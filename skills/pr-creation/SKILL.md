@@ -149,6 +149,11 @@ operation.
 
 ```bash
 PR_BODY_DIR=$(mktemp -d)
+cleanup_pr_body() {
+  rm -rf "$PR_BODY_DIR"
+}
+trap cleanup_pr_body EXIT
+
 cat > "$PR_BODY_DIR/body.md" << 'ENDOFPR'
 ## Summary
 
@@ -164,7 +169,8 @@ This branch ...
 ENDOFPR
 
 gh pr create --draft --title "<title>" --body-file "$PR_BODY_DIR/body.md"
-rm -rf "$PR_BODY_DIR"
+trap - EXIT
+cleanup_pr_body
 ```
 
 The quoted `ENDOFPR` marker is mandatory. It prevents shell expansion from
@@ -205,5 +211,7 @@ Before creating the draft pull request, verify that:
 - `Closes #123` appears when an issue is being closed;
 - the opening paragraph states what changed and why;
 - the walkthrough gives reviewers purpose-first entrypoints;
+- validation commands and results are recorded as code blocks or log links,
+  including skill validation, lint or lint-staged output, and diff checks;
 - every file reference is a Markdown link to a commit or branch ref; and
 - the prose uses third-person en-GB Oxford English.

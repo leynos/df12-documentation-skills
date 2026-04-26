@@ -62,10 +62,14 @@ ______________________________________________________________________
 
 ## Review references
 
-When a branch follows an issue, include the issue reference in the pull request
-title and add the required closure text in the description. When a branch
-follows a roadmap task, include the task reference in the title and explain how
-the branch satisfies the task.
+Follow the `pr-creation` skill contract for issue and roadmap references. For
+issue-based pull requests, use `ISSUE-<number>: <short-description>` as the
+title format and include `Closes ISSUE-<number>` in the description. If using
+GitHub issue numbers, use `Fixes #<number>` instead.
+
+For roadmap-task pull requests, use `TASK-<id>: <short-description>` as the
+title format. Include an `Implements TASK-<id>` line in the description, plus a
+brief bullet explaining how the change satisfies the task.
 
 If an execplan exists, link it from the pull request description and state
 whether the branch implements it or carries a pre-implementation plan.
