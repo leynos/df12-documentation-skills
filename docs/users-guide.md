@@ -55,6 +55,9 @@ heredoc delimiter before passing it to GitHub tooling. This protects the
 description from shell expansion of variables, command output, backticked code
 spans and escape sequences.
 
+Prefer the GitHub app when it is available. Use GitHub CLI only when the app is
+unavailable or cannot perform the required pull request operation.
+
 ______________________________________________________________________
 
 ## Review references

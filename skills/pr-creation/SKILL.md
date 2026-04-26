@@ -15,8 +15,10 @@ Treat these requirements as mandatory.
 ## Non-negotiable requirements
 
 - Create every pull request as a draft.
-- When using GitHub CLI, pass `--draft`. When using a connector or API, set
-  the draft field explicitly.
+- Prefer the GitHub app or connector when available. Use GitHub CLI only when
+  the app is unavailable or cannot perform the required operation.
+- When using GitHub CLI, pass `--draft`. When using the GitHub app, a
+  connector, or an API, set the draft field explicitly.
 - Cover the full branch in the pull request description, not only the most
   recent commits.
 - State what changed and why at the start of the description.
@@ -139,6 +141,11 @@ notes or caveats last.
 Write pull request descriptions to a temporary file with an inert
 single-quoted heredoc delimiter, then pass that file to the pull request tool.
 Do not pass long descriptions as shell arguments.
+
+Prefer creating the pull request through the GitHub app when it is available.
+Use the body file contents as the app or connector body input. Fall back to
+GitHub CLI only when the app is unavailable or cannot perform the required
+operation.
 
 ```bash
 PR_BODY_DIR=$(mktemp -d)
