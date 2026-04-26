@@ -109,7 +109,7 @@ ______________________________________________________________________
 
 ## Licence
 
-No licence file is present in this repository yet.
+ISC Licence — see [LICENSE](LICENSE) for details.
 
 ______________________________________________________________________
 
