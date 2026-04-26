@@ -36,7 +36,7 @@ The first phase is permitted (and usually necessary) to cover architectural
 decisions, build infrastructure, and test scaffolding. Even so, frame it as
 an idea:
 
-> Idea: if <product> settles its core contracts, packaging boundary, and
+> Idea: if the product settles its core contracts, packaging boundary, and
 > build spine before feature work starts, later slices can converge on one
 > coherent v1 architecture instead of repeatedly reworking interfaces and
 > test scaffolding.
@@ -91,7 +91,7 @@ A phase is a second-level heading with dotted numbering:
 Immediately below the heading, state the **idea** as a testable hypothesis:
 
 > Idea: if the first vertical slice can lint Markdown with trustworthy spans,
-> conservative fixes, and inspectable IR output, <product> will already solve
+> conservative fixes, and inspectable IR output, the product will already solve
 > a real repository problem before docstrings, plugins, or heavier NLP land.
 
 Follow with one to two paragraphs of context explaining what the phase
@@ -117,7 +117,7 @@ A step groups only tasks that serve the same delivery objective. If the tasks
 under a step do not share one operational purpose, split the step.
 
 Steps are sequenced so each workstream either unlocks the next one or reduces
-a specific class of delivery risk.
+a specific class of delivery risk. Steps do not need to be the same size.
 
 ## Task anatomy
 
@@ -154,21 +154,21 @@ A task is a checkbox item with dotted numbering:
   build activities. Sub-tasks are indented under the headline task. They do
   not carry dotted numbers unless the roadmap is very large.
 - **Scope.** Keep tasks small enough that each represents a coherent unit of
-  delivery. If a task description runs to more than five sub-bullets, it is
+  delivery. Tasks should be review-sized: small enough for one realistic pull
+  request review and broadly comparable in review burden to other tasks in the
+  same roadmap. If a task description runs to more than five sub-bullets, it is
   probably two tasks.
 
 ### Dependency notation
 
 Use dotted notation for all dependency citations:
 
-| Pattern                 | Meaning                                      |
-| ----------------------- | -------------------------------------------- |
-| `Requires 1.1.1.`      | Depends on one specific task.                |
-| `Requires 1.1.1 and 1.1.2.` | Depends on two specific tasks.          |
-| `Requires steps 1.1-1.3.` | Depends on all tasks in steps 1.1 through 1.3. |
-| `Requires phase 2.`    | Depends on the completion of an entire phase. |
-
-_Table 1: Dependency notation patterns._
+|Pattern|Meaning|
+|-|-|
+|`Requires 1.1.1.`|One specific task.|
+|`Requires 1.1.1 and 1.1.2.`|Two specific tasks.|
+|`Requires steps 1.1-1.3.`|All tasks in steps 1.1 through 1.3.|
+|`Requires phase 2.`|Completion of an entire phase.|
 
 ### Design citation notation
 
@@ -196,13 +196,11 @@ See adr-001-packaging-boundary.md.
 
 The roadmap hierarchy maps directly to the GIST framework:
 
-| Roadmap layer | GIST element | Purpose                                          |
-| ------------- | ------------ | ------------------------------------------------ |
-| Phase         | Idea         | A testable hypothesis about the product.         |
-| Step          | Step         | A workstream that validates or falsifies the idea.|
-| Task          | Task         | A concrete, measurable execution unit.           |
-
-_Table 2: GIST alignment._
+|Roadmap layer|GIST element|Purpose|
+|-|-|-|
+|Phase|Idea|Testable hypothesis about the product.|
+|Step|Workstream|Validates or falsifies the idea.|
+|Task|Task|Concrete, measurable execution unit.|
 
 ### What makes a good idea (phase)
 
@@ -231,6 +229,7 @@ A task must be:
 - Concrete: it describes a build activity, not an aspiration or status label.
 - Measurable: it has observable acceptance criteria.
 - Atomic: it can be completed as a coherent unit.
+- Review-sized: it adheres to the task-size rule above.
 - Traceable: it cites its design-document or RFC origin.
 
 ## Vertical-slice design
@@ -418,8 +417,18 @@ add tasks or note the deferral explicitly.
 Tasks that assume prior work without citing it. Every cross-step dependency
 must use dotted notation.
 
+### Mechanical step sizing
+
+Steps that all have the same number or size of tasks. Steps should follow the
+shape of the workstream, not an artificial template. A stream of uniformly
+sized steps should trigger a review of whether the task boundaries are too
+large, too small, or grouped for visual symmetry instead of pull request
+reviewability. Tasks should be review-sized because they become pull request
+review units; steps may vary because they represent workstreams with natural
+boundaries.
+
 ### Date commitments
 
 Roadmaps must not promise dates, durations, or timeframes. Development
-effort should be roughly consistent from task to task, but the roadmap does
-not predict calendar time.
+effort should stay review-sized at the task level, but the roadmap does not
+predict calendar time.
