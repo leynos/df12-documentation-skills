@@ -87,8 +87,9 @@ task must align with the GIST (Goals, Ideas, Steps, Tasks) model:
 - **Task = Execution unit.** A concrete, measurable piece of build work with
   clear acceptance criteria. Tasks cite dependencies on prior tasks or steps
   using dotted notation. Tasks cite relevant design document sections or RFCs.
-  Tasks should be roughly uniform in size and commensurate with the amount of
-  work that can realistically be reviewed in a single pull request.
+  Tasks should be review-sized: small enough for one realistic pull request
+  review and broadly comparable in review burden to other tasks in the same
+  roadmap.
 
 ### 5. Draft the roadmap
 
@@ -115,8 +116,7 @@ After the first draft, review for these failure modes:
   Each step must have a concrete objective and a learning opportunity.
 - **Vague tasks.** Does a task describe an aspiration ("Improve X") rather
   than a deliverable ("Implement X with Y acceptance criteria")? Rewrite.
-- **Mis-sized tasks.** Are tasks too large to review in one pull request, or
-  wildly different in size from nearby tasks? Split or merge them.
+- **Mis-sized tasks.** Are tasks not review-sized? Split or merge them.
 - **Mechanical step sizing.** Are steps all the same size? Steps do not need to
   be uniform. A run of uniformly sized steps is a warning that the underlying
   tasks may be sized to fit headings rather than realistic review boundaries.

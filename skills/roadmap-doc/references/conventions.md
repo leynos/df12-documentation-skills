@@ -117,10 +117,7 @@ A step groups only tasks that serve the same delivery objective. If the tasks
 under a step do not share one operational purpose, split the step.
 
 Steps are sequenced so each workstream either unlocks the next one or reduces
-a specific class of delivery risk. Steps do not need to be the same size. If
-many consecutive steps are similarly sized, check whether the tasks under them
-have been sized to make the headings look uniform rather than to match a
-realistic review boundary.
+a specific class of delivery risk. Steps do not need to be the same size.
 
 ## Task anatomy
 
@@ -157,19 +154,21 @@ A task is a checkbox item with dotted numbering:
   build activities. Sub-tasks are indented under the headline task. They do
   not carry dotted numbers unless the roadmap is very large.
 - **Scope.** Keep tasks small enough that each represents a coherent unit of
-  delivery that can realistically be reviewed in a single pull request. Tasks
-  in the same roadmap should be roughly uniform in size. If a task description
-  runs to more than five sub-bullets, it is probably two tasks.
+  delivery. Tasks should be review-sized: small enough for one realistic pull
+  request review and broadly comparable in review burden to other tasks in the
+  same roadmap. If a task description runs to more than five sub-bullets, it is
+  probably two tasks.
 
 ### Dependency notation
 
 Use dotted notation for all dependency citations:
 
-- `Requires 1.1.1.` depends on one specific task.
-- `Requires 1.1.1 and 1.1.2.` depends on two specific tasks.
-- `Requires steps 1.1-1.3.` depends on all tasks in steps 1.1 through
-  1.3.
-- `Requires phase 2.` depends on the completion of an entire phase.
+|Pattern|Meaning|
+|-|-|
+|`Requires 1.1.1.`|One specific task.|
+|`Requires 1.1.1 and 1.1.2.`|Two specific tasks.|
+|`Requires steps 1.1-1.3.`|All tasks in steps 1.1 through 1.3.|
+|`Requires phase 2.`|Completion of an entire phase.|
 
 ### Design citation notation
 
@@ -197,9 +196,11 @@ See adr-001-packaging-boundary.md.
 
 The roadmap hierarchy maps directly to the GIST framework:
 
-- Phase maps to an idea: a testable hypothesis about the product.
-- Step maps to a step: a workstream that validates or falsifies the idea.
-- Task maps to a task: a concrete, measurable execution unit.
+|Roadmap layer|GIST element|Purpose|
+|-|-|-|
+|Phase|Idea|Testable hypothesis about the product.|
+|Step|Step|Workstream that validates or falsifies the idea.|
+|Task|Task|Concrete, measurable execution unit.|
 
 ### What makes a good idea (phase)
 
@@ -228,9 +229,7 @@ A task must be:
 - Concrete: it describes a build activity, not an aspiration or status label.
 - Measurable: it has observable acceptance criteria.
 - Atomic: it can be completed as a coherent unit.
-- Reviewable: it is commensurate with the amount of work that can realistically
-  be reviewed in a single pull request, and it is not wildly larger or smaller
-  than nearby tasks.
+- Review-sized: it follows the task-size rule above.
 - Traceable: it cites its design-document or RFC origin.
 
 ## Vertical-slice design
@@ -424,11 +423,12 @@ Steps that all have the same number or size of tasks. Steps should follow the
 shape of the workstream, not an artificial template. A stream of uniformly
 sized steps should trigger a review of whether the task boundaries are too
 large, too small, or grouped for visual symmetry instead of pull request
-reviewability.
+reviewability. Tasks should be review-sized because they become pull request
+review units; steps may vary because they represent workstreams with natural
+boundaries.
 
 ### Date commitments
 
 Roadmaps must not promise dates, durations, or timeframes. Development
-effort should be roughly consistent from task to task and scoped to what a
-single pull request can realistically review, but the roadmap does not predict
-calendar time.
+effort should stay review-sized at the task level, but the roadmap does not
+predict calendar time.
