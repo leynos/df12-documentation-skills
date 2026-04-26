@@ -229,7 +229,7 @@ A task must be:
 - Concrete: it describes a build activity, not an aspiration or status label.
 - Measurable: it has observable acceptance criteria.
 - Atomic: it can be completed as a coherent unit.
-- Review-sized: it follows the task-size rule above.
+- Review-sized: it adheres to the task-size rule above.
 - Traceable: it cites its design-document or RFC origin.
 
 ## Vertical-slice design
