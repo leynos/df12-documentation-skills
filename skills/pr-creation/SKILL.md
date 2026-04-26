@@ -164,7 +164,7 @@ Before creating the draft pull request, verify that:
 
 - the pull request is marked as draft;
 - the title includes every required roadmap or issue reference;
-- the execplan is linked and its implementation status is clear;
+- the execplan is linked, and its implementation status is clear;
 - `Closes #123` appears when an issue is being closed;
 - the opening paragraph states what changed and why;
 - the walkthrough gives reviewers purpose-first entrypoints;
