@@ -129,6 +129,20 @@ After the first draft, review for these failure modes:
 - **Scope creep.** Does the roadmap include work the design explicitly
   rejects or defers? Move it to the deferred phase or remove it.
 - **Timeframes.** Does the roadmap promise dates or durations? Remove them.
+- **Testing theatre.** Does the roadmap contain standalone tasks whose sole
+  purpose is to write unit or behavioural tests? These belong inside
+  development tasks as implementation expectations, not as separate roadmap
+  tasks. Where specific outcome testing is not obvious from the task
+  description, move it to the task's `Success:` criterion.
+- **Isolated proving step.** Does the roadmap defer model checking, lemma
+  proofs, or property-based provers to a standalone step rather than
+  weaving them into development tasks? Hardening tasks are appropriate only
+  when the proving scope clearly exceeds a single PR.
+- **Missing E2E or combinatorial tasks.** Are there flag combinations,
+  feature interactions, or integration surfaces that need dedicated
+  end-to-end or combinatorial test suites? These warrant their own tasks
+  and should be encouraged, not collapsed into implementation tasks or
+  deferred.
 
 ### 7. Deliver the file
 
@@ -147,4 +161,13 @@ specifies) and present it.
 - Design document and RFC sections cited per task where applicable.
 - Success criteria stated where not immediately obvious from the task
   description.
+- Unit and behavioural tests are part of implementation, not standalone
+  tasks; where specific outcome testing is not inferrable, state it as a
+  `Success:` criterion on the relevant task.
+- E2E suites and combinatorial tests (covering flag and feature
+  combinations) are first-class tasks and should be scoped and sized
+  accordingly.
+- Model checking, provers, and property-based testing belong inside delivery
+  tasks; dedicated hardening tasks are appropriate only when the proving
+  scope exceeds a single PR.
 - Oxford comma where it aids comprehension.

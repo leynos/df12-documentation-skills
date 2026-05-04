@@ -32,6 +32,14 @@ Read the document against the agreed outline.
   Consolidate to one location and cross-reference.
 - Does the document answer the problem statement? Trace each
   requirement to a section.
+- Does the testing and verification section contain actual design
+  decisions, or does it list test types without rationale? If the
+  latter, cut it or replace it with the real choices.
+- Are correctness properties stated in falsifiable, observable terms?
+  Flag any property that cannot be checked — it is not yet a property.
+- For systems with multiple flags, modes, or integration targets: is
+  the combinatorial interaction surface addressed? If not, the design
+  is incomplete.
 
 ### Pass 2 — Sentence-level fluff elimination
 
@@ -121,6 +129,12 @@ Replace vague terms with precise ones.
 | "scalable" | To what? | "handles 10k requests/s per node" |
 | "seamless" | (Marketing word; delete) | Describe the actual UX |
 | "powerful" | (Marketing word; delete) | Describe the capability |
+| "thoroughly tested" | What is tested and how? | Name the suite, properties, and coverage |
+| "well-tested" | Same | Same |
+| "reliable" | What failure modes are handled? | "retries on transient errors; surfaces permanent failures to the caller" |
+| "correct" | Correct according to what specification? | Name the invariant or formal property |
+| "we will write unit tests" | What does this tell the reader? | Delete; state non-obvious testability choices only |
+| "comprehensive test coverage" | What combination surface is covered? | State the strategy and its known gaps |
 
 ### Pass 4 — Consistency
 
