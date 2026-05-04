@@ -53,6 +53,17 @@ Read the following reference files as needed during the workflow:
    ambiguity in the design. If a section cannot be written clearly, the
    design is not yet clear enough.
 
+6. **Verification is a design decision.** What must be true for the
+   system to be correct? The answer is not "it passes its tests" —
+   tests verify only what you thought to check. Name the invariants,
+   state the verification method, and identify what the test suite
+   cannot catch. Unit and behavioural tests are implementation defaults;
+   they do not belong in a design document unless the architecture makes
+   a specific testability choice worth recording. Formal correctness
+   properties, property-based provers, model-checked invariants, and
+   combinatorial interaction surfaces are design-level decisions and
+   must be treated as such.
+
 ## Workflow
 
 Execute these phases in order. Each phase produces concrete output
@@ -82,6 +93,15 @@ Establish the document's boundaries:
 5. **Prior art.** Does the user have existing documents, codebases, or
    designs that inform this one? Identify them early — they set
    constraints.
+
+6. **Verification scope.** What must be demonstrably true for the
+   design to be considered correctly implemented? Are there formal
+   correctness properties the system must satisfy — protocol invariants,
+   state-machine safety conditions, consistency guarantees? Does the
+   feature surface carry significant combinatorial interaction space
+   (flags, modes, integrations) that requires an explicit coverage
+   strategy? If neither question produces an answer, note that — it is
+   itself a design decision.
 
 If the user's prompt already answers these questions (as a detailed
 brief would), extract and confirm rather than re-asking.
@@ -134,7 +154,10 @@ The outline must:
   code, interface definitions),
 - flag sections where research gaps remain,
 - establish the dependency order between sections (some sections
-  reference concepts defined in earlier ones).
+  reference concepts defined in earlier ones),
+- identify verification targets: named invariants, formal properties,
+  and combinatorial interaction surfaces that require explicit design
+  decisions rather than deferred implementation choices.
 
 Present the outline to the user for agreement before proceeding. The
 outline is a contract — deviations during drafting require
@@ -425,3 +448,19 @@ skill and the self-check from `df12-copy`.
 - **The hedge forest.** "This could potentially perhaps be implemented
   using…" — if the design has not decided, say so explicitly rather
   than hedging. Indecision is information; hedging is noise.
+- **The test list.** "Unit, integration, and end-to-end tests will be
+  written" is not a testing strategy — it is what every software
+  project does by default. A design document that lists test types
+  without recording a non-obvious verification decision is wasting
+  words. Cut it, or replace it with the actual design choice.
+- **Vague correctness.** "The system must be reliable", "data must not
+  be lost", "the API must be correct" are aspirations, not verifiable
+  properties. A design that cannot state what correct means in precise,
+  observable terms has not finished designing. Every correctness claim
+  must name the mechanism that enforces or demonstrates it.
+- **The ignored combination space.** A system with N feature flags,
+  operating modes, or integration targets has a combination surface that
+  does not verify itself. Leaving it unaddressed in the design is not an
+  omission — it is a choice to carry that risk silently. Name the
+  surface, state the coverage strategy, and take responsibility for the
+  gaps.
