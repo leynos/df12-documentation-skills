@@ -263,6 +263,39 @@ slice. Handle these by including relevant tasks in each slice rather than
 collecting them into a cross-cutting phase. The principle: each slice should
 be independently useful and independently testable.
 
+### Testing philosophy
+
+Testing is a development activity, not a delivery artefact. Apply these
+rules when deciding how to represent testing in the roadmap.
+
+**Do not create tasks for unit or behavioural tests.** These are a normal
+part of implementing any task. A task should not exist solely to add tests;
+the tests are implied by the task's acceptance criteria. Where specific
+outcome testing is expected and may not be inferred from the task
+description, state it as a `Success:` criterion on the headline task rather
+than as a separate task.
+
+**Weave formal methods into development tasks.** Model checking,
+property-based testing, and prover integration belong alongside the work
+they validate. Developers should reach for these tools as a matter of
+course, not as an afterthought. A dedicated hardening task is appropriate
+only when the scope of model checking, lemma or axiom proofs, or invariant
+coverage clearly exceeds what a single PR can absorb alongside its
+implementation work.
+
+**E2E and combinatorial tests warrant their own tasks.** End-to-end suites
+— especially those covering multiple flags, features, or integration points
+in combination — cannot be collapsed into a single implementation task.
+Treat them as first-class deliverables and size them accordingly.
+Combinatorial flag coverage and multi-feature integration scenarios are
+especially high-value and should be encouraged explicitly.
+
+**Ask what testing gives real confidence.** When scoping a step, consider
+what evidence would genuinely convince users and library consumers that the
+outcome is correct and safe to depend on. Tests that answer that question
+belong in the roadmap. Tests that exist only to satisfy a coverage metric
+or to check a box do not.
+
 ## Formatting rules
 
 ### Markdown conventions
@@ -432,3 +465,34 @@ boundaries.
 Roadmaps must not promise dates, durations, or timeframes. Development
 effort should stay review-sized at the task level, but the roadmap does not
 predict calendar time.
+
+### Unit test tasks
+
+A standalone task whose sole purpose is to write unit or behavioural tests.
+Unit and behavioural testing is part of normal development, not a separate
+deliverable. Add a `Success:` criterion to the relevant implementation task
+instead.
+
+### Testing theatre
+
+Tasks that add tests because they satisfy a metric or check a box, rather
+than because they provide meaningful confidence. Before including a test
+task, ask: what will users or library consumers now know that they did not
+know before? If there is no clear answer, the task should not exist.
+
+### Isolated proving step
+
+A dedicated step or phase for model checking, formal proofs, or
+property-based testing, divorced from the implementation tasks they
+validate. Weave these activities into the relevant delivery tasks.
+A hardening task is acceptable only when the proving scope — covering
+lemmas, axioms, or invariants — clearly exceeds what can be absorbed
+in a single implementation PR alongside its other work.
+
+### Missing E2E or combinatorial coverage
+
+A roadmap that omits end-to-end or combinatorial test tasks where they are
+genuinely needed. When a feature surface involves multiple flags or
+interacting subsystems, the combinatorial test suite is a first-class
+deliverable and should appear as an explicit task, not as an implied
+afterthought.
