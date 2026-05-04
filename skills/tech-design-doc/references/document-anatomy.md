@@ -154,11 +154,13 @@ aspiration. The design document must carry properties, not aspirations.
 
 For each named property, state:
 
-- The verification method: model checker (which tool, which
-  specification language), property-based test suite (which generator
-  strategy, which shrinking behaviour), type-level proof (which language
-  mechanism, which guarantee it provides), or formal proof (which
-  theorem prover, which lemmas are required).
+- The verification method: model checker (e.g., Kani for bounded
+  model checking in Rust projects; state which tool and specification
+  language), property-based test suite (which generator strategy,
+  which shrinking behaviour), type-level proof (which language
+  mechanism, which guarantee it provides), or formal proof (e.g.,
+  Verus for mechanised proof of axioms in Rust; state which theorem
+  prover and which lemmas are required).
 - The scope boundary: which components, state machines, or interaction
   sequences are covered.
 - What the verification leaves unchecked, and why that is acceptable.
