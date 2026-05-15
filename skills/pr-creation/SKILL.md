@@ -14,7 +14,8 @@ Treat these requirements as mandatory.
 
 ## Non-negotiable requirements
 
-- Create every pull request as a draft.
+- Create new pull requests as draft by default, but preserve the current
+  draft/ready state when editing an existing pull request.
 - Prefer the GitHub app or connector when available. Use GitHub CLI only when
   the app is unavailable or cannot perform the required operation.
 - When using GitHub CLI, pass `--draft`. When using the GitHub app, a
@@ -29,10 +30,26 @@ Treat these requirements as mandatory.
 - Link every referenced file with a Markdown link to the relevant commit or,
   when a commit-specific reference is not yet stable, the branch ref.
 
+## Draft state rules                                                                                                            
+                                                                                                                                
+- When creating a new pull request, create it as a draft unless the user
+  explicitly asks for a ready-for-review PR.             
+- When updating, revising, or refreshing an existing pull request, preserve
+  the pull request's current draft/ready state.       
+- Do not convert an existing ready-for-review pull request back to draft
+  unless the user explicitly asks for that transition.   
+- Do not mark an existing draft pull request ready for review unless the
+  user explicitly asks for that transition.              
+- If the current draft state cannot be read, update only the
+  title/body/metadata requested and leave review readiness unchanged.
+
 ## Gather required context
 
 Before opening or revising the pull request, identify:
 
+- whether an existing pull request already exists for the branch;                       
+- if an existing pull request exists, whether it is currently draft or
+  ready for review;
 - the branch head and base branch;
 - the full branch diff from merge base to head;
 - whether the branch follows a roadmap task;
@@ -205,7 +222,10 @@ context:
 
 Before creating the draft pull request, verify that:
 
-- the pull request is marked as draft;
+- for a newly created pull request, the pull request is marked as draft
+  unless explicitly requested otherwise;                        
+- for an existing pull request, the previous draft/ready state has been
+  preserved unless the user explicitly requested a state change;
 - the title includes every required roadmap or issue reference;
 - the execplan is linked, and its implementation status is clear;
 - `Closes #123` appears when an issue is being closed;
