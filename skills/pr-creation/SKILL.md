@@ -30,16 +30,16 @@ Treat these requirements as mandatory.
 - Link every referenced file with a Markdown link to the relevant commit or,
   when a commit-specific reference is not yet stable, the branch ref.
 
-## Draft state rules                                                                                                            
-                                                                                                                                
+## Draft state rules
+
 - When creating a new pull request, create it as a draft unless the user
-  explicitly asks for a ready-for-review PR.             
+  explicitly asks for a ready-for-review PR.
 - When updating, revising, or refreshing an existing pull request, preserve
-  the pull request's current draft/ready state.       
+  the pull request's current draft/ready state.
 - Do not convert an existing ready-for-review pull request back to draft
-  unless the user explicitly asks for that transition.   
+  unless the user explicitly asks for that transition.
 - Do not mark an existing draft pull request ready for review unless the
-  user explicitly asks for that transition.              
+  user explicitly asks for that transition.
 - If the current draft state cannot be read, update only the
   title/body/metadata requested and leave review readiness unchanged.
 
@@ -47,7 +47,7 @@ Treat these requirements as mandatory.
 
 Before opening or revising the pull request, identify:
 
-- whether an existing pull request already exists for the branch;                       
+- whether an existing pull request already exists for the branch;
 - if an existing pull request exists, whether it is currently draft or
   ready for review;
 - the branch head and base branch;
@@ -223,7 +223,7 @@ context:
 Before creating the draft pull request, verify that:
 
 - for a newly created pull request, the pull request is marked as draft
-  unless explicitly requested otherwise;                        
+  unless explicitly requested otherwise;
 - for an existing pull request, the previous draft/ready state has been
   preserved unless the user explicitly requested a state change;
 - the title includes every required roadmap or issue reference;

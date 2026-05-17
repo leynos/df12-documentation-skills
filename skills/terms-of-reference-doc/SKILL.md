@@ -34,11 +34,15 @@ work whose value cannot be defended.
 
 Read the following reference files as needed during the workflow:
 
-| Reference | When to read | Path |
-|---|---|---|
-| **Elicitation protocol** | Before Phase 2 — interview discipline, question patterns, exit conditions | `references/elicitation-protocol.md` |
-| **Editing checklist** | Before Phase 4 — the fluff-elimination protocol (shared with `tech-design-doc`) | `../tech-design-doc/references/editing-checklist.md` |
-| **Document anatomy** | Optional, for cross-reference — section catalogue used by `tech-design-doc` | `../tech-design-doc/references/document-anatomy.md` |
+- **Elicitation protocol**:
+  `references/elicitation-protocol.md`. Read before Phase 2 for interview
+  discipline, question patterns and exit conditions.
+- **Editing checklist**:
+  `../tech-design-doc/references/editing-checklist.md`. Read before Phase 4
+  for the fluff-elimination protocol shared with `tech-design-doc`.
+- **Document anatomy**:
+  `../tech-design-doc/references/document-anatomy.md`. Read optionally as a
+  cross-reference for the section catalogue used by `tech-design-doc`.
 
 ## Governing principles
 
