@@ -5,7 +5,8 @@ workflows.*
 
 This repository packages small, focused skills that make documentation work
 repeatable: commit messages, pull request descriptions, README files, technical
-design documents, roadmaps, df12 copy and en-GB Oxford English.
+terms of reference, design documents, roadmaps, df12 copy and en-GB Oxford
+English.
 
 ______________________________________________________________________
 
@@ -15,7 +16,8 @@ Documentation quality depends on repeatable judgement. These skills collect
 the house rules in a form Codex can load at the right moment:
 
 - **Consistent workflow artefacts**: Commit messages, draft pull requests,
-  README files, roadmaps, and design documents follow durable structures.
+  README files, terms of reference, roadmaps, and design documents follow
+  durable structures.
 - **df12 voice in one place**: Public-facing prose can use the same compressed,
   precise, dry, grounded and playful register across projects.
 - **British Oxford spelling by default**: The language rule is explicit, so
@@ -86,6 +88,10 @@ ______________________________________________________________________
   [`editing-checklist.md`](skills/tech-design-doc/references/editing-checklist.md)
   and
   [`research-protocol.md`](skills/tech-design-doc/references/research-protocol.md).
+- [`terms-of-reference-doc`](skills/terms-of-reference-doc/SKILL.md) produces
+  upstream problem-space documents that establish domain, market, users,
+  job-to-be-done, scope, constraints and open questions before solution work
+  begins.
 
 ______________________________________________________________________
 

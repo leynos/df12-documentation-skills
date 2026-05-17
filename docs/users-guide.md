@@ -3,9 +3,9 @@
 *How to use df12 documentation workflow skills together.*
 
 This guide is for documentation practitioners using the skills in this
-repository to prepare branch hand-offs, commit history and pull request review
-surfaces. It gives the operating flow; each skill file remains the authority
-for detailed rules.
+repository to prepare problem statements, branch hand-offs, commit history and
+pull request review surfaces. It gives the operating flow; each skill file
+remains the authority for detailed rules.
 
 ______________________________________________________________________
 
@@ -13,15 +13,46 @@ ______________________________________________________________________
 
 Use the skills as a sequence rather than isolated snippets:
 
-1. Draft or update the documentation artefact in the target repository.
-2. Validate the edited files with the repository's documented gates.
-3. Use [`commit-message`](../skills/commit-message/SKILL.md) to write a
+1. Use
+   [`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md)
+   before solution work when the problem space is not yet explicit.
+2. Draft or update the downstream documentation artefact in the target
+   repository.
+3. Validate the edited files with the repository's documented gates.
+4. Use [`commit-message`](../skills/commit-message/SKILL.md) to write a
    file-backed Git commit message.
-4. Use [`pr-creation`](../skills/pr-creation/SKILL.md) to prepare the pull
+5. Use [`pr-creation`](../skills/pr-creation/SKILL.md) to prepare the pull
    request title and description from the full branch diff.
 
 This keeps the branch narrative consistent from local commit to pull request
 review.
+
+______________________________________________________________________
+
+## Terms of reference
+
+Use
+[`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md) before
+technical design or roadmap work when the project needs a defensible statement
+of why it exists, who it serves and what sits outside scope.
+
+The skill produces `docs/terms-of-reference.md` unless the user specifies a
+different target. It is an elicitation-led workflow: first read prior art, then
+build a provisional sketch with `[KNOWN]`, `[ASSUMED]` and `[OPEN]` claims,
+resolve the gaps one question at a time, and only then consolidate the draft.
+
+A terms of reference belongs to the problem space, not the solution space. It
+captures domain context, market context, users and stakeholders,
+job-to-be-done, goals, non-goals, success criteria, hard constraints,
+assumptions, dependencies and open questions. Architecture, implementation
+sequence and technology choices should move to downstream design or roadmap
+documents.
+
+Use the finished terms of reference as the upstream input for
+[`tech-design-doc`](../skills/tech-design-doc/SKILL.md) and
+[`roadmap-doc`](../skills/roadmap-doc/SKILL.md). If it introduces domain terms
+that are not already in `docs/context.md`, list those as companion context
+additions during hand-off.
 
 ______________________________________________________________________
 
@@ -45,10 +76,14 @@ ______________________________________________________________________
 Use [`pr-creation`](../skills/pr-creation/SKILL.md) when opening or revising a
 pull request.
 
-The skill requires pull requests to be created as drafts and the description to
-cover the full branch, not only the latest commit. Start with what changed and
-why, then give reviewers purpose-first entrypoints into the files they should
-read.
+The skill requires new pull requests to be created as drafts unless the user
+explicitly asks for a ready-for-review PR. When revising an existing pull
+request, preserve its current draft or ready state unless the user explicitly
+asks for that state to change.
+
+The description must cover the full branch, not only the latest commit. Start
+with what changed and why, then give reviewers purpose-first entrypoints into
+the files they should read.
 
 Write the pull request body to a temporary Markdown file with a single-quoted
 heredoc delimiter before passing it to GitHub tooling. This protects the
