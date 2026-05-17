@@ -4,7 +4,7 @@ All notable changes to the df12 documentation skills are recorded here.
 
 ______________________________________________________________________
 
-## Unreleased
+## 2026-05-16
 
 - Tighten [`pr-creation`](skills/pr-creation/SKILL.md) so new pull requests
   are draft by default, existing pull requests preserve their current
