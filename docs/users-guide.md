@@ -27,6 +27,25 @@ Use the skills as a sequence rather than isolated snippets:
 This keeps the branch narrative consistent from local commit to pull request
 review.
 
+```mermaid
+flowchart TD
+    A[Start documentation work] --> B{Problem space explicit?}
+    B -- No --> C[Run terms-of-reference-doc]
+    C --> D[Draft or update downstream doc artefact]
+    B -- Yes --> D
+    D --> E[Validate edited files against repo gates]
+    E --> F[Run commit-message]
+    F --> G[Run pr-creation]
+    G --> H[Pull request ready for review or draft]
+```
+
+Screen reader caption: Documentation work starts by checking whether the
+problem space is explicit. If it is not, run `terms-of-reference-doc` before
+drafting or updating the downstream document. If it is explicit, go directly to
+the downstream document. Then validate the edited files against the repository
+gates, run `commit-message`, run `pr-creation`, and leave the pull request in
+the appropriate ready-for-review or draft state.
+
 ______________________________________________________________________
 
 ## Terms of reference
