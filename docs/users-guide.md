@@ -60,8 +60,8 @@ different target. It is an elicitation-led workflow: first read prior art, then
 build a provisional sketch with `[KNOWN]`, `[ASSUMED]` and `[OPEN]` claims,
 resolve the gaps one question at a time, and only then consolidate the draft.
 
-A terms of reference belongs to the problem space, not the solution space. It
-captures domain context, market context, users and stakeholders,
+Terms of reference belong to the problem space, not the solution space. They
+capture domain context, market context, users and stakeholders,
 job-to-be-done, goals, non-goals, success criteria, hard constraints,
 assumptions, dependencies and open questions. Architecture, implementation
 sequence and technology choices should move to downstream design or roadmap
