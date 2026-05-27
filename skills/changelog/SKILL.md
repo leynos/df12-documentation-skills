@@ -207,18 +207,18 @@ outputs, and anything else a consumer perceives.
 
 #### Change line shape
 
-Each list item is a single line. Optional prefixes — first `**Breaking:**`,
-then a `**Subsystem:**` prefix — appear at the start of the line, immediately
-before the change description. References follow the description, with
+Each list item is a single line. An optional bold prefix appears at the
+start of the line, immediately before the change description; the three
+prefix forms are mutually exclusive. References follow the description, with
 authors last:
 
 ```text
-- [**Breaking:** ][**<Subsystem>:** ]<Change> (<references>) (<authors>)
+- [**Breaking:** | **<Subsystem>:** | **<Subsystem> (breaking):** ]<Change> (<references>) (<authors>)
 ```
 
-When both prefixes apply on a single line, combine them as
-`**<Subsystem> (breaking):** <Change>` rather than stacking two bold
-prefixes.
+Choose at most one of the three prefix forms. When a breaking change occurs
+inside a subsystem, use the combined `**<Subsystem> (breaking):**` form
+rather than stacking `**Breaking:**` and `**<Subsystem>:**` together.
 
 Concretely:
 
