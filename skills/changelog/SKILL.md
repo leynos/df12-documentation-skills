@@ -207,11 +207,18 @@ outputs, and anything else a consumer perceives.
 
 #### Change line shape
 
-Each list item is a single line with this shape:
+Each list item is a single line. Optional prefixes — first `**Breaking:**`,
+then a `**Subsystem:**` prefix — appear at the start of the line, immediately
+before the change description. References follow the description, with
+authors last:
 
 ```text
-- <Change>[ **Breaking:** prefix][ <subsystem prefix>:] (<references>) (<authors>)
+- [**Breaking:** ][**<Subsystem>:** ]<Change> (<references>) (<authors>)
 ```
+
+When both prefixes apply on a single line, combine them as
+`**<Subsystem> (breaking):** <Change>` rather than stacking two bold
+prefixes.
 
 Concretely:
 
@@ -267,10 +274,12 @@ comma-separated:
 
 After references, list authors in parentheses, comma-separated. With both
 references and authors on one entry, separate the two groups with a
-semicolon:
+semicolon. References remain Markdown links — the shorthand `#194` is only
+used in this document's prose to keep examples readable; the rendered
+changelog must use the linked form:
 
 ```markdown
-- Fix infinite loop (#194, #195; Alice Meerkat, Milly Moose)
+- Fix infinite loop ([#194](https://example/issues/194), [#195](https://example/issues/195); Alice Meerkat, Milly Moose)
 ```
 
 On single-contributor projects, omit authors. For bot-authored changes, list
