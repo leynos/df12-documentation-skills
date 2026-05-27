@@ -14,7 +14,7 @@ description: >
 
 Produce or update a project's `CHANGELOG.md` in the Common Changelog style:
 a human-curated, ordered list of notable changes per versioned release. The
-output prioritises consumer comprehension over machine parsing.
+output prioritizes consumer comprehension over machine parsing.
 
 This skill is adapted from **Common Changelog** by Vincent Weevers, which is
 itself a stricter subset of [Keep a Changelog](https://keepachangelog.com/).
@@ -61,7 +61,7 @@ Useful starting commands:
 ```bash
 git tag --sort=-v:refname | head            # most recent tags
 git log <previous-tag>..HEAD --no-merges    # raw commit list
-git log <previous-tag>..HEAD --merges       # PR merges (on GitHub flows)
+git log <previous-tag>..HEAD --merges       # PR merges (on GitHub Flow)
 ```
 
 Read the diffs of unclear commits before describing them. A change you cannot
@@ -69,9 +69,9 @@ explain plainly to a reader does not belong in the changelog yet.
 
 ### 2. Draft the entry from history, then curate
 
-Generate a rough list of candidate changes from the commit and PR titles in
-range. Then **curate**: this is the step that distinguishes a changelog from a
-`git log` dump.
+Generate a rough list of candidate changes from the commit and pull request
+(PR) titles in range. Then **curate**: this is the step that distinguishes a
+changelog from a `git log` dump.
 
 - **Remove noise.** Exclude maintenance work that does not affect consumers of
   the distributed project: dotfile tweaks, dev-only dependency bumps, minor
@@ -80,7 +80,7 @@ range. Then **curate**: this is the step that distinguishes a changelog from a
   documentation for previously undocumented features stay in.
 - **Rephrase for consistency.** Different contributors describe the same kind
   of change differently. Align wording without straying so far that authors no
-  longer recognise their own work.
+  longer recognize their own work.
 - **Merge related changes.** Two commits bumping the same dependency become
   one entry: `Bump \`json-parser\` from 2.x to 4.x (a, b)`. A feature plus its
   follow-up fixup becomes one entry crediting both commits.
@@ -172,7 +172,7 @@ _Initial release._
 
 ### Notice
 
-A release may begin with a single italicised paragraph — a **notice** —
+A release may begin with a single italicized paragraph — a **notice** —
 before any change groups. Use a notice to:
 
 - Point to an upgrade guide or blog post (`_If you are upgrading: see
@@ -261,7 +261,7 @@ Reference forms:
 ```
 
 The owner-prefixed forms are for git submodules or for issues in external
-repositories. Otherwise use the short form.
+repositories. Otherwise, use the short form.
 
 References sit in a single set of parentheses, with same-type references
 comma-separated:
@@ -331,7 +331,7 @@ When promoting `X.Y.Z-rc.N` to `X.Y.Z`, pick one approach:
   stable entry as if the prereleases never existed. Best for public
   projects whose consumers ignore prereleases.
 - **Skip the entry.** Acceptable only for prereleases used purely for
-  internal CI testing.
+  internal continuous integration (CI) testing.
 - **Refer to the prerelease.** Use a notice: `_Stable release based on
   [3.1.0-rc.2]._`. Best for private projects where all stakeholders
   already know the prerelease contents.
