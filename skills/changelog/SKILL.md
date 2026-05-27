@@ -340,7 +340,8 @@ When promoting `X.Y.Z-rc.N` to `X.Y.Z`, pick one approach:
 
 A release that was public for more than a few hours stays in the
 changelog. Add a notice explaining the yank and linking to context.
-Keep the original change list:
+Keep the original change list. The following example uses npm (Node
+Package Manager), but the pattern applies to any package registry:
 
 ```markdown
 ## [8.5.1] - 2021-05-10
