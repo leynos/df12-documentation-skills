@@ -64,6 +64,9 @@ ______________________________________________________________________
 
 ## Skills
 
+- [`changelog`](skills/changelog/SKILL.md) drafts and curates `CHANGELOG.md`
+  in the Common Changelog style, with consumer-focused entries, ISO 8601
+  dates, breaking-change prefixes and linked references.
 - [`commit-message`](skills/commit-message/SKILL.md) writes file-backed Git
   commit messages and forbids inline `git commit -m` messages.
 - [`df12-copy`](skills/df12-copy/SKILL.md) applies the df12 Productions copy
