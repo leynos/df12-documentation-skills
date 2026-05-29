@@ -24,8 +24,13 @@ Use the skills as a sequence rather than isolated snippets:
 5. Use [`pr-creation`](../skills/pr-creation/SKILL.md) to prepare the pull
    request title and description from the full branch diff.
 
+At release time — a separate cadence from per-branch work — use
+[`changelog`](../skills/changelog/SKILL.md) to curate `CHANGELOG.md` from the
+commits and pull requests in the release range, then commit the changelog
+edit before creating the git tag.
+
 This keeps the branch narrative consistent from local commit to pull request
-review.
+review, and from pull request to released changelog entry.
 
 ```mermaid
 flowchart TD
@@ -111,6 +116,45 @@ spans and escape sequences.
 
 Prefer the GitHub app when it is available. Use GitHub CLI only when the app is
 unavailable or cannot perform the required pull request operation.
+
+______________________________________________________________________
+
+## Release notes
+
+Use [`changelog`](../skills/changelog/SKILL.md) when cutting a new release,
+drafting release notes between two tags, promoting a prerelease to stable, or
+documenting a yanked release.
+
+The skill maintains `CHANGELOG.md` in the Common Changelog style: releases
+sorted latest-first by Semantic Versioning, ISO 8601 dates, four allowed
+categories (`Changed`, `Added`, `Removed`, `Fixed`), `**Breaking:**` prefixes
+on breaking entries, and a linked reference on every line. There is no
+`Unreleased` section: pending changes live in commits and pull requests until
+the release is cut, and the entry is curated at that moment.
+
+The workflow assumes the upstream artefacts produced earlier in this guide:
+
+1. After the pull request lands and the release tag is ready, gather the
+   commit range between the previous tag and `HEAD` (or between the two tags
+   being documented), along with the merged pull requests in that range.
+2. Curate, do not paste. Strip dotfile changes, dev-only dependency bumps and
+   purely cosmetic edits. Rephrase commit subjects so different contributors'
+   wording converges. Merge related commits into single entries with multiple
+   references.
+3. Write each entry in the imperative mood, one line, with at least one
+   Markdown-linked reference (commit, pull request, issue or external
+   ticket). Use `**Breaking:**` for breaking changes and place them before
+   non-breaking changes within their category.
+4. Commit the changelog edit using
+   [`commit-message`](../skills/commit-message/SKILL.md) before creating the
+   git tag, so the tag points at a commit whose `CHANGELOG.md` already
+   describes it.
+
+The skill explicitly rejects Conventional Commit prefixes inside entries,
+`Unreleased` sections, `[YANKED]` tags and regional date formats. Where a
+release has no real change content (initial release, stable promotion of a
+prerelease, fully yanked release), use a single-sentence italicized notice in
+place of the change groups.
 
 ______________________________________________________________________
 
