@@ -113,6 +113,14 @@ ______________________________________________________________________
   upstream problem-space documents that establish domain, market, users,
   job-to-be-done, scope, constraints and open questions before solution work
   begins.
+- [`tutorial-howto-doc`](skills/tutorial-howto-doc/SKILL.md) writes the two
+  practical, action-oriented documentation modes — learning-oriented tutorials
+  and task-oriented how-to guides — classifying the reader's need first, then
+  using a test-the-path workflow grounded in
+  [`pedagogy-and-prior-art.md`](skills/tutorial-howto-doc/references/pedagogy-and-prior-art.md),
+  [`tutorial-anatomy.md`](skills/tutorial-howto-doc/references/tutorial-anatomy.md)
+  and
+  [`how-to-anatomy.md`](skills/tutorial-howto-doc/references/how-to-anatomy.md).
 
 ______________________________________________________________________
 

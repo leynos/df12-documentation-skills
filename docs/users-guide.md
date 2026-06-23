@@ -89,6 +89,40 @@ additions during hand-off.
 
 ______________________________________________________________________
 
+
+## Tutorials and how-to guides
+
+Use [`tutorial-howto-doc`](../skills/tutorial-howto-doc/SKILL.md) when the
+downstream artefact is practical, action-oriented documentation: a tutorial
+that teaches a newcomer, or a how-to guide that helps a competent user finish a
+task. It is the user-facing counterpart to the upstream
+`terms-of-reference-doc` and `tech-design-doc`: those settle why the product
+exists and how it is built; this documents the product as it is in the user's
+hands.
+
+The skill's first move is classification. A reader is either *at study*
+(acquiring a skill → tutorial) or *at work* (applying a skill → how-to), and
+the two needs demand different documents. Conflating them is the most common
+failure in practical documentation, so the skill states the verdict — tutorial
+or how-to — before drafting, and proposes a split when a single request bundles
+both.
+
+It then drives a test-the-path workflow: scope the single learning journey or
+the single real-world goal, walk the path end to end and capture the *actual*
+output, draft to the matching anatomy, edit out blurred boundaries (explanation
+creeping into a tutorial, teaching creeping into a how-to), and hand off with
+links to reference and explanation. Theory and exhaustive option lists are
+linked, never inlined.
+
+The skill is grounded in, and credits, the Diátaxis framework by Daniele
+Procida, Carroll's minimalism, Gagné's events of instruction and cognitive load
+theory; the grounding and full attribution live in
+[`pedagogy-and-prior-art.md`](../skills/tutorial-howto-doc/references/pedagogy-and-prior-art.md).
+It deliberately writes only the two action-oriented modes — reference and
+explanation are out of scope and are linked rather than absorbed.
+
+______________________________________________________________________
+
 ## Roadmaps
 
 Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to author a new GIST
