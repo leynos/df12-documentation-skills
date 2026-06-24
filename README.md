@@ -118,9 +118,11 @@ ______________________________________________________________________
   and task-oriented how-to guides — classifying the reader's need first, then
   using a test-the-path workflow grounded in
   [`pedagogy-and-prior-art.md`](skills/tutorial-howto-doc/references/pedagogy-and-prior-art.md),
-  [`tutorial-anatomy.md`](skills/tutorial-howto-doc/references/tutorial-anatomy.md)
+  [`tutorial-anatomy.md`](skills/tutorial-howto-doc/references/tutorial-anatomy.md),
+  [`how-to-anatomy.md`](skills/tutorial-howto-doc/references/how-to-anatomy.md)
   and
-  [`how-to-anatomy.md`](skills/tutorial-howto-doc/references/how-to-anatomy.md).
+  [`testing-the-path.md`](skills/tutorial-howto-doc/references/testing-the-path.md)
+  for durable, docs-as-tests verification of worked examples.
 
 ______________________________________________________________________
 

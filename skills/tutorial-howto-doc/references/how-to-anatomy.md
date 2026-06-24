@@ -108,6 +108,7 @@ not interrupt the work:
 - [ ] Commands with invisible effects show sample confirming output.
 - [ ] Steps number about ten or fewer; larger tasks are split.
 - [ ] The path has been executed start to finish (or demonstrated by an
-      SME).
+      SME); where machine-checkable, the recommended path is captured as
+      an automated test in CI (see `testing-the-path.md`).
 - [ ] "See also" links cover the why (explanation) and the what
       (reference); British/Oxford spelling throughout.

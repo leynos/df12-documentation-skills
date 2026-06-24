@@ -52,6 +52,10 @@ Read the reference files as the workflow calls for them:
   drafting a tutorial.
 - **How-to anatomy**: `references/how-to-anatomy.md`. Read before
   drafting a how-to guide.
+- **Testing the path**: `references/testing-the-path.md`. Read when the
+  guide's steps could be checked by a machine — how to make the walk
+  durable (docs as tests) and how a guide's structure maps onto
+  Given/When/Then, deferring the BDD mechanics to project testing skills.
 - **Editing checklist**: `../tech-design-doc/references/editing-checklist.md`.
   Read before the editing pass for the fluff-elimination protocol shared
   across the df12 documentation skills.
@@ -92,11 +96,18 @@ Read the reference files as the workflow calls for them:
    must warn of forks and failure modes rather than pretend they do not
    exist.
 
-6. **Test the path.** Steps that have not been executed are hypotheses,
-   not instructions. Run the tutorial or the how-to end to end — or have
-   a subject-matter expert demonstrate it — and record the *actual*
-   output. Re-test after every notable product release; these are the
-   documents that rot fastest.
+6. **Test the path — and keep it tested.** Steps that have not been
+   executed are hypotheses, not instructions. Run the tutorial or the
+   how-to end to end — or have a subject-matter expert demonstrate it —
+   and record the *actual* output. A walk done once verifies the promise
+   for a moment; where the steps are machine-checkable, make the walk
+   *durable* by encoding the happy path as an automated test that runs in
+   CI ("docs as tests"). A guide already reads as Given/When/Then — its
+   prerequisites, its actions, and its narrative of the expected — so the
+   confirmations you write double as the test's assertions. See
+   `references/testing-the-path.md`; defer the BDD mechanics to the
+   project's testing skills. Re-test after every notable release; these
+   are the documents that rot fastest.
 
 7. **The document is living.** A tutorial is the most revision-hungry
    page you own because its end-to-end story cascades when the product
@@ -184,6 +195,13 @@ to accomplish Y." If the request bundles both, propose the split.
 - The forks and error scenarios the real world will present, and the
   single safest, surest path you will recommend through them.
 
+For either mode, also decide the **verification strategy** now: are the
+steps machine-checkable, and if so at what level — the embedded code
+snippets, the end-to-end path, or both — and with which tool? This is a
+writing decision, because committing to verification sharpens how you
+phrase steps (atomic, imperative, each with explicit expected output).
+See `references/testing-the-path.md`.
+
 ### Phase 2 — Walk the path
 
 This phase is non-negotiable and is where most defects are caught.
@@ -201,6 +219,13 @@ This phase is non-negotiable and is where most defects are caught.
 
 If the path cannot be made to work reliably, stop and fix the scope or
 the product before writing — do not paper over a broken path with prose.
+
+Where a verification strategy was chosen in Phase 1, **capture the walk
+as the test** rather than throwing it away. The commands you run become
+the actions, the output you record becomes the assertions, and the clean
+starting state becomes the setup — one disciplined walk yields both the
+captured output for the prose and the executable scenario. See
+`references/testing-the-path.md`.
 
 ### Phase 3 — Draft
 
@@ -268,7 +293,11 @@ The boundary-blur hunt is the most important edit:
   related how-to for what comes after.
 - For a tutorial, end with a brief, mildly admiring summary of what the
   learner built, and a pointer to where they go next.
-- Record the retest cadence (e.g. "re-run against each minor release").
+- If the walk was captured as a test, commit the feature file and step
+  definitions alongside the document and wire them into CI, so the
+  retest cadence is automatic.
+- Record the retest cadence (e.g. "re-run against each minor release"),
+  noting whether it is enforced by CI or left to a manual reminder.
 - Note any domain terms introduced that belong in `docs/context.md`.
 
 ## Language
@@ -396,8 +425,13 @@ reproduced; each is cited so a reader can go to the source.
   small steps, and load management.
 - **The Good Docs Project** — community tutorial and how-to templates.
   <https://www.thegooddocsproject.dev/>.
+- **Docs as Tests** — Manny Silva. The principle that documentation
+  should verify as well as inform, behind the durable test-the-path
+  guidance. <https://www.docsastests.com/>.
 
-Full references with URLs are in `references/pedagogy-and-prior-art.md`.
+Full references with URLs are in `references/pedagogy-and-prior-art.md`
+and `references/testing-the-path.md` (the latter also credits Sybil,
+pytest-bdd, rstest-bdd and `@aboviq/bun-test-cucumber`).
 
 ## Key constraints
 

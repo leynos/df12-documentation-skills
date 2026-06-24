@@ -123,5 +123,8 @@ say so, so they can.
 - [ ] Likely errors are flagged with their early-warning signs.
 - [ ] Primary steps number about seven or fewer.
 - [ ] The whole path has been executed from the assumed starting state.
+- [ ] Where the steps are machine-checkable, the walk is captured as an
+      automated test in CI; the *do, then confirm* pattern maps onto
+      `When`/`Then` (see `testing-the-path.md`).
 - [ ] The summary names the concrete achievement; next-step links exist.
 - [ ] Prose uses "we"/"let's"; British/Oxford spelling throughout.
