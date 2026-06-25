@@ -29,13 +29,13 @@ write.
 The single most expensive mistake in practical documentation is
 conflating these two modes. A tutorial that behaves like a how-to
 abandons the beginner; a how-to that behaves like a tutorial wastes the
-expert's time and patronises them. Most of this skill's value is in
+expert's time and patronizes them. Most of this skill's value is in
 forcing the classification *before* a line is drafted, then holding the
 chosen mode honest through writing and editing.
 
 This skill is inspired by, and credits, the Diátaxis framework by
 Daniele Procida, alongside older work in instructional design. It does
-not reproduce that material; it synthesises it into an executable
+not reproduce that material; it synthesizes it into an executable
 workflow. See `references/pedagogy-and-prior-art.md` for the grounding
 and full attribution.
 
@@ -240,7 +240,7 @@ While drafting a **tutorial**:
 - Point out what to notice ("the prompt now shows your branch name").
 - Keep results coming early and often; let each step produce something
   visible.
-- Ruthlessly minimise explanation. One clause of justification, then a
+- Ruthlessly minimize explanation. One clause of justification, then a
   link. The learner is *doing*, not studying.
 - Stay concrete and particular. No options, no "you could also". One
   line to the conclusion.
@@ -255,7 +255,7 @@ While drafting a **how-to**:
   and let the reader join it to their own work.
 - Warn about the unexpected — callouts for the irreversible step, the
   destructive flag, the long-running command.
-- Seek flow: order steps the way the work actually flows, minimising
+- Seek flow: order steps the way the work actually flows, minimizing
   context-switching and held-open thoughts.
 
 ### Phase 4 — Editing pass
@@ -410,7 +410,7 @@ step, clarity wins.
 
 ## Credits and prior art
 
-This skill synthesises, and gratefully credits, the following. None is
+This skill synthesizes, and gratefully credits, the following. None is
 reproduced; each is cited so a reader can go to the source.
 
 - **Diátaxis** — Daniele Procida. The four-kinds map and the

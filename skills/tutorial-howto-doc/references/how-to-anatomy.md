@@ -82,7 +82,7 @@ Rules for steps:
 - **Do not teach concepts.** If the reader needs the *why*, link to an
   explanation. If they need exhaustive options, link to reference. Keep
   them on this page and on task.
-- **Seek flow.** Order steps the way the work actually flows. Minimise
+- **Seek flow.** Order steps the way the work actually flows. Minimize
   context-switching between tools, and avoid making the reader hold a
   thought open across many steps before it resolves into an action.
 

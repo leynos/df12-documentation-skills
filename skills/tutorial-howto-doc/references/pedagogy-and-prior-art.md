@@ -10,7 +10,7 @@ inconvenient and you are tempted to break it.
 Everything here is a synthesis in our own words. Sources are cited so
 you can read the originals; nothing below is a substitute for them.
 
-## The organising distinction: study versus work
+## The organizing distinction: study versus work
 
 The most useful single idea in practical documentation is that a reader
 is always in one of two relationships with a craft: **acquiring** it
@@ -74,7 +74,7 @@ instructions". When a procedure contradicts their mental model, they
 trust the model, not the procedure.
 
 Carroll's response was **minimalism** — not "write less" as a style tic,
-but: *minimise the extent to which the instructional material obstructs
+but: *minimize the extent to which the instructional material obstructs
 the learner's own sense-making*. The commonly recited four principles
 (as distilled by JoAnn Hackos and by Hans van der Meij and Carroll) are:
 
@@ -158,7 +158,7 @@ overloaded. Load comes in kinds worth separating:
 - **Extraneous load** — load imposed by *how* the material is presented,
   not by the material itself. This is wasted effort, and it is what
   premature explanation, option sprawl, and poor ordering inflict on a
-  reader. Minimise it.
+  reader. Minimize it.
 
 Two consequences this skill leans on heavily:
 

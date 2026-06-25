@@ -27,7 +27,7 @@ it.
 ## 1. What we will build (orientation)
 
 A short paragraph, and ideally a picture or sample of the finished
-result, so the learner can see the destination and recognise it when
+result, so the learner can see the destination and recognize it when
 they arrive. This is Gagné's "inform the learner of the objective" and
 it sets expectations that every later step pays off.
 
@@ -86,7 +86,7 @@ Rules for steps:
 - **Stay concrete and on one line.** No "you could also", no alternative
   flags, no diversions. A tutorial follows a single managed path to the
   conclusion. Options are for how-to guides and reference.
-- **Minimise explanation.** One clause of justification at most — "we
+- **Minimize explanation.** One clause of justification at most — "we
   use HTTPS here because it is safer" — then a link to an explanation
   for the curious. Do not stop the action to teach.
 - **Speak as "we".** "First, let's create the project." The tutor is
