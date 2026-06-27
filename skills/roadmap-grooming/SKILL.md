@@ -3,8 +3,8 @@ name: roadmap-grooming
 description: >
   Groom and curate a *living* GIST (Goals, Ideas, Steps, Tasks) roadmap as it
   accretes work during execution — audit findings, code and design review
-  follow-ups, dogfooding fixes, and new ideas. Use this skill whenever an
-  existing roadmap is being maintained rather than authored: when refactoring or
+  follow-ups, dogfooding fixes, and new ideas. Use this skill whenever you are
+  maintaining an existing roadmap rather than authoring one: when refactoring or
   re-architecting tasks have piled up and need consolidating into proper steps;
   when a hardening or refactoring phase has inflated into many single-task
   "steps"; when new feature ideas risk being buried among refactoring work, or
@@ -111,9 +111,9 @@ steps. The method:
    follow-through.
 4. **Align by seam, not by wording.** Cluster tasks by the actual boundary,
    invariant, or module they touch — not their surface phrasing. Two cohesion
-   gates: if it is not possible to state **one hypothesis** the whole cluster
-   serves, it is two or more steps (split); if a task does not serve the seam,
-   it is misfiled (reroute — do not force-fit it).
+   gates: if you cannot state **one hypothesis** the whole cluster serves, it
+   is two or more steps (split); if a task does not serve the seam, it is
+   misfiled (reroute — do not force-fit it).
 5. **Synthesize the step.** Name the seam, then write the hypothesis: *"is
    `<seam>` now expressed once, correctly, documented, and pinned so it cannot
    re-fork?"* The cluster becomes the step's tasks. Set the consolidation
@@ -142,9 +142,8 @@ test.** Reference this standard instead of redefining it for each fragment.
 - **Findings fold into existing steps, never a new step per finding.** A process
   that files each audit or review finding as its own step is the engine of
   bucket inflation. Route findings into the relevant existing step, or a single
-  debt task, filtered by severity. If the process is under the team's control
-  — a triage step, a reviewer prompt — fix it there; prevention beats periodic
-  cleanup.
+  debt task, filtered by severity. If you control that process — a triage step,
+  a reviewer prompt — fix it there; prevention beats periodic cleanup.
 
 ## 5. Distinguish genuine debt from manufactured churn
 
