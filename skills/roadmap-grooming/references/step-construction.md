@@ -1,7 +1,7 @@
 # Constructing steps from refactoring tasks: a worked example
 
 This walks the construction method from `SKILL.md` section 3 end to end, on a
-real shape of degraded roadmap. Names are generalised; the pathology is not.
+real shape of degraded roadmap. Names are generalized; the pathology is not.
 
 ## The situation
 
@@ -11,7 +11,7 @@ to about 37 steps and roughly 100 open tasks. Reading the phase's headings
 showed the pathology at a glance:
 
 - ~14 steps beginning "Single-home X" or "Consolidate Y" — each a one- or
-  two-task DRY refactor of a specific seam.
+  two-task don't-repeat-yourself (DRY) refactor of a specific seam.
 - ~11 steps beginning "Harden Z against W" — each a one-task defensive fix.
 - 3 genuine feature steps (a configurable pack set, a new pass, a new detector),
   buried in the middle.
@@ -50,12 +50,13 @@ touches:
 
 *Five seams, not fourteen steps.*
 
-### 4. Synthesise one step per seam
+### 4. Synthesize one step per seam
 
 For each seam, write a step whose hypothesis is "is this seam expressed once,
 documented, and pinned?", and whose tasks are the cluster, each carrying the
-consolidation standard (one canonical implementation, documented, tested). The
-14 fragments become 5 coherent single-source steps.
+consolidation standard from `SKILL.md` section 3 (one canonical implementation,
+under one name, documented as the source of truth, pinned by a test). The 14
+fragments become 5 coherent single-source steps.
 
 ### 5. Consolidate the hardening and sequence it after
 

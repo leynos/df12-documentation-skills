@@ -18,10 +18,13 @@ Use the skills as a sequence rather than isolated snippets:
    before solution work when the problem space is not yet explicit.
 2. Draft or update the downstream documentation artefact in the target
    repository.
-3. Validate the edited files with the repository's documented gates.
-4. Use [`commit-message`](../skills/commit-message/SKILL.md) to write a
+3. Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to create a roadmap, or
+   [`roadmap-grooming`](../skills/roadmap-grooming/SKILL.md) to maintain a
+   living roadmap that already exists.
+4. Validate the edited files with the repository's documented gates.
+5. Use [`commit-message`](../skills/commit-message/SKILL.md) to write a
    file-backed Git commit message.
-5. Use [`pr-creation`](../skills/pr-creation/SKILL.md) to prepare the pull
+6. Use [`pr-creation`](../skills/pr-creation/SKILL.md) to prepare the pull
    request title and description from the full branch diff.
 
 At release time — a separate cadence from per-branch work — use
@@ -38,18 +41,24 @@ flowchart TD
     B -- No --> C[Run terms-of-reference-doc]
     C --> D[Draft or update downstream doc artefact]
     B -- Yes --> D
-    D --> E[Validate edited files against repo gates]
-    E --> F[Run commit-message]
-    F --> G[Run pr-creation]
-    G --> H[Pull request ready for review or draft]
+    D --> E{Roadmap exists?}
+    E -- No --> F[Run roadmap-doc]
+    E -- Yes --> G[Run roadmap-grooming]
+    F --> H[Validate edited files against repo gates]
+    G --> H
+    H --> I[Run commit-message]
+    I --> J[Run pr-creation]
+    J --> K[Pull request ready for review or draft]
 ```
 
 Screen reader caption: Documentation work starts by checking whether the
 problem space is explicit. If it is not, run `terms-of-reference-doc` before
 drafting or updating the downstream document. If it is explicit, go directly to
-the downstream document. Then validate the edited files against the repository
-gates, run `commit-message`, run `pr-creation`, and leave the pull request in
-the appropriate ready-for-review or draft state.
+the downstream document. Roadmap work then branches between `roadmap-doc` for a
+new roadmap and `roadmap-grooming` for an existing living roadmap. Then validate
+the edited files against the repository gates, run `commit-message`, run
+`pr-creation`, and leave the pull request in the appropriate ready-for-review or
+draft state.
 
 ______________________________________________________________________
 
@@ -77,6 +86,28 @@ Use the finished terms of reference as the upstream input for
 [`roadmap-doc`](../skills/roadmap-doc/SKILL.md). If it introduces domain terms
 that are not already in `docs/context.md`, list those as companion context
 additions during hand-off.
+
+______________________________________________________________________
+
+## Roadmaps
+
+Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to author a new GIST
+(Goals, Ideas, Steps, Tasks) roadmap from design documents, Requests for
+Comments (RFCs), and Architectural Decision Records (ADRs). It owns the roadmap
+grammar, formatting, dependency notation, and anti-pattern checks in
+[`conventions.md`](../skills/roadmap-doc/references/conventions.md).
+
+Use [`roadmap-grooming`](../skills/roadmap-grooming/SKILL.md) after execution
+has started and a living roadmap begins to accrete audit findings, review
+follow-ups, dogfooding fixes, refactoring fragments, hardening work, or new
+feature ideas. The skill classifies work by kind, keeps capability work out of
+refactoring and hardening phases, folds single-task findings into coherent
+steps, and separates genuine debt from manufactured audit churn.
+
+`roadmap-grooming` is a dependent workflow, not a standalone grammar. Single
+skill installs must include both `skills/roadmap-doc` and
+`skills/roadmap-grooming` so triggered agents can read the required conventions
+before maintaining a roadmap.
 
 ______________________________________________________________________
 
@@ -194,3 +225,6 @@ git diff --check
 Run broader repository gates when the project defines them. If a broader gate
 fails on pre-existing files outside the branch scope, report that clearly and
 keep the focused evidence for touched files visible.
+
+For this repository's own maintenance gates, see the
+[Developers' Guide](developers-guide.md).

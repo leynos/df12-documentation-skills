@@ -1,32 +1,42 @@
 ---
 name: roadmap-grooming
 description: >
-  Groom and curate a *living* GIST roadmap as it accretes work during execution
-  — audit findings, code and design review follow-ups, dogfooding fixes, and new
-  ideas. Use this skill whenever you are maintaining an existing roadmap rather
-  than authoring one: when refactoring or re-architecting tasks have piled up and
-  need consolidating into proper steps; when a hardening or refactoring phase has
-  inflated into many single-task "steps"; when new feature ideas risk being
-  buried among refactoring work, or refactoring work risks being dismissed as low
-  value; when deciding what is genuine debt versus self-generating audit churn;
-  or whenever a roadmap has grown and needs to be made legible again. This is the
-  maintenance counterpart to the roadmap-doc skill, which authors a roadmap from
-  design documents — read roadmap-doc for the GIST grammar, format, and
-  anti-patterns this skill assumes.
+  Groom and curate a *living* GIST (Goals, Ideas, Steps, Tasks) roadmap as it
+  accretes work during execution — audit findings, code and design review
+  follow-ups, dogfooding fixes, and new ideas. Use this skill whenever an
+  existing roadmap is being maintained rather than authored: when refactoring or
+  re-architecting tasks have piled up and need consolidating into proper steps;
+  when a hardening or refactoring phase has inflated into many single-task
+  "steps"; when new feature ideas risk being buried among refactoring work, or
+  refactoring work risks being dismissed as low value; when deciding what is
+  genuine debt versus self-generating audit churn; or whenever a roadmap has
+  grown and needs to be made legible again. This is the maintenance counterpart
+  to the roadmap-doc skill, which authors a roadmap from design documents — read
+  roadmap-doc for the GIST grammar, format, and anti-patterns this skill assumes.
 ---
 
 # Roadmap grooming skill
 
 ## Relationship to roadmap-doc
 
-The `roadmap-doc` skill *authors* a roadmap from design documents, RFCs, and
-ADRs. This skill *grooms* one that is already being executed against and
-continuously fed new work. The two share the GIST model (Goals, Ideas, Steps,
-Tasks), the formatting, and the authoring anti-patterns — all defined in
-`roadmap-doc` and its `references/conventions.md`. Do not re-derive those here:
-read them, then apply the grooming discipline below. In short, use
-`roadmap-doc` to write a roadmap and `roadmap-grooming` to keep it true and
-legible as it grows.
+The [`roadmap-doc`](../roadmap-doc/SKILL.md) skill *authors* a roadmap from
+design documents, Requests for Comments (RFCs), and Architectural Decision
+Records (ADRs). This skill *grooms* one that is already being executed against
+and continuously fed new work. The two share the GIST model, the formatting,
+and the authoring anti-patterns — all defined in `roadmap-doc` and its
+[`references/conventions.md`](../roadmap-doc/references/conventions.md). Do
+not re-derive those here: read them, then apply the grooming discipline below.
+In short, use `roadmap-doc` to write a roadmap and `roadmap-grooming` to keep
+it true and legible as it grows.
+
+## Required companion skill
+
+`roadmap-grooming` depends on `roadmap-doc`. Agents must have access to
+[`roadmap-doc/SKILL.md`](../roadmap-doc/SKILL.md) and
+[`roadmap-doc/references/conventions.md`](../roadmap-doc/references/conventions.md)
+before this skill can be applied correctly. When installing a single skill,
+install `roadmap-doc` alongside `roadmap-grooming`; otherwise the required GIST
+grammar, roadmap format, dependency notation, and anti-patterns are missing.
 
 ## Why grooming is a distinct activity
 
@@ -38,7 +48,7 @@ in two predictable, opposite ways:
 - **New ideas get lost.** A feature or capability, appended wherever there was
   room, ends up buried among refactoring work and becomes invisible.
 - **Refactoring gets dismissed.** Internal-quality work, judged by user-facing
-  value it was never meant to have, reads as "low value" and is deprioritised
+  value it was never meant to have, reads as "low value" and is deprioritized
   or cut wholesale.
 
 Both are the same root failure: **the roadmap does not distinguish *kinds* of
@@ -81,7 +91,7 @@ it was never meant to serve:
 - **Reconciliation** is valued by *truth*: a reader can trust the docs.
 
 Making the axis explicit is what stops refactoring being waved away as low
-value, and stops a clean-codebase investment being silently deprioritised.
+value, and stops a clean-codebase investment being silently deprioritized.
 
 ## 3. Construct proper steps from refactoring and re-architecting tasks
 
@@ -96,19 +106,18 @@ steps. The method:
 3. **Separate re-architecting from refactoring.** Re-architecting changes a
    boundary (ADR-worthy, larger); it *sets the target* the refactors align to,
    so it anchors the step (or earns its own) and is never buried among small
-   DRY tasks where a load-bearing structural decision goes unreviewed.
-   Refactoring *realises* that structure and becomes the follow-through.
+   don't-repeat-yourself (DRY) tasks where a load-bearing structural decision
+   goes unreviewed. Refactoring *realizes* that structure and becomes the
+   follow-through.
 4. **Align by seam, not by wording.** Cluster tasks by the actual boundary,
    invariant, or module they touch — not their surface phrasing. Two cohesion
-   gates: if you cannot state **one hypothesis** the whole cluster serves, it
-   is two or more steps (split); if a task does not serve the seam, it is
-   misfiled (reroute — do not force-fit it).
-5. **Synthesise the step.** Name the seam, then write the hypothesis: *"is
+   gates: if it is not possible to state **one hypothesis** the whole cluster
+   serves, it is two or more steps (split); if a task does not serve the seam,
+   it is misfiled (reroute — do not force-fit it).
+5. **Synthesize the step.** Name the seam, then write the hypothesis: *"is
    `<seam>` now expressed once, correctly, documented, and pinned so it cannot
    re-fork?"* The cluster becomes the step's tasks. Set the consolidation
-   standard as the definition of done for every task: **one canonical
-   implementation, under one name, documented as the source of truth, pinned by
-   a test.**
+   standard as the definition of done for every task.
 6. **Sequence.** Foundational consolidation and re-architecting first; then the
    dependents — *and the hardening, and the docs* — via `Requires`, so they
    attach to the single-sourced result rather than a copy that re-diverges.
@@ -117,6 +126,12 @@ This is harder than splitting fake steps, and its failure mode is the opposite:
 **over-consolidation** into an amorphous grab-bag. The one-hypothesis, one-seam
 gate is what keeps a constructed step cohesive. See
 `references/step-construction.md` for a worked example.
+
+### Consolidation standard
+
+Every consolidation task has the same definition of done: **one canonical
+implementation, under one name, documented as the source of truth, pinned by a
+test.** Reference this standard instead of redefining it for each fragment.
 
 ## 4. Bust buckets, and fix the generator
 
@@ -127,8 +142,9 @@ gate is what keeps a constructed step cohesive. See
 - **Findings fold into existing steps, never a new step per finding.** A process
   that files each audit or review finding as its own step is the engine of
   bucket inflation. Route findings into the relevant existing step, or a single
-  debt task, filtered by severity. If you control that process — a triage step,
-  a reviewer prompt — fix it there; prevention beats periodic cleanup.
+  debt task, filtered by severity. If the process is under the team's control
+  — a triage step, a reviewer prompt — fix it there; prevention beats periodic
+  cleanup.
 
 ## 5. Distinguish genuine debt from manufactured churn
 
@@ -163,7 +179,8 @@ matches its kind.
 ## Key constraints
 
 - This skill assumes the GIST grammar, formatting, and authoring anti-patterns
-  defined in the `roadmap-doc` skill and its `references/conventions.md`.
+  defined in the [`roadmap-doc`](../roadmap-doc/SKILL.md) skill and its
+  [`references/conventions.md`](../roadmap-doc/references/conventions.md).
   Follow them; do not restate or contradict them.
 - British English, Oxford spelling (-ize, -our, -yse); sentence-case headings;
   80-column prose wrapping.
