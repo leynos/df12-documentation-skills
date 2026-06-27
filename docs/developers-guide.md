@@ -17,19 +17,20 @@ SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
-markdownlint-cli2 README.md docs/*.md skills/<skill-name>/SKILL.md \
-  skills/<skill-name>/references/*.md
+make markdownlint
+make nixie
 git diff --check
 ```
 
 `quick_validate.py` checks skill frontmatter and required skill-file structure.
-`markdownlint-cli2` applies the repository Markdown style from
-`.markdownlint-cli2.jsonc`, including 80-column prose wrapping, ordered-list
-style, tab handling, and node/cache ignore paths. `git diff --check` catches
-trailing whitespace and other patch hygiene defects.
+`make markdownlint` applies the repository Markdown style from
+`.markdownlint-cli2.jsonc` to changed Markdown files against `origin/main`,
+including 80-column prose wrapping, ordered-list style, tab handling, and
+node/cache ignore paths. `git diff --check` catches trailing whitespace and
+other patch hygiene defects.
 
-Run the gates sequentially. The repository has no `Makefile`; direct commands
-are the documented build path.
+Run the gates sequentially. The repository `Makefile` is the documented build
+driver, so automation can invoke the same targets as local development.
 
 ______________________________________________________________________
 
@@ -40,9 +41,17 @@ The repository uses `markdownlint-cli2`, configured by
 files within the configured wrapping rules unless the content is a table or
 code block covered by the config exceptions.
 
-When adding a new skill with reference documents, include both the main
-`SKILL.md` and the `references/*.md` files in the lint invocation. This avoids
-shipping reference-only lint failures.
+When adding a new skill with reference documents, `make markdownlint` includes
+changed main `SKILL.md` and `references/*.md` files. This avoids shipping
+reference-only lint failures.
+
+______________________________________________________________________
+
+## Mermaid validation
+
+The `make nixie` target runs `nixie` against changed Markdown files to validate
+Mermaid diagrams. Keep Mermaid diagrams inside Markdown code fences so the
+validator can discover them.
 
 ______________________________________________________________________
 

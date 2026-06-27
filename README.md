@@ -138,8 +138,9 @@ SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
+make markdownlint
+make nixie
 git diff --check
-markdownlint-cli2 README.md skills/<skill-name>/SKILL.md
 ```
 
 ______________________________________________________________________
