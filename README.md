@@ -46,6 +46,19 @@ mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R skills/pr-creation "${CODEX_HOME:-$HOME/.codex}/skills/"
 ```
 
+Some skills have companion-skill dependencies. For example,
+[`roadmap-grooming`](skills/roadmap-grooming/SKILL.md) requires
+[`roadmap-doc`](skills/roadmap-doc/SKILL.md) and
+[`roadmap-doc/references/conventions.md`](skills/roadmap-doc/references/conventions.md)
+because it delegates the roadmap grammar and formatting rules to that skill.
+Install both folders for that workflow:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R skills/roadmap-doc skills/roadmap-grooming \
+  "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
 ### Basic usage
 
 Reference a skill by name in a Codex request:
@@ -81,10 +94,15 @@ ______________________________________________________________________
 - [`pr-creation`](skills/pr-creation/SKILL.md) creates draft pull requests with
   branch-wide descriptions, issue and roadmap references, execplan links, and
   reviewer entrypoints.
-- [`roadmap-doc`](skills/roadmap-doc/SKILL.md) turns design documents, RFCs and
-  ADRs into outcome-oriented roadmaps, using
+- [`roadmap-doc`](skills/roadmap-doc/SKILL.md) turns design documents,
+  Requests for Comments (RFCs) and Architectural Decision Records (ADRs) into
+  outcome-oriented roadmaps, using
   [`conventions.md`](skills/roadmap-doc/references/conventions.md) for the
   detailed format.
+- [`roadmap-grooming`](skills/roadmap-grooming/SKILL.md) maintains living GIST
+  (Goals, Ideas, Steps, Tasks) roadmaps during execution, routing new findings,
+  refactoring fragments and feature ideas into coherent phases. It requires
+  [`roadmap-doc`](skills/roadmap-doc/SKILL.md) as a companion skill.
 - [`tech-design-doc`](skills/tech-design-doc/SKILL.md) produces rigorous
   technical design documents, supported by
   [`document-anatomy.md`](skills/tech-design-doc/references/document-anatomy.md),
@@ -102,6 +120,8 @@ ______________________________________________________________________
 
 - [Users' Guide](docs/users-guide.md) — how documentation practitioners combine
   the workflow skills.
+- [Developers' Guide](docs/developers-guide.md) — validation gates and
+  repository maintenance expectations.
 
 ______________________________________________________________________
 
@@ -118,8 +138,9 @@ SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
+make markdownlint
+make nixie
 git diff --check
-markdownlint-cli2 README.md skills/<skill-name>/SKILL.md
 ```
 
 ______________________________________________________________________
