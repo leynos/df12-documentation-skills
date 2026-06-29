@@ -13,29 +13,28 @@ it.
 
 ## Front matter
 
-- **Title.** Name the journey, not a feature. "Build and deploy your
-  first API" beats "The deployment subsystem". Avoid "Learn about…".
+- **Title.** Name the journey, not a feature. "Build and deploy a first
+  API" beats "The deployment subsystem". Avoid "Learn about…".
 - **One-line destination.** A single sentence the learner reads before
-  anything else: "In this tutorial, we will build a small to-do API and
-  deploy it to a live URL. Along the way we will meet routing, a
-  database, and a deploy command." Set the picture; do not say "you will
-  learn".
-- **Time and level.** "About 30 minutes. Assumes you can use a terminal;
-  no prior knowledge of the framework is needed." Keep the assumed level
+  anything else: "This tutorial builds a small to-do API and deploys it
+  to a live URL. Along the way, the path introduces routing, a database,
+  and a deploy command." Set the picture; do not frame the destination
+  as a list of learning outcomes.
+- **Time and level.** "About 30 minutes. Assumes basic terminal use; no
+  prior knowledge of the framework is needed." Keep the assumed level
   genuinely low.
 
-## 1. What we will build (orientation)
+## 1. What the tutorial builds (orientation)
 
 A short paragraph, and ideally a picture or sample of the finished
 result, so the learner can see the destination and recognize it when
 they arrive. This is Gagné's "inform the learner of the objective" and
 it sets expectations that every later step pays off.
 
-Resist listing learning outcomes as a syllabus ("you will learn X, Y,
-Z"). Describe the *thing we will make*; the learning rides along inside
-it.
+Resist listing learning outcomes as a syllabus. Describe the *thing the
+tutorial makes*; the learning rides along inside it.
 
-## 2. Before we start (prerequisites)
+## 2. Prerequisites
 
 The minimum the learner needs in place to succeed, stated so they
 discover gaps now rather than halfway through:
@@ -71,8 +70,8 @@ Rules for steps:
 - **Around seven primary steps maximum.** Past that, split the tutorial
   or regroup. Cap substeps at about four.
 - **Always show expected output.** Paste the real prompt, log line, or
-  screenshot you captured when you walked the path. The absent tutor
-  speaks through this confirmation.
+  screenshot captured during the path walk. The absent tutor speaks
+  through this confirmation.
 - **Maintain a narrative of the expected.** "After a few seconds, the
   server prints `Listening on :8080`." "This command returns several
   hundred lines of logs — that is normal." Prepare the learner for what
@@ -80,25 +79,24 @@ Rules for steps:
 - **Point out what to notice.** "Notice the prompt now shows
   `(venv)` — that means the environment is active." Close the loop of
   learning the learner is too busy to close alone.
-- **Flag likely slips.** "If you see `command not found`, you probably
-  skipped step 2." Errors are teachable moments; pre-empt the common
-  ones.
-- **Stay concrete and on one line.** No "you could also", no alternative
-  flags, no diversions. A tutorial follows a single managed path to the
-  conclusion. Options are for how-to guides and reference.
-- **Minimize explanation.** One clause of justification at most — "we
-  use HTTPS here because it is safer" — then a link to an explanation
-  for the curious. Do not stop the action to teach.
-- **Speak as "we".** "First, let's create the project." The tutor is
-  present in the prose; the first-person plural carries that presence.
+- **Flag likely slips.** "`command not found` usually means step 2 was
+  skipped." Errors are teachable moments; pre-empt the common ones.
+- **Stay concrete and on one line.** No optional alternatives, no
+  alternative flags, no diversions. A tutorial follows a single managed
+  path to the conclusion. Options are for how-to guides and reference.
+- **Minimize explanation.** One clause of justification at most — "HTTPS
+  is used here because it is safer" — then a link to an explanation for
+  the curious. Do not stop the action to teach.
+- **Use a guided voice.** Keep the tutor present in the prose through
+  clear, concrete instructions and immediate confirmation after action.
 
-## 4. What we built (summary)
+## 4. What the tutorial built (summary)
 
 Close by describing — and mildly admiring — what the learner has
-accomplished: "You now have a working API, deployed and reachable, with
-data persisting between requests." This is Gagné's retention-and-transfer
-event. Do not merely restate the objectives verbatim; name the concrete
-result and the skills exercised.
+accomplished: "The result is a working API, deployed and reachable, with
+data persisting between requests." This is Gagné's
+retention-and-transfer event. Do not merely restate the objectives
+verbatim; name the concrete result and the skills exercised.
 
 ## 5. Where to go next
 
@@ -110,7 +108,7 @@ Outward links the body kept out of the way:
 
 Optionally invite repetition — learners reaffirm the *feeling of doing*
 by running a successful exercise again. Where the steps are reversible,
-say so, so they can.
+say so.
 
 ## Pre-publication checklist
 
@@ -118,7 +116,7 @@ say so, so they can.
 - [ ] Prerequisites are listed and genuinely minimal.
 - [ ] Every step starts with an imperative verb and does one thing.
 - [ ] Every step shows the real, captured expected output.
-- [ ] There are no options, forks, or "you could also" in the body.
+- [ ] There are no options, forks, or optional alternatives in the body.
 - [ ] Explanation is one clause plus a link, never a paragraph.
 - [ ] Likely errors are flagged with their early-warning signs.
 - [ ] Primary steps number about seven or fewer.
@@ -127,4 +125,4 @@ say so, so they can.
       automated test in CI; the *do, then confirm* pattern maps onto
       `When`/`Then` (see `testing-the-path.md`).
 - [ ] The summary names the concrete achievement; next-step links exist.
-- [ ] Prose uses "we"/"let's"; British/Oxford spelling throughout.
+- [ ] Prose uses a guided voice; British/Oxford spelling throughout.

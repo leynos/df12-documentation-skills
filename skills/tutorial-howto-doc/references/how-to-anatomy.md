@@ -12,7 +12,7 @@ go wrong.
 
 ## Front matter
 
-- **Title.** State exactly what the guide shows, framed as the *user's*
+- **Title.** State exactly what the guide shows, framed as the reader's
   goal: "How to restore a database from a backup." Not "Restoring a
   database" (might be about *whether* to), not "The `pg_restore`
   command" (that is reference). Good titles serve search engines as well
@@ -20,15 +20,15 @@ go wrong.
 
 ## 1. What this guide does (problem statement)
 
-One short paragraph naming the goal and when the reader would want it:
-"This guide shows you how to restore a PostgreSQL database from a
-`pg_dump` backup. Use it when recovering from data loss or cloning
-production data into a staging environment."
+One short paragraph naming the goal and when it applies: "This guide
+shows how to restore a PostgreSQL database from a `pg_dump` backup. Use
+it when recovering from data loss or cloning production data into a
+staging environment."
 
 Frame it from the user's project, not the machine's operations. The tool
 is an incidental bit-player; the reader's goal is the subject.
 
-## 2. Before you begin (prerequisites)
+## 2. Prerequisites
 
 What the reader needs in place. Because a how-to addresses the
 competent, this assumes familiarity and lists only the specifics:
@@ -38,9 +38,9 @@ competent, this assumes familiarity and lists only the specifics:
 - State the task depends on (a backup file exists; the target database
   is reachable).
 
-Optionally, redirect readers who are in the wrong place: "If you need to
-*create* a backup first, see [How to back up a database]." A how-to may
-assume the reader is asking the right question.
+Optionally, redirect readers who are in the wrong place: "For creating a
+backup first, see [How to back up a database]." A how-to may assume the
+reader is asking the right question.
 
 ## 3. The steps
 
@@ -60,8 +60,8 @@ N. <Imperative action, starting with a verb.>
 
 Rules for steps:
 
-- **Conditional imperatives for the forks.** "If you are restoring to a
-  fresh database, run X. If restoring over an existing one, first do Y."
+- **Conditional imperatives for the forks.** "For a restore to a fresh
+  database, run X. For a restore over an existing one, first do Y."
   The real world branches; name the branches that matter.
 - **Recommend one safest path.** Where several routes exist, do not make
   the reader choose — pick the surest one and document it. Mention
@@ -73,7 +73,7 @@ Rules for steps:
 - **Warn before hazards, not after.** Put a callout *before* any step
   that is irreversible, destructive, long-running, or surprising:
   "Warning: `--clean` drops existing objects before restoring. Confirm
-  you are pointed at the right database." A how-to cannot promise
+  the target database before continuing." A how-to cannot promise
   safety, so it must prepare for danger.
 - **One action per step; about eight to ten steps maximum.** If the task
   is larger, split it into sub-tasks with their own short step lists.

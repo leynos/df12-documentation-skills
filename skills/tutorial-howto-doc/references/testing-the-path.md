@@ -1,7 +1,7 @@
 # Testing the path
 
-A tutorial or how-to is a promise: *follow these steps and you will get
-this result.* A walk-through done once, by hand, verifies that promise
+A tutorial or how-to is a promise: *follow these steps to get this
+result.* A walk-through done once, by hand, verifies that promise
 for a single moment. The product then moves on, and the document rots —
 quietly, because prose does not fail a build. These are the most
 rot-prone pages you own (see the "living document" principle in
@@ -11,7 +11,7 @@ This file covers how to make the *walk the path* phase **durable**: how
 to encode a guide's happy path as an automated test that runs in CI, so
 the promise is re-checked on every release rather than every time a user
 complains. It does **not** teach test frameworks or the BDD process —
-defer those mechanics to your project's testing skills and conventions.
+defer those mechanics to the project's testing skills and conventions.
 The concern here is only where verification meets the *writing* process.
 
 The governing idea is **"docs as tests"** (Manny Silva): a documented
@@ -55,7 +55,7 @@ a guide's structure already maps onto a scenario.
 - **CLI / UI flows**: tool-driven approaches such as Doc Detective that
   drive the product and assert on what it returns.
 
-Best for: multi-step procedures, CLI walkthroughs, and anything where
+Best for: multi-step procedures, CLI walk-throughs, and anything where
 the order and accumulated state matter.
 
 ## The mapping: a tutorial already is Given/When/Then
@@ -68,15 +68,15 @@ skill mandates maps onto Gherkin with almost no translation:
 | --- | --- |
 | starting state / prerequisites | `Given` (shared → `Background`) |
 | a step's action ("run X") | `When` |
-| expected output ("you should see Y") | `Then` |
+| expected output ("the output shows Y") | `Then` |
 | variant inputs (OS, version, role) | `Scenario Outline` + `Examples` |
 
 The most useful consequence: the **narrative of the expected** — the
 confirmations the tutorial anatomy already requires after every step —
-*is* the `Then` oracle. The same literal you paste into the prose
-("`Listening on :8080`") becomes the string the test asserts. You are
-not writing a test in addition to the tutorial; you are giving the
-tutorial's confirmations a machine that checks them.
+*is* the `Then` oracle. The same literal pasted into the prose
+("`Listening on :8080`") becomes the string the test asserts. This is
+not a test in addition to the tutorial; it gives the tutorial's
+confirmations a machine that checks them.
 
 Likewise, the skill's existing rules already produce good steps: one
 action per step (one `When`), imperative phrasing, explicit expected
@@ -96,9 +96,9 @@ drift:
   incomplete change.
 - **Share the expected-output literals.** The string asserted in a
   `Then` step and the output shown in the prose must be the same text.
-  When you capture real output during the walk, it serves both.
+  When real output is captured during the walk, it serves both.
 - **Wire it into CI.** A test that is not run does not prevent rot.
-  Record the trigger (per release, per merge) in the handoff so the
+  Record the trigger (per release, per merge) in the handoff, so the
   retest cadence is automatic, not a manual reminder.
 
 ## Where this fits in the writing workflow
@@ -107,12 +107,12 @@ This is an extension of the skill's existing phases, not a new track:
 
 - **Phase 1 (Scope).** Decide the verification strategy up front:
   snippet-level, path-level, or both, and which ecosystem tool. This is
-  a writing decision because it sharpens how you phrase steps — atomic,
+  a writing decision because it sharpens how steps are phrased — atomic,
   imperative, each with explicit expected output — which the anatomy
   already demands.
 - **Phase 2 (Walk the path).** Capture the manual walk *as* the test.
-  The real commands you run become `When` steps; the real output you
-  record becomes `Then` assertions; the clean starting state becomes the
+  The real commands become `When` steps; the real output becomes `Then`
+  assertions; the clean starting state becomes the
   `Given`/`Background`. One disciplined walk yields both the captured
   output for the prose and the executable scenario.
 - **Phase 5 (Handoff).** Commit the feature file and step definitions
@@ -126,7 +126,7 @@ This is an extension of the skill's existing phases, not a new track:
   process — those belong to the project's dedicated testing and BDD
   skills. Name the tool, map the structure, defer the mechanics.
 - Not every guide warrants an automated test. A short conceptual
-  walkthrough with no reproducible commands may not. Use judgement; the
+  walk-through with no reproducible commands may not. Use judgement; the
   payoff scales with how often the steps run and how badly a silent
   break would hurt.
 

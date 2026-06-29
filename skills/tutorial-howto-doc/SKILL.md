@@ -71,7 +71,7 @@ Read the reference files as the workflow calls for them:
 
 2. **Guide action; do not teach theory.** Both modes are sequences of
    things to *do*. Theory belongs elsewhere. Give the minimal
-   orientation needed to act — "we use HTTPS because it is safer" — and
+   orientation needed to act — "HTTPS is used because it is safer" — and
    link to an explanation for the reader who wants the rest. Explanation
    wedged into a procedure breaks the reader's flow and their attention.
 
@@ -104,15 +104,15 @@ Read the reference files as the workflow calls for them:
    *durable* by encoding the happy path as an automated test that runs in
    CI ("docs as tests"). A guide already reads as Given/When/Then — its
    prerequisites, its actions, and its narrative of the expected — so the
-   confirmations you write double as the test's assertions. See
+   confirmations in the guide double as the test's assertions. See
    `references/testing-the-path.md`; defer the BDD mechanics to the
    project's testing skills. Re-test after every notable release; these
    are the documents that rot fastest.
 
 7. **The document is living.** A tutorial is the most revision-hungry
-   page you own because its end-to-end story cascades when the product
-   changes. Ship it complete for today, expect to revise it, and note
-   the retest cadence in the handoff.
+   page in the documentation set because its end-to-end story cascades
+   when the product changes. Ship it complete for today, expect to
+   revise it, and note the retest cadence in the handoff.
 
 ## The classification test
 
@@ -140,7 +140,7 @@ Tell-tale signs you have misclassified:
   already knows where things are → it is really a how-to.
 - A "how-to" that explains concepts, refuses to assume competence, and
   contrives a clean sandbox → it is really a tutorial, or it is two
-  documents fused together.
+  documents fused.
 
 If a single document genuinely must do both, that is two documents.
 Split them and cross-link.
@@ -163,8 +163,8 @@ Find what already exists before writing anything:
 - `docs/context.md` for the ubiquitous language, if present.
 
 Then **classify** using the test above, and state the verdict to the
-user in one line: "This is a tutorial, because the reader is learning
-X," or "This is a how-to, because the reader already knows X and needs
+user in one line: "This is a tutorial because the reader is learning X"
+or "This is a how-to because the reader already knows X and needs
 to accomplish Y." If the request bundles both, propose the split.
 
 ### Phase 1 — Scope
@@ -180,7 +180,7 @@ to accomplish Y." If the request bundles both, propose the split.
   the way (distinct from what they must be *told*). List them; the
   journey must touch each one.
 - A time budget. Fifteen to sixty minutes is the workable range; longer
-  tutorials overwhelm. If the scope will not fit, cut it, do not rush
+  tutorials overwhelm. If the scope does not fit, cut it, do not rush
   it.
 
 **For a how-to**, agree:
@@ -198,7 +198,7 @@ to accomplish Y." If the request bundles both, propose the split.
 For either mode, also decide the **verification strategy** now: are the
 steps machine-checkable, and if so at what level — the embedded code
 snippets, the end-to-end path, or both — and with which tool? This is a
-writing decision, because committing to verification sharpens how you
+writing decision because committing to verification sharpens how you
 phrase steps (atomic, imperative, each with explicit expected output).
 See `references/testing-the-path.md`.
 
@@ -265,12 +265,13 @@ shared protocol, then apply these mode-specific passes.
 
 The boundary-blur hunt is the most important edit:
 
-- **Explanation creep (tutorials and how-tos).** Find every sentence
-  that explains *why* and ask whether the reader needs it *now*. Cut it
-  to a clause and a link, or move it to an explanation document.
-- **Teaching creep (how-tos).** Find every passage that assumes no
-  competence or defines basics. Delete or link out; a how-to addresses
-  the already-competent.
+- **Explanation creeping into the text (tutorials and how-tos).** Find
+  every sentence that explains *why* and ask whether the reader needs it
+  *now*. Cut it to a clause and a link, or move it to an explanation
+  document.
+- **Teaching creeping into the text (how-tos).** Find every passage that
+  assumes no competence or defines basics. Delete or link out; a how-to
+  addresses the already-competent.
 - **Option sprawl (tutorials).** Find every "you can also", "or", or
   alternative command. Remove it; a tutorial follows one line.
 - **Machine-shaped goals (how-tos).** Find titles and openings framed
@@ -411,7 +412,7 @@ step, clarity wins.
 ## Credits and prior art
 
 This skill synthesizes, and gratefully credits, the following. None is
-reproduced; each is cited so a reader can go to the source.
+reproduced; each is cited, so a reader can go to the source.
 
 - **Diátaxis** — Daniele Procida. The four-kinds map and the
   study/work compass that underpin the classification test.

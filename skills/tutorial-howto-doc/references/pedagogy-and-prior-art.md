@@ -7,8 +7,8 @@ instructional design. Read this once to understand *why* the workflow
 insists on what it insists on, then consult it when a rule feels
 inconvenient and you are tempted to break it.
 
-Everything here is a synthesis in our own words. Sources are cited so
-you can read the originals; nothing below is a substitute for them.
+Everything here is a synthesis in our own words. Sources are cited, so
+the originals can be consulted; nothing below is a substitute for them.
 
 ## The organizing distinction: study versus work
 
@@ -35,7 +35,7 @@ encounter. A qualified surgeon following a procedure manual during an
 operation is at work: the result is everything, competence is assumed,
 the real world supplies complications, and responsibility sits with the
 practitioner. A document that confused the two would, in that domain, be
-lethal. In software it is merely expensive — but expensive every single
+lethal. In software, it is merely expensive — but expensive every single
 time.
 
 This study/work distinction, and the four-quadrant map that places
@@ -60,7 +60,7 @@ Procida: "What nobody tells you about documentation" (PyCon Australia
 
 ## Carroll's minimalism and the paradox of sense-making
 
-In the 1980s **John M. Carroll** and colleagues studied people learning
+In the 1980s, **John M. Carroll** and colleagues studied people learning
 to use computer systems and found something counter-intuitive: the less
 people knew, the *less* they used the manual. The classical model —
 novices read the docs, experts improvise — was backwards in practice.
@@ -119,10 +119,10 @@ conditions for learning. They map cleanly onto a good tutorial and are
 the skeleton behind the tutorial anatomy:
 
 1. **Gain attention** — open with something that engages, not boilerplate.
-2. **Inform the learner of the objective** — say what we will build, so
-   they can picture the destination.
+2. **Inform the learner of the objective** — say what the tutorial will
+   build, so they can picture the destination.
 3. **Stimulate recall of prior learning** — connect to what the reader
-   already knows; this is also where you set the (low) assumed starting
+   already knows; this is also where the (low) assumed starting
    point.
 4. **Present the content** — the steps, in a meaningful order.
 5. **Provide learning guidance** — worked examples, the narrative of the
@@ -130,7 +130,7 @@ the skeleton behind the tutorial anatomy:
    removed as competence grows.
 6. **Elicit performance (practice)** — the reader *does* each step; this
    is the heart of a tutorial, not an afterthought.
-7. **Provide feedback** — show the expected output so the reader can
+7. **Provide feedback** — show the expected output, so the reader can
    confirm they are on track. The absent tutor speaks through this.
 8. **Assess performance** — the reader sees the working artefact; the
    result is its own assessment.
@@ -153,7 +153,7 @@ memory is severely limited and that learning fails when it is
 overloaded. Load comes in kinds worth separating:
 
 - **Intrinsic load** — the inherent difficulty of the material. Manage
-  it by breaking a complex task into smaller steps and sequencing them
+  it by breaking a complex task into smaller steps and sequencing them,
   so each builds on the last.
 - **Extraneous load** — load imposed by *how* the material is presented,
   not by the material itself. This is wasted effort, and it is what
@@ -172,8 +172,8 @@ Two consequences this skill leans on heavily:
   Provide support that lets the learner succeed at something just beyond
   their independent reach, then remove it as they gain competence. A
   tutorial is scaffolding made of prose: heavy support early, the
-  explicit "where to type this" and "what you'll see", tapering as the
-  learner finds their feet.
+  explicit "where to type this" and "what the result looks like",
+  tapering as the learner finds their feet.
 
 A practical limit falls out of all this: keep a procedure to roughly
 seven primary steps, and one action per step. When a sequence runs
@@ -205,7 +205,7 @@ templates).
 The four traditions agree more than they differ, and the agreement is
 what this skill encodes:
 
-- **Doing beats telling.** Diátaxis ("ruthlessly minimise explanation"),
+- **Doing beats telling.** Diátaxis ("ruthlessly minimize explanation"),
   Carroll (action-orientation), Gagné (elicit performance), and CLT (the
   worked-example effect) all say the reader learns and accomplishes by
   acting, not by reading theory.
