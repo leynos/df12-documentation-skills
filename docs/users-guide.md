@@ -89,7 +89,6 @@ additions during hand-off.
 
 ______________________________________________________________________
 
-
 ## Tutorials and how-to guides
 
 Use [`tutorial-howto-doc`](../skills/tutorial-howto-doc/SKILL.md) when the
