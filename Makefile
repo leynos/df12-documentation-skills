@@ -1,4 +1,5 @@
-SKILL_CREATOR ?= $(HOME)/.codex/skills/.system/skill-creator
+CODEX_HOME ?= $(HOME)/.codex
+SKILL_CREATOR ?= $(CODEX_HOME)/skills/.system/skill-creator
 DIFF_BASE ?= origin/main
 CHANGED_MARKDOWN := $(sort $(shell \
 	{ git diff --name-only --diff-filter=ACMRT "$(DIFF_BASE)"...HEAD -- '*.md'; \
