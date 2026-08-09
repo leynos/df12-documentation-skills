@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from hypothesis import given, settings
@@ -16,8 +17,12 @@ from hypothesis import strategies as st
 from pytest_bdd import given as bdd_given
 from pytest_bdd import parsers, scenarios, then, when
 
+if TYPE_CHECKING:
+    from cmd_mox import CmdMox
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 FEATURES_DIRECTORY = "features/temporary_file_cleanup.feature"
+pytest_plugins = ("cmd_mox.pytest_plugin",)
 
 
 @dc.dataclass(frozen=True)
@@ -70,7 +75,6 @@ WORKFLOWS = (
 WORKFLOWS_BY_NAME = {workflow.name: workflow for workflow in WORKFLOWS}
 BOUNDED_CASE_NAMES = (
     "normal",
-    "empty",
     "dot",
     "parent",
     "absolute",
@@ -101,53 +105,14 @@ def extract_cleanup_function(workflow: CleanupWorkflow) -> str:
     return match.group()
 
 
-def create_guarded_commands(root: Path) -> Path:
-    """Create fixture-only shims that reject paths outside ``root``.
-
-    They keep malformed values, especially the empty string, from host paths.
-    """
-    command_directory = root / "guarded-bin"
-    command_directory.mkdir()
-    command_script = """#!/bin/sh
-set -eu
-
-operand=${1-}
-if test -z "$operand"; then
-  exit 64
-fi
-parent=$(dirname "$operand")
-base=$(basename "$operand")
-absolute=$(CDPATH= cd -P -- "$parent" 2>/dev/null && pwd -P)/$base
-case "$absolute" in
-  "$TEST_ROOT" | "$TEST_ROOT"/*) ;;
-  *) exit 64 ;;
-esac
-PATH=$SAFE_PATH command COMMAND "$operand"
-"""
-    for command_name in ("unlink", "rmdir"):
-        command_path = command_directory / command_name
-        command_path.write_text(
-            command_script.replace("COMMAND", command_name), encoding="utf-8"
-        )
-        command_path.chmod(0o755)
-    return command_directory
-
-
 def run_cleanup(
     workflow: CleanupWorkflow,
-    root: Path,
     directory_value: str,
     invocation_directory: Path,
 ) -> subprocess.CompletedProcess[str]:
     """Execute the extracted shell cleanup function within one safe fixture."""
-    command_directory = create_guarded_commands(root)
     environment = os.environ.copy()
-    environment.update({
-        "CLEANUP_DIRECTORY": directory_value,
-        "PATH": f"{command_directory}{os.pathsep}{environment['PATH']}",
-        "SAFE_PATH": environment["PATH"],
-        "TEST_ROOT": str(root),
-    })
+    environment["CLEANUP_DIRECTORY"] = directory_value
     script = "\n".join((
         "set -eu",
         extract_cleanup_function(workflow),
@@ -185,14 +150,6 @@ def bounded_case_paths(case_name: str, work_directory: Path) -> BoundedCase:
             invocation_directory=work_directory,
             target_directory=target_directory,
         )
-    if case_name == "empty":
-        return BoundedCase(
-            name=case_name,
-            directory_value="",
-            invocation_directory=work_directory,
-            target_directory=None,
-        )
-
     target_directory = {
         "absolute": work_directory / "absolute-target",
         "dot": work_directory / "dot-target",
@@ -297,7 +254,6 @@ def when_documented_cleanup_runs(cleanup_scenario: CleanupScenario) -> None:
     assert cleanup_scenario.temporary_directory is not None
     cleanup_scenario.result = run_cleanup(
         cleanup_scenario.workflow,
-        cleanup_scenario.root,
         str(cleanup_scenario.temporary_directory),
         cleanup_scenario.root,
     )
@@ -345,7 +301,6 @@ def test_cleanup_scope_for_bounded_directory_values(
 
     result = run_cleanup(
         workflow,
-        tmp_path,
         case.directory_value,
         case.invocation_directory,
     )
@@ -354,6 +309,33 @@ def test_cleanup_scope_for_bounded_directory_values(
     assert_scope_is_preserved(tmp_path, case)
     if case.target_directory is not None:
         assert not (case.target_directory / workflow.artefact_name).exists()
+
+
+@pytest.mark.cmd_mox(auto_lifecycle=False)
+@pytest.mark.parametrize("workflow", WORKFLOWS, ids=lambda workflow: workflow.name)
+def test_cleanup_scope_for_empty_directory_value(
+    tmp_path: Path, workflow: CleanupWorkflow, cmd_mox: CmdMox
+) -> None:
+    """Mock the unsafe empty value without allowing host command execution."""
+    (tmp_path / "outer.sentinel").write_text("outer", encoding="utf-8")
+    case_root = tmp_path / "empty"
+    sibling_directory = case_root / "sibling"
+    case_root.mkdir()
+    sibling_directory.mkdir()
+    (case_root / "parent.sentinel").write_text("parent", encoding="utf-8")
+    (sibling_directory / "sibling.sentinel").write_text("sibling", encoding="utf-8")
+    cmd_mox.stub("unlink").returns(exit_code=64)
+    cmd_mox.mock("rmdir").with_args("").returns(exit_code=64)
+    cmd_mox.replay()
+
+    result = run_cleanup(workflow, "", tmp_path)
+
+    cmd_mox.verify()
+    assert result.returncode == 64
+    assert (tmp_path / "outer.sentinel").is_file()
+    assert (case_root / "parent.sentinel").is_file()
+    assert (sibling_directory / "sibling.sentinel").is_file()
+    assert sibling_directory.is_dir()
 
 
 @given(
@@ -387,7 +369,6 @@ def test_cleanup_scope_for_generated_directory_names(
 
         result = run_cleanup(
             workflow,
-            root,
             case.directory_value,
             case.invocation_directory,
         )

@@ -7,6 +7,7 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+    "cmd-mox",
     "hypothesis>=6",
     "interrogate",
     "pytest",
@@ -74,6 +75,7 @@ max-bool-expr = 2
 max-locals = 10
 
 [tool.pytest.ini_options]
+markers = ["cmd_mox(auto_lifecycle: bool = True): control cmd-mox lifecycle"]
 testpaths = ["tests"]
 timeout = 30
 
