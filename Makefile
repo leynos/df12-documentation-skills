@@ -9,6 +9,8 @@ CHANGED_SKILLS := $(sort $(shell \
 	  git diff --name-only --diff-filter=ACMRT -- 'skills/*'; } \
 	| awk -F/ 'NF >= 3 { print $$1 "/" $$2 }' | sort -u))
 
+PYTHON_TESTS := tests
+
 .PHONY: markdownlint nixie check-fmt lint typecheck test
 
 markdownlint:
@@ -27,9 +29,12 @@ nixie:
 
 check-fmt:
 	git diff --check
+	uv run --group dev ruff format --check $(PYTHON_TESTS)
 	$(MAKE) markdownlint
 
 lint: nixie
+	uv run --group dev ruff check $(PYTHON_TESTS)
+	uv run --group dev interrogate --fail-under 100 $(PYTHON_TESTS)
 
 typecheck:
 	@if [ -z "$(CHANGED_SKILLS)" ]; then \
@@ -39,6 +44,7 @@ typecheck:
 		uv run --with pyyaml python \
 			"$(SKILL_CREATOR)/scripts/quick_validate.py" "$$skill"; \
 	done
+	uv run --group dev ty check $(PYTHON_TESTS)
 
 test: typecheck
-	sh tests/test_temporary_file_cleanup.sh
+	uv run --group dev pytest -v $(PYTHON_TESTS)
