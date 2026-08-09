@@ -41,3 +41,4 @@ typecheck:
 	done
 
 test: typecheck
+	sh tests/test_temporary_file_cleanup.sh
