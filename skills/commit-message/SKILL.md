@@ -33,7 +33,8 @@ ENDOFMSG
 git commit -F "$COMMIT_MSG_DIR/COMMIT_MSG.md"
 
 # 4. Clean up
-rm -rf "$COMMIT_MSG_DIR"
+unlink -- "$COMMIT_MSG_DIR/COMMIT_MSG.md"
+rmdir -- "$COMMIT_MSG_DIR"
 ```
 
 ## Message Format

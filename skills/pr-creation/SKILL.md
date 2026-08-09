@@ -167,7 +167,8 @@ operation.
 ```bash
 PR_BODY_DIR=$(mktemp -d)
 cleanup_pr_body() {
-  rm -rf "$PR_BODY_DIR"
+  unlink -- "$PR_BODY_DIR/body.md"
+  rmdir -- "$PR_BODY_DIR"
 }
 trap cleanup_pr_body EXIT
 
