@@ -199,10 +199,10 @@ into the pull request description.
 
 ## File links
 
-I must use GFM-style Markdown file links, not bare paths, for every file mentioned in
-the pull request description. I must point each file link at the relevant lines with
-a GFM line anchor, and use a branch ref so the link remains available after the
-pull request merges.
+I must use GFM-style Markdown file links, not bare paths, for every file
+mentioned in the pull request description. I must point each file link at the
+relevant lines with a GFM line anchor, and I must use a branch ref so the link
+remains available after the pull request merges.
 
 I must not use a commit SHA for a file link merely because the commit is already
 pushed. I should link to a specific commit SHA only when the description references
@@ -227,6 +227,6 @@ Before creating the draft pull request, verify that:
 - the walkthrough gives reviewers purpose-first entrypoints;
 - validation commands and results are recorded as code blocks or log links,
   including skill validation, lint or lint-staged output, and diff checks;
-- every file reference is a GFM Markdown link to a branch ref with a line
-  anchor, except for a specific-commit issue reference; and
+- I must ensure every file reference is a GFM Markdown link to a branch ref
+  with a line anchor, except for a specific-commit issue reference; and
 - the prose uses third-person en-GB Oxford English.
