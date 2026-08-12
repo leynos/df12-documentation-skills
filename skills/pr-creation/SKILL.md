@@ -199,14 +199,14 @@ into the pull request description.
 
 ## File links
 
-Use GFM-style Markdown file links, not bare paths, for every file mentioned in
-the pull request description. Point each file link at the relevant lines with
+I must use GFM-style Markdown file links, not bare paths, for every file mentioned in
+the pull request description. I must point each file link at the relevant lines with
 a GFM line anchor, and use a branch ref so the link remains available after the
 pull request merges.
 
-Do not use a commit SHA for a file link merely because the commit is already
-pushed. Link to a specific commit SHA only when the description references an
-issue in that exact commit.
+I must not use a commit SHA for a file link merely because the commit is already
+pushed. I should link to a specific commit SHA only when the description references
+an issue in that exact commit.
 
 ```markdown
 [docs/execplans/example.md](https://github.com/OWNER/REPO/blob/BRANCH/docs/execplans/example.md#L12)
