@@ -23,6 +23,14 @@ git status --short         # overview
 
 # 2. Write the message
 COMMIT_MSG_DIR=$(mktemp -d)
+cleanup_commit_message() {
+  if [ -e "$COMMIT_MSG_DIR/COMMIT_MSG.md" ] || [ -L "$COMMIT_MSG_DIR/COMMIT_MSG.md" ]; then
+    unlink "$COMMIT_MSG_DIR/COMMIT_MSG.md"
+  fi
+  rmdir "$COMMIT_MSG_DIR"
+}
+trap cleanup_commit_message EXIT
+
 cat > "$COMMIT_MSG_DIR/COMMIT_MSG.md" << 'ENDOFMSG'
 <summary line>
 
@@ -33,7 +41,8 @@ ENDOFMSG
 git commit -F "$COMMIT_MSG_DIR/COMMIT_MSG.md"
 
 # 4. Clean up
-rm -rf "$COMMIT_MSG_DIR"
+trap - EXIT
+cleanup_commit_message
 ```
 
 ## Message Format

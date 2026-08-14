@@ -1,0 +1,83 @@
+[project]
+name = "df12-documentation-skills"
+version = "0.1.0"
+description = "Canonical documentation skills and their test contracts"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "cmd-mox",
+    "hypothesis>=6",
+    "interrogate",
+    "pytest",
+    "pytest-bdd",
+    "pytest-timeout",
+    "ruff",
+    "ty==0.0.56",
+]
+
+[tool.ruff]
+line-length = 88
+preview = true
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "ANN",
+    "B",
+    "BLE",
+    "C4",
+    "C90",
+    "D",
+    "E",
+    "F",
+    "FA",
+    "FBT",
+    "FURB",
+    "I",
+    "ICN",
+    "ISC",
+    "LOG",
+    "N",
+    "PERF",
+    "PLR",
+    "PT",
+    "PTH",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "TC",
+    "TD",
+    "TID",
+    "TRY",
+    "UP",
+    "W",
+]
+extend-ignore = ["D203", "D213"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.per-file-ignores]
+"tests/test_*.py" = ["PLR0913", "PLR2004", "PLR6301", "S101", "S404", "S603"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.pylint]
+max-args = 4
+max-bool-expr = 2
+max-locals = 10
+
+[tool.pytest.ini_options]
+markers = ["cmd_mox(auto_lifecycle: bool = True): control cmd-mox lifecycle"]
+testpaths = ["tests"]
+timeout = 30
+
+[tool.uv]
+package = false

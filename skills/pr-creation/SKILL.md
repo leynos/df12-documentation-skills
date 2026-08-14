@@ -167,7 +167,13 @@ operation.
 ```bash
 PR_BODY_DIR=$(mktemp -d)
 cleanup_pr_body() {
-  rm -rf "$PR_BODY_DIR"
+  if [ -z "$PR_BODY_DIR" ]; then
+    return 64
+  fi
+  if [ -e "$PR_BODY_DIR/body.md" ] || [ -L "$PR_BODY_DIR/body.md" ]; then
+    unlink "$PR_BODY_DIR/body.md"
+  fi
+  rmdir "$PR_BODY_DIR"
 }
 trap cleanup_pr_body EXIT
 
@@ -196,26 +202,17 @@ into the pull request description.
 
 ## File links
 
-Use Markdown file links, not bare paths, for every file mentioned in the pull
-request description.
+I must use GFM-style Markdown file links, not bare paths, for every file
+mentioned in the pull request description. I must point each file link at the
+relevant lines with a GFM line anchor, and I must use a branch ref so the link
+remains available after the pull request merges.
 
-Prefer commit-specific links when the commit is already pushed and stable:
-
-```markdown
-[docs/execplans/example.md](https://github.com/OWNER/REPO/blob/COMMIT/docs/execplans/example.md)
-```
-
-Use branch-ref links when the commit may still change before review:
+I must not use a commit SHA for a file link merely because the commit is already
+pushed. I should link to a specific commit SHA only when the description references
+an issue in that exact commit.
 
 ```markdown
-[docs/execplans/example.md](https://github.com/OWNER/REPO/blob/BRANCH/docs/execplans/example.md)
-```
-
-Add line anchors when they help reviewers land directly on the relevant
-context:
-
-```markdown
-[docs/execplans/example.md](https://github.com/OWNER/REPO/blob/COMMIT/docs/execplans/example.md#L12)
+[docs/execplans/example.md](https://github.com/OWNER/REPO/blob/BRANCH/docs/execplans/example.md#L12)
 ```
 
 ## Final check
@@ -233,5 +230,6 @@ Before creating the draft pull request, verify that:
 - the walkthrough gives reviewers purpose-first entrypoints;
 - validation commands and results are recorded as code blocks or log links,
   including skill validation, lint or lint-staged output, and diff checks;
-- every file reference is a Markdown link to a commit or branch ref; and
+- I must ensure every file reference is a GFM Markdown link to a branch ref
+  with a line anchor, except for a specific-commit issue reference; and
 - the prose uses third-person en-GB Oxford English.
