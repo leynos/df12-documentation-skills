@@ -167,6 +167,9 @@ operation.
 ```bash
 PR_BODY_DIR=$(mktemp -d)
 cleanup_pr_body() {
+  if [ -z "$PR_BODY_DIR" ]; then
+    return 64
+  fi
   if [ -e "$PR_BODY_DIR/body.md" ] || [ -L "$PR_BODY_DIR/body.md" ]; then
     unlink "$PR_BODY_DIR/body.md"
   fi

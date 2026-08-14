@@ -338,14 +338,18 @@ def test_cleanup_scope_for_empty_directory_value(
     sibling_directory.mkdir()
     (case_root / "parent.sentinel").write_text("parent", encoding="utf-8")
     (sibling_directory / "sibling.sentinel").write_text("sibling", encoding="utf-8")
-    cmd_mox.stub("unlink").returns(exit_code=64)
-    cmd_mox.mock("rmdir").with_args("").returns(exit_code=64)
+    if workflow.name == "pr":
+        cmd_mox.mock("unlink").times(0)
+        cmd_mox.mock("rmdir").times(0)
+    else:
+        cmd_mox.stub("unlink").returns(exit_code=64)
+        cmd_mox.mock("rmdir").with_args("").returns(exit_code=64)
     cmd_mox.replay()
 
     result = _run_cleanup(workflow, "", tmp_path)
 
     cmd_mox.verify()
-    assert result.returncode == 64, "mocked empty-value cleanup must return status 64"
+    assert result.returncode == 64, "empty-value cleanup must return status 64"
     assert (tmp_path / "outer.sentinel").is_file(), "outer sentinel must remain"
     assert (case_root / "parent.sentinel").is_file(), "parent sentinel must remain"
     assert (sibling_directory / "sibling.sentinel").is_file(), (
