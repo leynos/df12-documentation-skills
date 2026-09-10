@@ -89,7 +89,7 @@ ______________________________________________________________________
   [`logisphere-expert-profiles.md`](skills/df12-copy/references/logisphere-expert-profiles.md).
 - [`df12-readme`](skills/df12-readme/SKILL.md) creates README files in the df12
   house style.
-- [`en-gb-oxendict-style`](skills/en-gb-oxendict/SKILL.md) enforces British
+- [`en-gb-oxendict-style`](skills/en-gb-oxendict-style/SKILL.md) enforces British
   English with Oxford spelling conventions.
 - [`pr-creation`](skills/pr-creation/SKILL.md) creates draft pull requests with
   branch-wide descriptions, issue and roadmap references, execplan links, and
@@ -148,10 +148,17 @@ SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
+make skill-manifest-check
 make markdownlint
 make nixie
 git diff --check
 ```
+
+Each skill directory carries a `SKILL.md` whose YAML frontmatter is an Agent
+Skills manifest, and the manifest `name` is the discovery name. The
+`make skill-manifest-check` target validates every shipped manifest and runs as
+part of `make lint`; the [Developers' Guide](docs/developers-guide.md) covers
+the targets in detail.
 
 ______________________________________________________________________
 

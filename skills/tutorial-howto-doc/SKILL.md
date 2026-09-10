@@ -396,7 +396,7 @@ Read them for the audience definition and the domain vocabulary, but do
 not let solution-space or problem-space framing leak into a practical
 guide.
 
-### Relationship to `en-gb-oxendict`
+### Relationship to `en-gb-oxendict-style`
 
 Apply the British/Oxford spelling rules throughout. Load that skill if
 the locale conventions are in question.

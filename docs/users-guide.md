@@ -241,6 +241,22 @@ Prefer commit-specific links after the branch has been pushed.
 
 ______________________________________________________________________
 
+## Skill manifests
+
+Each skill is a directory containing a `SKILL.md` whose YAML frontmatter is an
+Agent Skills manifest. The manifest `name` is the discovery name that a strict
+loader uses; a manifest without it is not discoverable, and a directory whose
+name differs from the manifest `name` fails validation. Every shipped skill
+directory matches its manifest `name`, so a skill can be referred to by the same
+identifier on disk and at the point of discovery.
+
+`make lint` validates every shipped manifest, so a malformed or non-conformant
+manifest cannot be shipped. See the
+[Developers' Guide](developers-guide.md#skill-manifest-validation) for the
+targets and the dependency declarations behind them.
+
+______________________________________________________________________
+
 ## Validation evidence
 
 Record validation commands in the pull request description after the review
@@ -251,6 +267,7 @@ SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
+make skill-manifest-check
 markdownlint-cli2 README.md skills/<skill-name>/SKILL.md
 git diff --check
 ```
