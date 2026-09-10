@@ -264,6 +264,8 @@ walkthrough. For skill documentation changes, the usual focused checks are:
 
 ```bash
 SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
+[ -d "$SKILL_CREATOR" ] ||
+  SKILL_CREATOR="$HOME/.agents/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>

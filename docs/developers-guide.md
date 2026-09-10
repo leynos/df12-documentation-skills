@@ -14,6 +14,8 @@ Run focused gates for every skill documentation change before committing:
 
 ```bash
 SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
+[ -d "$SKILL_CREATOR" ] ||
+  SKILL_CREATOR="$HOME/.agents/skills/.system/skill-creator"
 uv run --with pyyaml python \
   "$SKILL_CREATOR/scripts/quick_validate.py" \
   skills/<skill-name>
@@ -24,6 +26,10 @@ git diff --check
 ```
 
 `quick_validate.py` checks skill frontmatter and required skill-file structure.
+`make typecheck` runs it for each changed skill, searching
+`$CODEX_HOME/skills/.system/skill-creator` and
+`~/.agents/skills/.system/skill-creator`, and skipping the check with a warning
+when neither candidate exists.
 `make skill-manifest-check` enforces the Agent Skills manifest schema over every
 shipped skill; see [Skill manifest validation](#skill-manifest-validation).
 `make markdownlint` applies the repository Markdown style from
@@ -65,7 +71,9 @@ wiring is covered rather than assumed.
 
 `quick_validate.py` and the manifest targets check different contracts: the
 skill-creator script checks the structure a Codex install expects, while
-`skills-ref` checks the Agent Skills schema. Both run for a skill change.
+`skills-ref` checks the Agent Skills schema. Both run for a skill change; the
+`skill-creator-validate` target carries the `quick_validate.py` loop, and
+`typecheck` depends on it.
 
 ### Skill manifest tooling dependencies
 

@@ -12,9 +12,13 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SHIPPED_MANIFESTS = sorted((REPOSITORY_ROOT / "skills").glob("*/SKILL.md"))
 
 
-def _run_make(target: str, *skill_dirs: Path) -> subprocess.CompletedProcess[str]:
+def _run_make(
+    target: str,
+    *skill_dirs: Path,
+    variables: tuple[str, ...] = (),
+) -> subprocess.CompletedProcess[str]:
     """Run a Makefile manifest target over shipped skills or given fixtures."""
-    arguments = ["make", target]
+    arguments = ["make", target, *variables]
     if skill_dirs:
         directories = " ".join(f"{directory}/" for directory in skill_dirs)
         arguments.append(f"SKILL_DIRS={directories}")
@@ -172,3 +176,22 @@ def test_frontmatter_lint_reports_an_unreadable_manifest(tmp_path: Path) -> None
     result = _run_make("skill-frontmatter-lint", absent, valid)
 
     assert result.returncode != 0, result.stdout + result.stderr
+
+
+def test_typecheck_skips_an_absent_skill_creator(tmp_path: Path) -> None:
+    """Skip the skill-creator check rather than failing without the tool.
+
+    ``quick_validate.py`` ships with the Codex skill-creator, which is not
+    installed on every host and moved between Codex home layouts. Failing the
+    ``typecheck`` gate there would block every commit for a reason unrelated
+    to the change under test, so the target warns and continues.
+    """
+    absent = tmp_path / "absent-skill-creator"
+
+    result = _run_make(
+        "skill-creator-validate",
+        variables=(f"SKILL_CREATOR={absent}",),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "skipping quick_validate.py" in result.stdout

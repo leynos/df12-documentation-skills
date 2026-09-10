@@ -2,7 +2,11 @@ SHELL := /usr/bin/env
 .SHELLFLAGS := bash -c
 
 CODEX_HOME ?= $(HOME)/.codex
-SKILL_CREATOR ?= $(CODEX_HOME)/skills/.system/skill-creator
+SKILL_CREATOR_CANDIDATES := \
+    $(CODEX_HOME)/skills/.system/skill-creator \
+    $(HOME)/.agents/skills/.system/skill-creator
+SKILL_CREATOR ?= $(firstword $(wildcard $(SKILL_CREATOR_CANDIDATES)))
+QUICK_VALIDATE := $(SKILL_CREATOR)/scripts/quick_validate.py
 DIFF_BASE ?= origin/main
 CHANGED_MARKDOWN := $(sort $(shell \
 	{ git diff --name-only --diff-filter=ACMRT "$(DIFF_BASE)"...HEAD -- '*.md'; \
@@ -19,7 +23,7 @@ SKILL_YAMLLINT_CONFIG := {extends: default, rules: {line-length: disable}}
 
 PYTHON_TESTS := tests
 
-.PHONY: markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check typecheck test
+.PHONY: markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test
 
 markdownlint:
 	@if [ -n "$(CHANGED_MARKDOWN)" ]; then \
@@ -59,15 +63,25 @@ skill-manifest-validate:
 
 skill-manifest-check: skill-frontmatter-lint skill-manifest-validate
 
-typecheck:
-	@if [ -z "$(CHANGED_SKILLS)" ]; then \
-		echo "No changed skills to validate."; \
-	fi
-	@for skill in $(CHANGED_SKILLS); do \
-		uv run --with pyyaml python \
-			"$(SKILL_CREATOR)/scripts/quick_validate.py" "$$skill"; \
-	done
+typecheck: skill-creator-validate
 	uv run --group dev ty check $(PYTHON_TESTS)
+
+skill-creator-validate:
+	@set -eu; \
+	if [ ! -f "$(QUICK_VALIDATE)" ]; then \
+		echo "WARNING: skill-creator not found; skipping quick_validate.py."; \
+		echo "Searched: $(SKILL_CREATOR_CANDIDATES)"; \
+		echo "Set SKILL_CREATOR=<skill-creator directory> to run it."; \
+		exit 0; \
+	fi; \
+	if [ -z "$(CHANGED_SKILLS)" ]; then \
+		echo "No changed skills to validate."; \
+		exit 0; \
+	fi; \
+	for skill in $(CHANGED_SKILLS); do \
+		echo "quick_validate $$skill"; \
+		uv run --with pyyaml python "$(QUICK_VALIDATE)" "$$skill"; \
+	done
 
 test: typecheck
 	uv run --group dev pytest -v $(PYTHON_TESTS)

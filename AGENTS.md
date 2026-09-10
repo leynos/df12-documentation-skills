@@ -18,6 +18,10 @@ make typecheck
 make test
 ```
 
+`make typecheck` runs the Codex skill-creator `quick_validate.py` over changed
+skills when the tool is installed, and prints a warning and skips that check
+when it is not; a missing skill-creator is not a reason to stop.
+
 ## Changes under `skills/`
 
 Every skill is a directory containing a `SKILL.md` whose YAML frontmatter is an
