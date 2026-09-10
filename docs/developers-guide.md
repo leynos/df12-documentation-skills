@@ -16,9 +16,13 @@ Run focused gates for every skill documentation change before committing:
 SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 [ -d "$SKILL_CREATOR" ] ||
   SKILL_CREATOR="$HOME/.agents/skills/.system/skill-creator"
-uv run --with pyyaml python \
-  "$SKILL_CREATOR/scripts/quick_validate.py" \
-  skills/<skill-name>
+if [ -f "$SKILL_CREATOR/scripts/quick_validate.py" ]; then
+  uv run --with pyyaml python \
+    "$SKILL_CREATOR/scripts/quick_validate.py" \
+    skills/<skill-name>
+else
+  echo "WARNING: skill-creator not found; skipping quick_validate.py."
+fi
 make skill-manifest-check
 make markdownlint
 make nixie
@@ -29,7 +33,9 @@ git diff --check
 `make typecheck` runs it for each changed skill, searching
 `$CODEX_HOME/skills/.system/skill-creator` and
 `~/.agents/skills/.system/skill-creator`, and skipping the check with a warning
-when neither candidate exists.
+when neither candidate exists. The manual invocation above applies the same
+guard, so a host without the skill-creator skips the check rather than
+failing.
 `make skill-manifest-check` enforces the Agent Skills manifest schema over every
 shipped skill; see [Skill manifest validation](#skill-manifest-validation).
 `make markdownlint` applies the repository Markdown style from

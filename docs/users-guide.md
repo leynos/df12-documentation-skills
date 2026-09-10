@@ -266,9 +266,13 @@ walkthrough. For skill documentation changes, the usual focused checks are:
 SKILL_CREATOR="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
 [ -d "$SKILL_CREATOR" ] ||
   SKILL_CREATOR="$HOME/.agents/skills/.system/skill-creator"
-uv run --with pyyaml python \
-  "$SKILL_CREATOR/scripts/quick_validate.py" \
-  skills/<skill-name>
+if [ -f "$SKILL_CREATOR/scripts/quick_validate.py" ]; then
+  uv run --with pyyaml python \
+    "$SKILL_CREATOR/scripts/quick_validate.py" \
+    skills/<skill-name>
+else
+  echo "WARNING: skill-creator not found; skipping quick_validate.py."
+fi
 make skill-manifest-check
 markdownlint-cli2 README.md skills/<skill-name>/SKILL.md
 git diff --check

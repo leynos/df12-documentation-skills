@@ -55,6 +55,19 @@ def _write_manifest(skill_dir: Path, body: str) -> Path:
     return skill_dir
 
 
+def _install_skill_creator(root: Path, log: Path) -> None:
+    """Install a skill-creator fixture that records the skills it validates."""
+    scripts = root / "scripts"
+    scripts.mkdir(parents=True)
+    (scripts / "quick_validate.py").write_text(
+        f"import pathlib\nimport sys\n\n"
+        f"log = pathlib.Path({str(log)!r})\n"
+        f'with log.open("a", encoding="utf-8") as handle:\n'
+        f'    handle.write("\\n".join(sys.argv[1:]) + "\\n")\n',
+        encoding="utf-8",
+    )
+
+
 def test_shipped_skill_manifests_satisfy_the_contract() -> None:
     """Ensure every shipped skill passes YAML and schema validation."""
     result = _run_manifest_check()
@@ -143,7 +156,8 @@ def test_lint_runs_the_manifest_contract(tmp_path: Path) -> None:
     The contract is only enforced because ``lint`` depends on
     ``skill-manifest-check``; without this test, dropping that prerequisite
     would silently disable manifest validation while every other test still
-    passed.
+    passed. ``CHANGED_MARKDOWN`` is cleared so that ``nixie`` cannot fail on
+    an unrelated changed diagram and mask the manifest failure.
     """
     skill_dir = _write_manifest(
         tmp_path / "unlintable",
@@ -152,7 +166,7 @@ def test_lint_runs_the_manifest_contract(tmp_path: Path) -> None:
         "---\n\n# Fixture\n",
     )
 
-    result = _run_make("lint", skill_dir)
+    result = _run_make("lint", skill_dir, variables=("CHANGED_MARKDOWN=",))
 
     assert result.returncode != 0, result.stdout + result.stderr
 
@@ -184,14 +198,51 @@ def test_typecheck_skips_an_absent_skill_creator(tmp_path: Path) -> None:
     ``quick_validate.py`` ships with the Codex skill-creator, which is not
     installed on every host and moved between Codex home layouts. Failing the
     ``typecheck`` gate there would block every commit for a reason unrelated
-    to the change under test, so the target warns and continues.
+    to the change under test, so the target warns and continues. The check
+    runs through ``typecheck`` because that is the gate a contributor runs.
     """
     absent = tmp_path / "absent-skill-creator"
 
-    result = _run_make(
-        "skill-creator-validate",
-        variables=(f"SKILL_CREATOR={absent}",),
-    )
+    result = _run_make("typecheck", variables=(f"SKILL_CREATOR={absent}",))
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "skipping quick_validate.py" in result.stdout
+
+
+@pytest.mark.parametrize("layout", ["CODEX_HOME", "HOME"])
+def test_typecheck_uses_each_skill_creator_layout(
+    tmp_path: Path,
+    layout: str,
+) -> None:
+    """Validate every changed skill from either supported Codex layout.
+
+    Candidate one is ``$CODEX_HOME/skills/.system/skill-creator`` and candidate
+    two is ``$HOME/.agents/skills/.system/skill-creator``. Either layout must
+    be able to supply the tool on its own, so a host that uses only one of them
+    validates each changed skill instead of silently skipping the check.
+    """
+    codex_home = tmp_path / "codex-home"
+    home = tmp_path / "home"
+    relative = Path("skills/.system/skill-creator")
+    if layout == "HOME":
+        relative = Path(".agents") / relative
+    log = tmp_path / "validated.log"
+    _install_skill_creator(
+        (codex_home if layout == "CODEX_HOME" else home) / relative,
+        log,
+    )
+
+    result = _run_make(
+        "typecheck",
+        variables=(
+            f"HOME={home}",
+            f"CODEX_HOME={codex_home}",
+            "CHANGED_SKILLS=skills/changelog skills/commit-message",
+        ),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert log.read_text(encoding="utf-8").split() == [
+        "skills/changelog",
+        "skills/commit-message",
+    ]
