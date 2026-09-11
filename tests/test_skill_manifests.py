@@ -20,7 +20,7 @@ def _run_make(
     """Run a Makefile manifest target over shipped skills or given fixtures."""
     arguments = ["make", target, *variables]
     if skill_dirs:
-        directories = " ".join(f"{directory}/" for directory in skill_dirs)
+        directories = " ".join(str(directory) for directory in skill_dirs)
         arguments.append(f"SKILL_DIRS={directories}")
     return subprocess.run(
         arguments,
