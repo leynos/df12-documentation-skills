@@ -1,20 +1,6 @@
 ---
 name: tutorial-howto-doc
-description: >
-  Write and revise tutorials and how-to guides — the two practical,
-  action-oriented kinds of documentation. Use this skill whenever the
-  user asks to write, draft, structure, or fix a tutorial, a getting-
-  started guide, a walkthrough, a lesson, a how-to, a task guide, a
-  recipe, a procedure, or a troubleshooting guide. Also trigger when a
-  document tries to both teach and get a job done at once, when a
-  "tutorial" reads like a reference dump, when steps fail for readers,
-  or when the user is unsure whether they need a tutorial or a how-to.
-  The skill first classifies the document by user need (study versus
-  work), then drives a test-the-path workflow: scope the journey or the
-  goal, execute it end to end recording real output, draft to the right
-  anatomy, edit out blurred boundaries, and hand off to reference and
-  explanation. It is grounded in Diátaxis, Carroll's minimalism, Gagné's
-  events of instruction, and cognitive load theory.
+description: Create or revise tutorials for learning and how-to guides for completing a concrete task.
 ---
 
 # Tutorials and how-to guides

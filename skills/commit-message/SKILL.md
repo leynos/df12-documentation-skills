@@ -1,6 +1,6 @@
 ---
 name: commit-message
-description: Write and apply Git commit messages. Use this skill whenever committing code, staging a commit, writing a commit message, or when the user says "commit", "git commit", "save my changes", or asks to describe what changed. Also trigger when reviewing staged changes before committing. This skill enforces file-based commit messages — never pass messages via `-m`.
+description: Prepare and create a Git commit when asked to commit changes or to write or review a commit message.
 ---
 
 # Commit Message Creation

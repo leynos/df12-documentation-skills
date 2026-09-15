@@ -1,10 +1,6 @@
 ---
 name: pr-creation
-description: >
-  Create GitHub pull requests (PRs) with complete draft PR metadata,
-  reviewer-focused descriptions, roadmap and issue references, execplan
-  identification, and en-GB Oxford English. Use whenever Codex opens, drafts,
-  revises, or prepares a pull request description or title for a branch.
+description: Create or revise GitHub pull request titles and descriptions, including issue, roadmap, and ExecPlan links.
 ---
 
 # Pull request creation

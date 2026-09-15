@@ -1,18 +1,6 @@
 ---
 name: tech-design-doc
-description: >
-  Generate rigorous technical design documents from a problem statement or
-  product brief. Use this skill whenever the user asks to produce a system
-  design, technical specification, architecture document, design document,
-  or product design — whether from scratch, from an existing brief, or by
-  expanding a rough concept into a full specification. Also trigger when
-  the user asks to "write a design doc", "spec this out", "produce an
-  architecture document", "design this system", or provides a problem
-  statement and expects a structured technical output. The skill drives a
-  multi-phase workflow: research, outline, planning, drafting with
-  external artefacts, Mermaid diagram validation, and a mandatory editing
-  pass. It produces documents in the style of df12 Productions design
-  documents — precise, evidence-grounded, and free of fluff.
+description: Create a technical design or architecture document from a problem statement, product brief, or rough system concept.
 ---
 
 # Technical design document generation
@@ -25,7 +13,7 @@ statements, product briefs, or rough concepts.
 Read the following reference files as needed during the workflow:
 
 | Reference | When to read | Path |
-|---|---|---|
+| --- | --- | --- |
 | **Document anatomy** | Before outlining — structural patterns and section catalogue | `references/document-anatomy.md` |
 | **Research protocol** | Before the research phase — methodology and source evaluation | `references/research-protocol.md` |
 | **Editing checklist** | Before the final editing pass — the fluff-elimination protocol | `references/editing-checklist.md` |
@@ -172,7 +160,7 @@ directory.
 Artefact types and their file formats:
 
 | Artefact | Format | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | Domain model / glossary | Markdown or TOML | Normative terminology and entity definitions |
 | Data schemata | SQL, Protobuf, JSON Schema, TOML, or language-native types | Canonical data structures |
 | Interface contracts | OpenAPI, gRPC `.proto`, CLI help text, or type signatures | API and command surfaces |

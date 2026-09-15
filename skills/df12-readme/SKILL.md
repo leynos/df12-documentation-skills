@@ -1,6 +1,6 @@
 ---
 name: df12-readme
-description: "Generate README files for projects in the df12 Productions house style"
+description: Create or revise project README files in the df12 Productions house style.
 ---
 # df12 README skill
 
@@ -8,7 +8,7 @@ Use this skill when creating or updating `README.md` files for df12 Productions
 projects. This skill produces READMEs that are welcoming, clear, and get
 developers to "Hello World" quickly.
 
-**df12 Productions**: https://df12.studio/
+**df12 Productions**: <https://df12.studio/>
 
 ## Trigger phrases
 
@@ -129,7 +129,7 @@ If you cannot locate the principal design document, ask the user.
 
 ## Template with placeholders
 
-```markdown
+````markdown
 # {Project Name}
 
 *{One-line description of what it does}.*
@@ -190,7 +190,8 @@ ______________________________________________________________________
 ## Contributing
 
 Contributions welcome! Please see [AGENTS.md](AGENTS.md) for guidelines.
-```
+
+````
 
 ## Example excerpts from df12 projects
 
@@ -234,7 +235,7 @@ with `=qput` and let Claude handle them when the time is right.
 
 ### Good quick start
 
-```markdown
+````markdown
 ## Quick start
 
 ```shell
@@ -244,7 +245,8 @@ git donkey feature/awesome-stuff
 # Track a remote branch
 git track feature/from-teammate
 ```
-```
+
+````
 
 ## What to avoid
 

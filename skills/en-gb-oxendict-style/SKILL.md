@@ -1,6 +1,6 @@
 ---
 name: en-gb-oxendict-style
-description: Enforce British English using Oxford spelling conventions, permit outwith and caveat where appropriate, and use the Oxford comma only when it improves clarity.
+description: Write or edit prose in British English using Oxford spelling, with selective use of the Oxford comma.
 ---
 
 # en-GB Oxford spelling and grammar

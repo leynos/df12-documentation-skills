@@ -1,15 +1,6 @@
 ---
 name: roadmap-doc
-description: >
-  Generate development roadmaps from design documents, RFCs, and ADRs found in
-  a repository or provided with the prompt. Use this skill whenever the user
-  asks to create, draft, write, or generate a roadmap, execution plan, delivery
-  plan, or development plan for a software project — especially when design
-  documents, RFCs, or ADRs are available as source material. Also trigger when
-  the user asks to turn a design document or set of RFCs into actionable work
-  items, or to plan the build order for a system described in technical
-  documentation. Trigger even for partial requests such as "plan the next phase"
-  or "break this design into tasks" when design documentation is present.
+description: Create a new software delivery roadmap from design documents, RFCs, ADRs, or a rough technical brief.
 ---
 
 # Roadmap document skill

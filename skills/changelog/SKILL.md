@@ -1,13 +1,6 @@
 ---
 name: changelog
-description: >
-  Write and maintain a project's `CHANGELOG.md` following the Common Changelog
-  style. Use this skill whenever the user asks to create, draft, update,
-  rewrite, or review a changelog; add a release entry; record notable changes
-  since the last tag; cut a release; promote a prerelease; or document a yanked
-  release. Trigger on phrases such as "update the changelog", "add a changelog
-  entry", "what changed since v1.2.0?", "draft release notes from git history",
-  or "write CHANGELOG.md".
+description: Create, update, or review CHANGELOG.md entries using Common Changelog, including prereleases and yanked releases.
 ---
 
 # Changelog skill
@@ -199,7 +192,7 @@ applies:
 - `### Fixed` — bug fixes.
 
 There is no `Deprecated` and no `Security` category. Record deprecations
-under `Changed` (`Deprecate the \`unsafe\` option`). Record security fixes
+under `Changed` (``Deprecate the `unsafe` option``). Record security fixes
 under `Fixed` with a clear note.
 
 "Functionality" includes documentation, supported runtime environments, build
@@ -233,12 +226,12 @@ Concretely:
 Write each change in the imperative mood and make it self-describing without
 relying on the category heading:
 
-| Avoid                                  | Prefer                              |
-| -------------------------------------- | ----------------------------------- |
-| `Support of CentOS`                    | `Support CentOS`                    |
-| `\`write()\` method`                   | `Add \`write()\` method`            |
-| `Documentation for the \`read()\` method` | `Document the \`read()\` method` |
-| `Added support for streaming uploads`  | `Add support for streaming uploads` |
+| Avoid | Prefer |
+| --- | --- |
+| `Support of CentOS` | `Support CentOS` |
+| `` `write()` method`` | ``Add `write()` method`` |
+| ``Documentation for the `read()` method`` | ``Document the `read()` method`` |
+| `Added support for streaming uploads` | `Add support for streaming uploads` |
 
 Use present-tense verbs: `Add`, `Bump`, `Document`, `Deprecate`, `Drop`,
 `Fix`, `Refactor`, `Remove`, `Rename`, `Restore`, `Support`.

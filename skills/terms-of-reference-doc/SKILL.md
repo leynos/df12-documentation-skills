@@ -1,21 +1,6 @@
 ---
 name: terms-of-reference-doc
-description: >
-  Generate terms of reference documents that capture the problem space —
-  domain, market, users, job-to-be-done, scope, constraints, and open
-  questions — before any solution work begins. Use this skill whenever
-  the user asks to write, draft, or produce a terms of reference,
-  project charter, product brief, problem statement, vision and scope
-  document, domain knowledge document, or "what is this for" document.
-  Also trigger when the user starts a new project without an established
-  brief, wants to capture domain knowledge from a subject-matter expert,
-  needs to draw explicit scope boundaries before technical design, or
-  asks to elicit and document the rationale for a system. The skill
-  drives an elicitation-led workflow: prior-art discovery, gap analysis,
-  structured interview, drafting, editing, and handoff to the design
-  and roadmap skills. It produces documents in the style of df12
-  Productions — precise, evidence-grounded, and free of aspirational
-  fluff.
+description: Create terms of reference defining the problem space, users, scope, constraints, and open questions before design.
 ---
 
 # Terms of reference document generation

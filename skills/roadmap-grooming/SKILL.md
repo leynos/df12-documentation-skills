@@ -1,18 +1,6 @@
 ---
 name: roadmap-grooming
-description: >
-  Groom and curate a *living* GIST (Goals, Ideas, Steps, Tasks) roadmap as it
-  accretes work during execution — audit findings, code and design review
-  follow-ups, dogfooding fixes, and new ideas. Use this skill whenever you are
-  maintaining an existing roadmap rather than authoring one: when refactoring or
-  re-architecting tasks have piled up and need consolidating into proper steps;
-  when a hardening or refactoring phase has inflated into many single-task
-  "steps"; when new feature ideas risk being buried among refactoring work, or
-  refactoring work risks being dismissed as low value; when deciding what is
-  genuine debt versus self-generating audit churn; or whenever a roadmap has
-  grown and needs to be made legible again. This is the maintenance counterpart
-  to the roadmap-doc skill, which authors a roadmap from design documents — read
-  roadmap-doc for the GIST grammar, format, and anti-patterns this skill assumes.
+description: Maintain and restructure an existing GIST roadmap when accumulated work has obscured its goals, steps, or priorities.
 ---
 
 # Roadmap grooming skill

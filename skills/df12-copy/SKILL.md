@@ -1,17 +1,6 @@
 ---
 name: df12-copy
-description: >
-  Voice and copy style enforcement for df12 Productions. Use this skill
-  whenever writing, editing, or reviewing marketing copy, landing pages,
-  product descriptions, white papers, migration guides, release
-  announcements, blog posts, README openers, or any other public-facing
-  prose for df12 Productions or its products (Netsuke, Weaver, rstest-bdd,
-  Zamburak, Wildside, Concordat, and others). Also trigger when the user
-  asks to write "in the df12 voice", mentions the Logisphere crew or
-  mascot characters, or requests copy that follows the "serious tools,
-  playful worlds" ethos. This skill applies to all df12 product copy and
-  should be used even for short-form content like taglines, feature
-  bullets, changelogs, and social media posts.
+description: Write, edit, or review public-facing copy for df12 Productions and its products in the df12 voice.
 ---
 
 # df12 Productions copy skill
@@ -176,7 +165,7 @@ any content that involves the crew. The critical rules:
 ### Core roster
 
 | Character | Domain |
-|---|---|
+| --- | --- |
 | Pandalump 🐼 | Architecture & structure |
 | Wafflecat 🐈🧇 | Creative R&D & alternatives |
 | Buzzy Bee 🐝 | Performance & observability |
