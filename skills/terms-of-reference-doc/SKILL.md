@@ -17,6 +17,11 @@ work whose value cannot be defended.
 
 ## Before starting
 
+Read `references/problem-contract.md` before intake and again at handoff.
+It defines the problem-space contract, compatibility exclusions, evidence
+freshness, and change feedback that complement the workflow below. Apply its
+risk-based tailoring: no mandatory enterprise domains or ceremonial sections.
+
 Read the following reference files as needed during the workflow:
 
 - **Elicitation protocol**:
@@ -34,10 +39,10 @@ Read the following reference files as needed during the workflow:
 1. **Problem space, not solution space.** A terms of reference describes
    what is true about the world the product enters: who the users are,
    what they are trying to accomplish, what constrains the work. It
-   does not name technologies, draw architectures, or sequence
-   implementation. Solution-space material that surfaces during
-   elicitation is captured as a candidate for the tech design document,
-   not absorbed into the terms of reference.
+   does not choose technologies, draw architectures, or sequence
+   implementation. Record an already imposed platform or technology as
+   a sourced constraint, not as a new design decision. Solution candidates
+   belong in the tech design handoff, not in the terms of reference.
 
 2. **Elicit, don't infer.** The domain knowledge lives in the user's
    head and in their existing artefacts. The skill's job is to extract
@@ -66,6 +71,29 @@ Read the following reference files as needed during the workflow:
    non-goal becomes a goal. The skill produces v1; subsequent revisions
    are expected and welcome.
 
+## Contract with downstream skills
+
+Use stable IDs selectively for goals, hard constraints, success criteria,
+important assumptions, and open questions. Preserve existing IDs; a revision
+must not silently change their meaning. Record source revision, evidence
+status, decision owner, and affected downstream items as applicable.
+`[KNOWN]` means supported within its stated scope, not approved or immutable.
+
+A completed draft does not authorize implementation. Hand off approved intent
+and unresolved decisions separately. `tech-design-doc` owns design choices;
+`roadmap-doc` owns sequencing; `execplans` owns execution tolerances,
+`Conformance basis`, `Verification plan`, and milestone acceptance. Do not
+invent downstream milestone IDs, approvals, owners, or evidence.
+
+Terms of reference MUST NOT create source-API compatibility requirements for
+private APIs (including application-internal public surfaces), test-only APIs,
+pre-1.0 APIs, or unreleased API changes ahead of the latest formal release tag.
+Update those interfaces and their callers together. Existing released 1.0+
+contracts and deployed-data or wire-format obligations require separate,
+sourced assessment; an internal change does not erase a released contract.
+If an inherited document conflicts with these exclusions, record the conflict
+for explicit resolution. Do not authorize a shim or silently rewrite history.
+
 ## Workflow
 
 Execute these phases in order. Each phase produces concrete output
@@ -91,6 +119,10 @@ Check these locations and read what is present:
 - `docs/design.md`, `docs/architecture.md`, or any tech design
   documents.
 - `docs/roadmap.md`.
+- Relevant ExecPlans, release tags, merged/open PRs, and acceptance evidence.
+  Use sync and daily summaries as discovery aids; verify their underlying
+  records before carrying forward a status or blocker. See the evidence and
+  dependency rules in `references/problem-contract.md`.
 - Any pitch decks, briefs, or proposals the user references.
 
 **A note on order.** If a tech design document or roadmap exists but
@@ -99,7 +131,10 @@ documentation downstream. This is a smell worth surfacing: the design
 may be solving a problem that has not been articulated, or the team may
 have implicit assumptions worth making explicit. Acknowledge the
 ordering, then proceed — reconstructing the terms of reference from
-existing solution-space artefacts is a legitimate exercise.
+existing solution-space artefacts is a legitimate exercise. Separate observed
+behaviour from approved intent; existing code is not proof that its
+requirements were ever accepted. Record
+mismatches as design gaps instead of retrofitting goals to justify the code.
 
 Produce a working note that catalogues:
 
@@ -146,6 +181,10 @@ should never have to repeat themselves.
 
 → Read `references/elicitation-protocol.md` for question patterns,
 single-question discipline, dependency ordering, and exit conditions.
+Also use the concern, scenario, authority, and dependency probes in
+`references/problem-contract.md`. Ask only for information the sources do not
+already settle. An assumption remains an assumption without evidence, even
+when its failure consequence is unknown or immaterial.
 
 The elicitation phase resolves `[ASSUMED]` and `[OPEN]` items in
 dependency order. The most important rules:
@@ -206,6 +245,10 @@ read).
 
 Terms-of-reference-specific targets for the editing pass:
 
+- **Contract reconciliation.** Check trace IDs, source revisions, stakeholder
+  concerns, approval state, compatibility exclusions, and dependency unblock
+  conditions against `references/problem-contract.md`. Preserve explicit
+  uncertainty and evidence limits during prose editing.
 - **Aspirational language.** "We aim to delight users" is not a goal;
   it is mood music. Cut or replace with a verifiable outcome.
 - **Persona zoo.** A document with seven personas usually has two real
@@ -239,6 +282,14 @@ Before delivering, identify what comes next:
    roadmap (`roadmap-doc`). It usually is, with open questions
    acknowledged; it occasionally is not, and the user should know
    that before downstream work begins.
+5. **Traceable handoff.** Supply the revision, approval state, stable IDs,
+   stakeholder concerns, success measures, and scoped dependency conditions
+   that the design and ExecPlan will inherit. Distinguish ready-for-design,
+   bounded-discovery-only, and blocked work; name what each open item gates.
+6. **Feedback route.** Name the upstream sections and decision authority to
+   revisit if implementation falsifies an assumption. Record proposed changes
+   without presenting them as accepted. Reconcile affected design, roadmap,
+   and ExecPlan links before claiming the change complete.
 
 Deliver the document to `docs/terms-of-reference.md` unless the user
 specifies otherwise.
@@ -259,6 +310,9 @@ not the reverse.
 - **Companion documents.** Pointers to `context.md`, `docs/design.md`,
   `docs/roadmap.md`, relevant ADRs.
 - **Date and version.** Last substantive revision.
+- **Authority and evidence basis.** Owner/approver if known, approval evidence,
+  source revisions, and last verification date. Keep document acceptance
+  separate from product delivery status.
 
 ### 1. Background and motivation
 
@@ -322,7 +376,9 @@ Distinguish:
   prevents scope drift.
 
 A stakeholder mapping table is often clearer than prose for this
-section. Use one.
+section. Use one. Include each material concern, the question the downstream
+design must answer, the evidence the stakeholder needs, and their decision
+rights. Do not assume that the person funding the work can approve every risk.
 
 ### 5. Job to be done
 
@@ -344,9 +400,14 @@ Where relevant, name:
 - The competing alternatives currently used, including
   workarounds and "do nothing".
 
+For multi-actor or integration-heavy work, add a small problem-space scenario:
+trigger, actors, preconditions, normal and exceptional flows, observable
+outcome, and measure. Use it to test the job statement, not to prescribe an
+implementation. Omit it when it adds no decision-relevant information.
+
 ### 6. Scope
 
-Two subsections, of roughly equal length:
+Two subsections, with defensible boundaries rather than matching lengths:
 
 #### 6.1 Goals
 
@@ -379,6 +440,11 @@ Specific signals beat aspirational metrics. "Median time from `git
 clone` to first successful run is under five minutes" is a signal.
 "Users find it easy to get started" is not.
 
+For material measures, record baseline, target, measurement conditions,
+evidence source, and owner. Mark missing values open rather than inventing
+thresholds. Separate implementation acceptance from later adoption or outcome
+measurement. A merged PR does not by itself establish either.
+
 ### 8. Constraints and assumptions
 
 #### 8.1 Hard constraints
@@ -397,8 +463,11 @@ one and a fallback is required."
 #### 8.3 Dependencies
 
 External work the project relies on: other teams' deliverables,
-third-party services, upstream library releases. Name them; note where
-they sit on the critical path.
+third-party services, upstream library releases. Name the required capability
+and version, provider, consumer, evidence, and exact unblock condition. State
+whether it blocks discovery, a milestone, release, or outcome validation.
+Re-check stale edges against current evidence; a related issue is not
+necessarily a blocker. Do not change external trackers without authorization.
 
 ### 9. Open questions
 
@@ -478,8 +547,8 @@ several.
 
 - **The everything-in scope.** A goals section that lists twenty items
   and a non-goals section with one item. The scope is undefended.
-  Force the user to cut goals or expand non-goals until the lists are
-  roughly comparable in length and the boundaries are defensible.
+  Challenge the missing boundary. Add only plausible exclusions or reduce
+  scope; never invent non-goals to meet a numerical quota.
 
 - **The aspirational user.** Describing the user the product hopes to
   attract, rather than the user it currently or initially serves.
