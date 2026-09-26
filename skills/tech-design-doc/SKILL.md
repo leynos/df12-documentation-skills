@@ -10,6 +10,11 @@ statements, product briefs, or rough concepts.
 
 ## Before starting
 
+Read `references/architecture-contract.md` before intake, outlining, and
+handoff. It supplements the section catalogue with required traceability,
+baseline/target/gap analysis, compatibility rules, verification obligations,
+and upstream reconciliation. Tailor the depth, not the truthfulness.
+
 Read the following reference files as needed during the workflow:
 
 | Reference | When to read | Path |
@@ -52,6 +57,30 @@ Read the following reference files as needed during the workflow:
    combinatorial interaction surfaces are design-level decisions and
    must be treated as such.
 
+## Contract with upstream and execution skills
+
+The terms of reference owns problem-space intent; this skill owns the design
+and its verification obligations. The roadmap sequences work, and `execplans`
+turns an approved slice into a self-contained execution contract. Do not copy
+its entire template into a design or treat design acceptance as implementation
+approval. Read the installed `execplans` skill and its template when preparing
+that handoff; record the version inspected or state that it is unavailable.
+
+Use selective stable IDs and a revision-pinned `Conformance basis`. Preserve
+links from upstream goals, constraints, success criteria, and assumptions to
+requirements, design elements, gaps, and verification obligations. Changes
+require impact analysis in both directions. A passing check demonstrates only
+the property and scope it actually exercises; it does not approve a design.
+
+Designs MUST NOT prescribe source-API compatibility machinery for private APIs
+(including application-internal public surfaces), test-only APIs, pre-1.0
+APIs, or unreleased API changes ahead of the latest formal release tag.
+Change the interface and all affected callers together. A plateau requires a
+coherent validated state, not parallel old and new interfaces. Assess existing
+released 1.0+ contracts and deployed-data or wire-format obligations separately.
+An inherited compatibility demand in a prohibited case is a conflict to resolve
+explicitly, not permission to add a wrapper.
+
 ## Workflow
 
 Execute these phases in order. Each phase produces concrete output
@@ -59,6 +88,12 @@ before the next begins. Do not collapse phases or draft prose before
 the outline is agreed.
 
 ### Phase 0 — Intake and scoping
+
+First read `docs/terms-of-reference.md`, `docs/context.md`, governing ADRs,
+existing designs, relevant ExecPlans, and the roadmap when present. Record
+exact revisions and distinguish accepted decisions from draft proposals and
+observed implementation. Missing upstream material stays explicit; do not
+invent it. Use sync/work summaries to find evidence, not to certify state.
 
 Establish the document's boundaries:
 
@@ -90,6 +125,11 @@ Establish the document's boundaries:
    (flags, modes, integrations) that requires an explicit coverage
    strategy? If neither question produces an answer, note that — it is
    itself a design decision.
+
+7. **Baseline and obligations.** Establish the current implementation and
+   applicable release/deployment baselines, stakeholder concerns, governing
+   principles, inherited constraints, and real compatibility commitments.
+   Identify evidence that will expire on an upstream change or rebase.
 
 If the user's prompt already answers these questions (as a detailed
 brief would), extract and confirm rather than re-asking.
@@ -125,7 +165,9 @@ Research targets (select those relevant to the design):
 
 Produce a research summary as a working note. This is not part of the
 final document, but it informs every subsequent phase. Include sources
-with URLs.
+with URLs. Preserve decision-relevant measurements, source revisions, and
+limitations in durable referenced artefacts; do not discard the only evidence
+when removing the working note. Record unexecuted checks as planned, not passed.
 
 ### Phase 2 — Outline
 
@@ -135,9 +177,12 @@ structural patterns.
 
 The outline must:
 
-- map every requirement from the problem statement to at least one
-  section,
-- identify sections that need diagrams,
+- map each applicable upstream requirement to a stable design requirement,
+  design element, and verification obligation, or an explicit unresolved gap,
+- distinguish baseline, target, and retained/changed/added/removed elements;
+  assign actionable gaps and dispositions without manufacturing roadmap work,
+- identify stakeholder concerns that need a view, then choose the smallest
+  useful representation rather than defaulting to diagrams,
 - identify sections that need external artefacts (schemata, models,
   code, interface definitions),
 - flag sections where research gaps remain,
@@ -145,7 +190,11 @@ The outline must:
   reference concepts defined in earlier ones),
 - identify verification targets: named invariants, formal properties,
   and combinatorial interaction surfaces that require explicit design
-  decisions rather than deferred implementation choices.
+  decisions rather than deferred implementation choices,
+- include the compact contract records in `references/architecture-contract.md`:
+  conformance basis, concerns/views, gap register, verification obligations,
+  compatibility assessment, and handoff/readiness. Combine sections when the
+  scope is small; state why an inapplicable record is unnecessary.
 
 Present the outline to the user for agreement before proceeding. The
 outline is a contract — deviations during drafting require
@@ -220,6 +269,18 @@ diagram fixes to the editing pass.
 ### Phase 4 — Drafting
 
 Draft the document section by section, following the agreed outline.
+For each major component, record the requirements it satisfies, reused assets
+and their contracts, and the rationale for custom implementation. Discover
+existing principles and express their statement, rationale, and implications;
+do not invent principles or mistake preferences for hard constraints.
+
+Design implementation and verification together. Name invariants, intermediate
+lemmas, external axioms, methods, bounds, and residual gaps. Include a
+non-vacuity argument and real-boundary coverage where repository-owned logic
+relies on an external contract. Keep exact execution commands in the ExecPlan,
+while preserving the design-level discharge criteria here. See
+`references/architecture-contract.md` for the obligation record and method
+selection rules.
 
 **Drafting rules:**
 
@@ -315,7 +376,9 @@ The editing pass addresses these categories in order:
 
 5. **Source verification.** Every factual claim must still have a
    source. Any claim that lost its source during drafting either gets
-   one or gets cut.
+   one or gets cut. Re-check stale symbols, baselines, assumptions, blocker
+   edges, and evidence scope. Preserve explicit uncertainty; editing must
+   not turn a proposal, bounded check, or missing result into a fact.
 
 6. **Locale enforcement.** British English with Oxford spelling
    throughout (unless the user specifies otherwise): -ize, -yse, -our,
@@ -330,7 +393,15 @@ Assemble the final document:
 3. Add a table of contents if the document exceeds ~30 sections.
 4. Add a glossary if domain-specific terms are used.
 5. Add a references section with all cited sources.
-6. Deliver as a Markdown file.
+6. Reconcile the contract records, diagrams, external artefacts, and
+   upstream revisions. Hand off the selected requirement/gap IDs, target
+   states, obligations, external assumptions, compatibility classification,
+   acceptance boundaries, and unresolved decisions to `execplans`.
+7. State readiness and approval separately. The receiving plan maps these
+   inputs to `Conformance basis`, `Verification plan`, milestones, and
+   acceptance evidence without inventing approvals or past results.
+8. Deliver as a Markdown file. Record what remains designed, implemented,
+   verified, released, or deployed; do not collapse these states.
 
 If the user requests a Word document (.docx), use the docx skill for
 final formatting after the Markdown master is complete.
@@ -415,8 +486,17 @@ skill and the self-check from `df12-copy`.
 - **Scope creep during drafting.** If a section grows beyond its
   outline allocation, either the outline was wrong (update it) or the
   section contains fluff (edit it). Do not silently expand scope.
-- **External artefact contradicts prose.** The artefact is
-  authoritative. Update the prose to match, not the reverse.
+- **External artefact contradicts prose.** An approved canonical schema
+  governs its definitions, not the whole project's intent. Compare both
+  artefacts with the accepted upstream requirement. Correct transcription
+  drift; otherwise record a proposed deviation and its impacts. Do not
+  rewrite requirements to legitimize a generated artefact or current code.
+- **Implementation falsifies the design.** Reopen the affected claim and
+  requirement/gap links. An executing ExecPlan records the deviation in
+  `Decision log`, enters `BLOCKED`, and awaits explicit acceptance. Update
+  the ToR, design, or ADR with the approved resolution before `COMPLETE`;
+  mechanical changes that alter neither intent nor architecture stay in
+  the execution log.
 
 ## Anti-patterns to avoid
 
