@@ -93,8 +93,7 @@ These are non-negotiable. Violating any of them means the message is wrong.
   `Revert "..."`).
 - Avoid conventional-commit prefixes.
   The summary describes the change in plain English. Prefixes add taxonomy
-  noise that belongs in labels, changelogs, or CI config, not in the commit
-  log.
+  noise that belongs in labels, changelogs, or CI config, not in the commit log.
 - Do not add AI/bot attribution trailers.
   The commit records *what changed*, not *who typed it*.
 - Write the message file as Markdown.

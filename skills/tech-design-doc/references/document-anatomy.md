@@ -1,14 +1,14 @@
 # Document anatomy
 
-Structural patterns and section catalogue for technical design
-documents. Read this before producing an outline (Phase 2).
+Structural patterns and section catalogue for technical design documents. Read
+this before producing an outline (Phase 2).
 
 ## Section catalogue
 
-Not every document needs every section. The outline phase selects from
-this catalogue based on the system being designed. Sections are listed
-in a natural dependency order — earlier sections define concepts that
-later sections reference.
+Not every document needs every section. The outline phase selects from this
+catalogue based on the system being designed. Sections are listed in a natural
+dependency order — earlier sections define concepts that later sections
+reference.
 
 ### Front matter
 
@@ -16,21 +16,21 @@ later sections reference.
 - **Status.** Draft, living design, accepted, superseded.
 - **Audience.** Who reads this and what they need from it.
 - **Companion documents.** ADRs, roadmaps, engineering standards,
-  repository layouts — anything normative that lives outside this
-  document. Reference by path.
+  repository layouts — anything normative that lives outside this document.
+  Reference by path.
 - **Date and version.** When this was last substantively updated.
 
 ### Problem and context
 
 - **Design context and motivation.** Why does this system exist? What
-  external observations, research results, or operational pain points
-  drive the design? Cite sources.
+  external observations, research results, or operational pain points drive the
+  design? Cite sources.
 - **Core business problem.** The problem in terms the reader's
   organisation cares about.
 - **Prior art and ecosystem survey.** What exists already? What are its
-  strengths and limitations? This section earns its length only if it
-  informs design decisions. A survey that does not lead to a "therefore
-  we chose X" is a literature review and should be cut.
+  strengths and limitations? This section earns its length only if it informs
+  design decisions. A survey that does not lead to a "therefore we chose X" is
+  a literature review and should be cut.
 
 ### Scope and goals
 
@@ -43,9 +43,8 @@ later sections reference.
 ### Terminology
 
 - **Glossary.** Normative definitions for domain-specific terms. Every
-  term used inconsistently in everyday language but precisely in this
-  design gets an entry. Include naming conventions (casing, prefixes)
-  if they matter.
+  term used inconsistently in everyday language but precisely in this design
+  gets an entry. Include naming conventions (casing, prefixes) if they matter.
 - **Acronyms.** Expand every acronym on first use in the document body,
   and collect them in a table for reference.
 
@@ -59,22 +58,22 @@ later sections reference.
 ### Architecture
 
 - **Architectural summary.** A paragraph-level overview of the system's
-  shape: what pattern it follows (hexagonal, event-driven, pipeline,
-  etc.), what its major boundaries are, and how data flows.
+  shape: what pattern it follows (hexagonal, event-driven, pipeline, etc.),
+  what its major boundaries are, and how data flows.
 - **Architecture diagram.** A Mermaid diagram showing major components
   and their relationships. Validate with nixie.
 - **Trust boundaries.** Where does trusted code meet untrusted input?
-  Where do privilege levels change? For security-critical systems, this
-  is its own section with explicit attacker capabilities and protected
-  assets (see the Zamburak pattern).
+  Where do privilege levels change? For security-critical systems, this is its
+  own section with explicit attacker capabilities and protected assets (see the
+  Zamburak pattern).
 - **Component topology.** How components are deployed, scaled, and
   connected at runtime.
 
 ### Domain model
 
 - **Core domain model.** The entities, their relationships, and their
-  invariants. Produce as an external artefact (ER diagram, type
-  definitions, or both) before writing prose.
+  invariants. Produce as an external artefact (ER diagram, type definitions, or
+  both) before writing prose.
 - **Aggregate boundaries.** Which entities are modified together? Where
   are consistency boundaries?
 - **State machines.** Lifecycle diagrams for entities with non-trivial
@@ -130,64 +129,60 @@ One subsection per major component. Each should cover:
 
 ### Testing and verification
 
-This section earns its place only when it contains design decisions.
-A list of test types ("unit, integration, end-to-end") is not a design
-decision — it is a restatement of industry defaults. A testing section
-that says nothing a competent developer would not already assume should
-be cut entirely.
+This section earns its place only when it contains design decisions. A list of
+test types ("unit, integration, end-to-end") is not a design decision — it is a
+restatement of industry defaults. A testing section that says nothing a
+competent developer would not already assume should be cut entirely.
 
-**What does not belong here.** Unit and behavioural tests follow from
-the code structure; they are implementation concerns. Do not mention them
-unless the architecture makes a specific testability choice worth
-recording — for example, a hexagonal boundary that isolates the domain
-for testing, or a plugin interface that imposes a public contract on
-consumer test harnesses. If the reason to mention unit tests is not
-immediately obvious from that description, do not mention them.
+**What does not belong here.** Unit and behavioural tests follow from the code
+structure; they are implementation concerns. Do not mention them unless the
+architecture makes a specific testability choice worth recording — for example,
+a hexagonal boundary that isolates the domain for testing, or a plugin
+interface that imposes a public contract on consumer test harnesses. If the
+reason to mention unit tests is not immediately obvious from that description,
+do not mention them.
 
-**Invariants and formal properties.** If the system has correctness
-properties that must hold — protocol invariants, state-machine safety
-conditions, consistency guarantees, ownership or liveness proofs — name
-them here in precise, falsifiable terms. "No message transitions from
-`inflight` to `dropped` without passing through `acknowledged` or
-`retryable`" is a property. "The system must not lose messages" is an
-aspiration. The design document must carry properties, not aspirations.
+**Invariants and formal properties.** If the system has correctness properties
+that must hold — protocol invariants, state-machine safety conditions,
+consistency guarantees, ownership or liveness proofs — name them here in
+precise, falsifiable terms. "No message transitions from `inflight` to
+`dropped` without passing through `acknowledged` or `retryable`" is a property.
+"The system must not lose messages" is an aspiration. The design document must
+carry properties, not aspirations.
 
 For each named property, state:
 
 - The verification method: model checker (which tool, which
-  specification language), property-based test suite (which generator
-  strategy, which shrinking behaviour), type-level proof (which language
-  mechanism, which guarantee it provides), or formal proof (which
-  theorem prover, which lemmas are required).
+  specification language), property-based test suite (which generator strategy,
+  which shrinking behaviour), type-level proof (which language mechanism, which
+  guarantee it provides), or formal proof (which theorem prover, which lemmas
+  are required).
 - The scope boundary: which components, state machines, or interaction
   sequences are covered.
 - What the verification leaves unchecked, and why that is acceptable.
 
-A design document that cannot name specific properties has not yet
-decided what correct means. Resolve this before the draft is considered
-complete.
+A design document that cannot name specific properties has not yet decided what
+correct means. Resolve this before the draft is considered complete.
 
-**Combinatorial and end-to-end coverage.** When the system exposes
-multiple flags, operating modes, or integration targets, the combination
-space is a design concern. State which combinations carry the highest
-risk, which must be covered by automated combinatorial or E2E suites,
-and why the selected coverage is sufficient. A feature surface with
-non-trivial interaction space that is not addressed in the design has
-not been designed — it has been deferred.
+**Combinatorial and end-to-end coverage.** When the system exposes multiple
+flags, operating modes, or integration targets, the combination space is a
+design concern. State which combinations carry the highest risk, which must be
+covered by automated combinatorial or E2E suites, and why the selected coverage
+is sufficient. A feature surface with non-trivial interaction space that is not
+addressed in the design has not been designed — it has been deferred.
 
-**Acceptance criteria.** For each major component or externally
-observable behaviour, state what constitutes correct implementation in
-observable terms. If a criterion can only be verified by human
-inspection, explain why it is not automatable and what the manual
-verification procedure is. Vague criteria ("the system behaves
-correctly under load") are not criteria; they are tasks for a future
-meeting.
+**Acceptance criteria.** For each major component or externally observable
+behaviour, state what constitutes correct implementation in observable terms.
+If a criterion can only be verified by human inspection, explain why it is not
+automatable and what the manual verification procedure is. Vague criteria ("the
+system behaves correctly under load") are not criteria; they are tasks for a
+future meeting.
 
 ### Roadmap and phasing
 
 - **MVP scope.** What ships first? This section belongs in the design
-  document only if it defines the boundary between "designed now" and
-  "designed later". Otherwise, it belongs in a separate roadmap.
+  document only if it defines the boundary between "designed now" and "designed
+  later". Otherwise, it belongs in a separate roadmap.
 - **Implementation priorities.** High, medium, low — with rationale.
 - **Deferred decisions.** Design choices explicitly left open, with
   criteria for when they must be resolved.
@@ -204,17 +199,16 @@ meeting.
    it. If two sections serve the same purpose, merge them.
 
 2. **Dependency order.** A section should not reference concepts that
-   have not yet been defined. If forward references are unavoidable,
-   flag them explicitly.
+   have not yet been defined. If forward references are unavoidable, flag them
+   explicitly.
 
 3. **Depth is earned.** Level-4 headings (####) are a signal that the
-   document may be too granular. Prefer flatter structures. If a
-   section genuinely needs sub-sub-sections, it may warrant its own
-   companion document.
+   document may be too granular. Prefer flatter structures. If a section
+   genuinely needs sub-sub-sections, it may warrant its own companion document.
 
 4. **Tables over prose for structured data.** Stakeholder mappings,
-   configuration parameters, error codes, comparison matrices — these
-   are tables, not paragraphs.
+   configuration parameters, error codes, comparison matrices — these are
+   tables, not paragraphs.
 
 5. **Code blocks are artefacts.** A code block longer than ~20 lines
    should have been an external artefact that was validated before
@@ -225,8 +219,8 @@ meeting.
 
 ## Length guidance
 
-There is no target length. A design document is as long as the design
-requires and no longer. The editing pass enforces this. That said:
+There is no target length. A design document is as long as the design requires
+and no longer. The editing pass enforces this. That said:
 
 - A CLI tool design (like Splitters): 2,000–5,000 words.
 - A service or platform design (like Episodic): 5,000–15,000 words.

@@ -23,7 +23,16 @@ SKILL_YAMLLINT_CONFIG := {extends: default, rules: {line-length: disable}}
 
 PYTHON_TESTS := tests
 
-.PHONY: markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test
+# `make fmt` and `make check-fmt` call mdtablefix directly. `--git` selects the
+# Markdown files Git tracks and `--include-untracked` adds the untracked files
+# Git does not ignore, so a new document is formatted before it is staged.
+# Both modes need mdtablefix 0.6.1 or later.
+MDLINT ?= markdownlint-cli2
+MDTABLEFIX ?= mdtablefix
+MDTABLEFIX_SELECT = --git --include-untracked
+MDTABLEFIX_RULES = --wrap --renumber --breaks --ellipsis --fences
+
+.PHONY: markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test fmt
 
 markdownlint:
 	@if [ -n "$(CHANGED_MARKDOWN)" ]; then \
@@ -43,6 +52,7 @@ check-fmt:
 	git diff --check
 	uv run --group dev ruff format --check $(PYTHON_TESTS)
 	$(MAKE) markdownlint
+	$(MDTABLEFIX) --check $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
 
 lint: nixie skill-manifest-check
 	uv run --group dev ruff check $(PYTHON_TESTS)
@@ -85,3 +95,7 @@ skill-creator-validate:
 
 test: typecheck
 	uv run --group dev pytest -v $(PYTHON_TESTS)
+
+fmt: ## Format Markdown sources
+	$(MDTABLEFIX) --in-place $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
+	$(MDLINT) --fix "**/*.md"

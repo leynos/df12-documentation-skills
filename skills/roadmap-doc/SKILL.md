@@ -5,31 +5,31 @@ description: Create a new software delivery roadmap from design documents, RFCs,
 
 # Roadmap document skill
 
-Generate outcome-oriented development roadmaps from design documents, RFCs,
-and ADRs. The output is a Markdown roadmap file ready for a repository's
-`docs/` directory.
+Generate outcome-oriented development roadmaps from design documents, RFCs, and
+ADRs. The output is a Markdown roadmap file ready for a repository's `docs/`
+directory.
 
 ## When to read references
 
 Before generating any roadmap, read
 `/mnt/skills/user/roadmap-doc/references/conventions.md` for the full
-formatting rules, GIST alignment model, and a worked structural example.
-Follow those conventions exactly.
+formatting rules, GIST alignment model, and a worked structural example. Follow
+those conventions exactly.
 
 ## Workflow
 
 ### 1. Gather source material
 
-Identify the design documents, RFCs, and ADRs that define the system. These
-are the authoritative inputs. Check these locations:
+Identify the design documents, RFCs, and ADRs that define the system. These are
+the authoritative inputs. Check these locations:
 
 - Files attached to the prompt.
 - `docs/` in the repository root (design documents, ADRs).
 - `docs/rfcs/` in the repository root (RFCs).
 - Any other paths the user indicates.
 
-Read every document before planning. Do not begin drafting until the full
-scope is understood.
+Read every document before planning. Do not begin drafting until the full scope
+is understood.
 
 ### 2. Extract the architectural skeleton
 
@@ -40,8 +40,8 @@ From the source material, identify:
 - **Dependencies and sequencing constraints.** Which components must exist
   before others can be built? These determine task ordering.
 - **Open questions and required decisions.** ADRs to be written, scope
-  decisions to be made, alternatives to be resolved. These become early
-  tasks that unblock later work.
+  decisions to be made, alternatives to be resolved. These become early tasks
+  that unblock later work.
 - **Contracts and interfaces.** IR schemas, API surfaces, CLI contracts,
   plugin boundaries. Settling these early prevents rework.
 - **Validation and test requirements.** What must be tested and how? These
@@ -51,8 +51,8 @@ From the source material, identify:
 
 ### 3. Plan vertical slices
 
-Structure the roadmap around vertical slices of user-facing functionality,
-not horizontal layers. Each slice should deliver something usable end-to-end.
+Structure the roadmap around vertical slices of user-facing functionality, not
+horizontal layers. Each slice should deliver something usable end-to-end.
 
 Think in terms of domains, not tiers. "Markdown linting with real spans and
 safe fixes" is a good slice. "Build the parser layer" is not — it delivers
@@ -60,21 +60,21 @@ infrastructure without a usable product surface.
 
 Exceptions: the first phase may be foundational (contracts, build spine, test
 scaffolding) when the project has unresolved architectural decisions or no
-existing skeleton. Even then, frame the phase as an idea to validate, not as
-a layer to build.
+existing skeleton. Even then, frame the phase as an idea to validate, not as a
+layer to build.
 
 ### 4. Apply the GIST model
 
-Once the foundational phase is in place, every subsequent phase, step, and
-task must align with the GIST (Goals, Ideas, Steps, Tasks) model:
+Once the foundational phase is in place, every subsequent phase, step, and task
+must align with the GIST (Goals, Ideas, Steps, Tasks) model:
 
 - **Phase = Idea.** State a testable hypothesis. What will the project learn
-  or prove by completing this phase? If the phase cannot be wrong, it is not
-  an idea — it is a wish.
+  or prove by completing this phase? If the phase cannot be wrong, it is not an
+  idea — it is a wish.
 - **Step = Workstream.** Each step pursues a single delivery objective that
-  validates or falsifies some aspect of the phase idea. State what question
-  the step answers and what informs subsequent steps. Steps are sequenced so
-  each one either unlocks the next or reduces a specific delivery risk.
+  validates or falsifies some aspect of the phase idea. State what question the
+  step answers and what informs subsequent steps. Steps are sequenced so each
+  one either unlocks the next or reduces a specific delivery risk.
 - **Task = Execution unit.** A concrete, measurable piece of build work with
   clear acceptance criteria. Tasks cite dependencies on prior tasks or steps
   using dotted notation. Tasks cite relevant design document sections or RFCs.
@@ -126,19 +126,18 @@ After the first draft, review for these failure modes:
   tasks. Where specific outcome testing is not obvious from the task
   description, move it to the task's `Success:` criterion.
 - **Isolated proving step.** Does the roadmap defer model checking, lemma
-  proofs, or property-based provers to a standalone step rather than
-  weaving them into development tasks? Hardening tasks are appropriate only
-  when the proving scope clearly exceeds a single PR.
+  proofs, or property-based provers to a standalone step rather than weaving
+  them into development tasks? Hardening tasks are appropriate only when the
+  proving scope clearly exceeds a single PR.
 - **Missing E2E or combinatorial tasks.** Are there flag combinations,
-  feature interactions, or integration surfaces that need dedicated
-  end-to-end or combinatorial test suites? These warrant their own tasks
-  and should be encouraged, not collapsed into implementation tasks or
-  deferred.
+  feature interactions, or integration surfaces that need dedicated end-to-end
+  or combinatorial test suites? These warrant their own tasks and should be
+  encouraged, not collapsed into implementation tasks or deferred.
 
 ### 7. Deliver the file
 
-Write the final roadmap to `docs/roadmap.md` (or the path the user
-specifies) and present it.
+Write the final roadmap to `docs/roadmap.md` (or the path the user specifies)
+and present it.
 
 ## Key constraints
 
@@ -159,6 +158,6 @@ specifies) and present it.
   combinations) are first-class tasks and should be scoped and sized
   accordingly.
 - Model checking, provers, and property-based testing belong inside delivery
-  tasks; dedicated hardening tasks are appropriate only when the proving
-  scope exceeds a single PR.
+  tasks; dedicated hardening tasks are appropriate only when the proving scope
+  exceeds a single PR.
 - Oxford comma where it aids comprehension.
