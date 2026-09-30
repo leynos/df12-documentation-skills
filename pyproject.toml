@@ -61,13 +61,13 @@ select = [
     "UP",
     "W",
 ]
-extend-ignore = ["D203", "D213"]
+extend-ignore = ["incorrect-blank-line-before-class", "multi-line-summary-second-line"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 8
 
 [tool.ruff.lint.per-file-ignores]
-"tests/test_*.py" = ["PLR0913", "PLR2004", "PLR6301", "S101", "S404", "S603"]
+"tests/test_*.py" = ["too-many-arguments", "magic-value-comparison", "no-self-use", "assert", "suspicious-subprocess-import", "subprocess-without-shell-equals-true"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
