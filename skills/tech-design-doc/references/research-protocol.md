@@ -1,13 +1,13 @@
 # Research protocol
 
-How to conduct targeted research for technical design documents. Read
-this before Phase 1 (Research).
+How to conduct targeted research for technical design documents. Read this
+before Phase 1 (Research).
 
 ## Purpose of research in a design document
 
-Research serves the design, not the other way around. Every piece of
-research must connect to a design decision. If a finding does not
-inform a choice, it does not belong in the document.
+Research serves the design, not the other way around. Every piece of research
+must connect to a design decision. If a finding does not inform a choice, it
+does not belong in the document.
 
 Research answers three questions:
 
@@ -20,23 +20,19 @@ Research answers three questions:
 
 ## Firecrawl MCP usage
 
-## Firecrawl MCP usage
-
-A companion Firecrawl skill provides the complete tool surface, query
-patterns, and usage guidance. Load it for the research phase. What
-follows here is the research-specific decision framework — not the
-tool mechanics.
+A companion Firecrawl skill provides the complete tool surface, query patterns,
+and usage guidance. Load it for the research phase. What follows here is the
+research-specific decision framework — not the tool mechanics.
 
 ### When to use Firecrawl
 
 - **Documentation sites.** Crawl official docs for a framework,
-  protocol, or tool to extract current API surfaces, configuration
-  options, and architectural guidance.
+  protocol, or tool to extract current API surfaces, configuration options, and
+  architectural guidance.
 - **GitHub repositories.** Scrape README files, specification
   documents, and CHANGELOG entries for competing or related projects.
 - **Technical blogs and release notes.** Extract structured content
-  from posts announcing new features, benchmarks, or architectural
-  changes.
+  from posts announcing new features, benchmarks, or architectural changes.
 - **Specification documents.** Crawl RFC or W3C spec pages that
   `web_fetch` may render incompletely.
 
@@ -47,8 +43,8 @@ tool mechanics.
 - **Paywalled or authenticated content.** Firecrawl cannot bypass
   authentication.
 - **Broad surveys.** Firecrawl is a scalpel, not a trawl net. Use
-  `web_search` to identify targets, then Firecrawl to extract from
-  specific pages.
+  `web_search` to identify targets, then Firecrawl to extract from specific
+  pages.
 
 ### Dealing with Firecrawl unavailability
 
@@ -57,11 +53,11 @@ If Firecrawl MCP is not connected:
 1. Use `web_search` to identify relevant pages.
 2. Use `web_fetch` to extract content from specific URLs.
 3. Note in the research summary that Firecrawl was unavailable and
-   results may be less comprehensive for JavaScript-rendered or
-   deeply-nested documentation.
+   results may be less comprehensive for JavaScript-rendered or deeply-nested
+   documentation.
 
-Do not ask the user to connect Firecrawl unless the research genuinely
-cannot proceed without it. Degrade gracefully.
+Do not ask the user to connect Firecrawl unless the research genuinely cannot
+proceed without it. Degrade gracefully.
 
 ## Source evaluation
 
@@ -90,8 +86,8 @@ Use with attribution. Note the author's relationship to the project.
 - Stack Overflow answers and forum discussions
 - Tutorial sites and "awesome" lists
 
-Use for ecosystem context and to identify what to investigate further.
-Do not cite as authoritative for design decisions.
+Use for ecosystem context and to identify what to investigate further. Do not
+cite as authoritative for design decisions.
 
 ### Tier 4 — Avoid
 
@@ -100,8 +96,8 @@ Do not cite as authoritative for design decisions.
 - AI-generated summaries on content farms
 - Undated or unattributed blog posts
 
-Do not cite. If information from these sources seems important,
-corroborate it from a higher-tier source.
+Do not cite. If information from these sources seems important, corroborate it
+from a higher-tier source.
 
 ## Research summary format
 
@@ -131,8 +127,8 @@ Produce a working note (not part of the final document) structured as:
 - Topics where sources conflict
 ```
 
-This summary feeds Phase 2 (Outline) and Phase 4 (Drafting). It is a
-working document, not a deliverable.
+This summary feeds Phase 2 (Outline) and Phase 4 (Drafting). It is a working
+document, not a deliverable.
 
 ## Ecosystem survey depth
 
@@ -143,5 +139,5 @@ The ecosystem survey should be thorough enough to answer:
   known solutions
 - "What version of X is current?" for every technology dependency
 
-It should not attempt to be exhaustive. The goal is informed design
-decisions, not a market landscape report.
+It should not attempt to be exhaustive. The goal is informed design decisions,
+not a market landscape report.

@@ -33,8 +33,9 @@ already enforced by the standard gate sequence above. When adding, renaming, or
 editing anything under `skills/`, the following are required:
 
 - Run `make lint`. It runs `skill-frontmatter-lint` (`yamllint` over each
-  extracted frontmatter block) and `skill-manifest-validate` (`skills-ref
-  validate` over each skill directory). Both must pass before committing.
+  extracted frontmatter block) and `skill-manifest-validate`
+  (`skills-ref validate` over each skill directory). Both must pass before
+  committing.
 - Run `make test`. `tests/test_skill_manifests.py` asserts that every shipped
   manifest satisfies the contract, and that `make lint` still enforces it.
 - Keep the directory name equal to the manifest `name`.

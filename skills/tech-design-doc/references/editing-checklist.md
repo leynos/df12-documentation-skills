@@ -1,23 +1,22 @@
 # Editing checklist
 
-The mandatory editing pass for technical design documents. Read this
-before Phase 6 (Editing).
+The mandatory editing pass for technical design documents. Read this before
+Phase 6 (Editing).
 
 ## Philosophy
 
-The editing pass is adversarial. Its job is to find and remove
-everything that does not earn its place. A sentence survives editing
-only if removing it would lose information that matters to the reader.
+The editing pass is adversarial. Its job is to find and remove everything that
+does not earn its place. A sentence survives editing only if removing it would
+lose information that matters to the reader.
 
 This is not proofreading. Proofreading fixes typos and grammar. Editing
-restructures, cuts, and tightens. Both happen in this phase, but the
-emphasis is on the destructive work.
+restructures, cuts, and tightens. Both happen in this phase, but the emphasis
+is on the destructive work.
 
 ## Pass order
 
-Execute these passes in sequence. Each pass has a specific target.
-Running them in order prevents earlier passes from undermining later
-ones.
+Execute these passes in sequence. Each pass has a specific target. Running them
+in order prevents earlier passes from undermining later ones.
 
 ### Pass 1 — Structural coherence
 
@@ -33,13 +32,13 @@ Read the document against the agreed outline.
 - Does the document answer the problem statement? Trace each
   requirement to a section.
 - Does the testing and verification section contain actual design
-  decisions, or does it list test types without rationale? If the
-  latter, cut it or replace it with the real choices.
+  decisions, or does it list test types without rationale? If the latter, cut
+  it or replace it with the real choices.
 - Are correctness properties stated in falsifiable, observable terms?
   Flag any property that cannot be checked — it is not yet a property.
 - For systems with multiple flags, modes, or integration targets: is
-  the combinatorial interaction surface addressed? If not, the design
-  is incomplete.
+  the combinatorial interaction surface addressed? If not, the design is
+  incomplete.
 
 ### Pass 2 — Sentence-level fluff elimination
 
@@ -48,8 +47,8 @@ information that matters?" If not, remove it.
 
 Specific targets:
 
-**Throat-clearing.** Sentences that announce what is about to be said
-rather than saying it.
+**Throat-clearing.** Sentences that announce what is about to be said rather
+than saying it.
 
 - "It is worth noting that X." → "X."
 - "In order to achieve Y, the system…" → "The system… to achieve Y."
@@ -59,14 +58,13 @@ rather than saying it.
   specific cross-reference)
 - "Before we dive into the details…" → (delete)
 
-**Hedge words.** Words that weaken claims without adding genuine
-uncertainty.
+**Hedge words.** Words that weaken claims without adding genuine uncertainty.
 
 - "perhaps", "arguably", "it seems", "it could be said", "it is
   believed that", "in some cases it may be possible"
 - If the uncertainty is genuine, express it precisely: "The performance
-  impact is not yet benchmarked" not "The performance impact may
-  perhaps be significant."
+  impact is not yet benchmarked" not "The performance impact may perhaps be
+  significant."
 - If the uncertainty is not genuine, delete the hedge and state the
   claim directly.
 
@@ -79,8 +77,8 @@ uncertainty.
 - "end result" → "result"
 - "each individual" → "each"
 
-**Weak transitions.** Words that connect sentences that are already
-obviously connected.
+**Weak transitions.** Words that connect sentences that are already obviously
+connected.
 
 - "Additionally" — if the connection is obvious, delete
 - "Furthermore" — same
@@ -88,12 +86,11 @@ obviously connected.
 - "It should also be noted that" — always delete
 - "In addition to the above" — always delete
 
-If a genuine transition is needed, write one that conveys the
-relationship: "This constraint also affects X" is better than
-"Additionally, X."
+If a genuine transition is needed, write one that conveys the relationship:
+"This constraint also affects X" is better than "Additionally, X."
 
-**Passive voice.** Rewrite in active voice unless the agent is
-genuinely unknown or irrelevant.
+**Passive voice.** Rewrite in active voice unless the agent is genuinely
+unknown or irrelevant.
 
 - "Tasks are dispatched by the orchestrator" → "The orchestrator
   dispatches tasks"
@@ -101,8 +98,7 @@ genuinely unknown or irrelevant.
 - "The configuration is loaded at startup" → "The service loads
   configuration at startup"
 
-**Nominalisations.** Verbs disguised as nouns, adding bulk without
-meaning.
+**Nominalisations.** Verbs disguised as nouns, adding bulk without meaning.
 
 - "performs validation of" → "validates"
 - "provides support for" → "supports"
@@ -115,26 +111,26 @@ meaning.
 
 Replace vague terms with precise ones.
 
-| Vague | Ask | Precise example |
-|---|---|---|
-| "handles" | How? | "retries with exponential backoff" |
-| "manages" | What operations? | "creates, updates, and deletes" |
-| "processes" | What transformation? | "parses and validates" |
-| "supports" | What mechanism? | "exposes a gRPC port for" |
-| "ensures" | How is it enforced? | "rejects requests that lack" |
-| "integrates with" | Through what interface? | "calls the X API via" |
-| "leverages" | (Never use this word) | (Use the actual verb) |
-| "utilizes" | (Use "uses") | "uses" |
-| "robust" | Against what? | "tolerates N concurrent failures" |
-| "scalable" | To what? | "handles 10k requests/s per node" |
-| "seamless" | (Marketing word; delete) | Describe the actual UX |
-| "powerful" | (Marketing word; delete) | Describe the capability |
-| "thoroughly tested" | What is tested and how? | Name the suite, properties, and coverage |
-| "well-tested" | Same | Same |
-| "reliable" | What failure modes are handled? | "retries on transient errors; surfaces permanent failures to the caller" |
-| "correct" | Correct according to what specification? | Name the invariant or formal property |
-| "we will write unit tests" | What does this tell the reader? | Delete; state non-obvious testability choices only |
-| "comprehensive test coverage" | What combination surface is covered? | State the strategy and its known gaps |
+| Vague                         | Ask                                      | Precise example                                                          |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------------------ |
+| "handles"                     | How?                                     | "retries with exponential backoff"                                       |
+| "manages"                     | What operations?                         | "creates, updates, and deletes"                                          |
+| "processes"                   | What transformation?                     | "parses and validates"                                                   |
+| "supports"                    | What mechanism?                          | "exposes a gRPC port for"                                                |
+| "ensures"                     | How is it enforced?                      | "rejects requests that lack"                                             |
+| "integrates with"             | Through what interface?                  | "calls the X API via"                                                    |
+| "leverages"                   | (Never use this word)                    | (Use the actual verb)                                                    |
+| "utilizes"                    | (Use "uses")                             | "uses"                                                                   |
+| "robust"                      | Against what?                            | "tolerates N concurrent failures"                                        |
+| "scalable"                    | To what?                                 | "handles 10k requests/s per node"                                        |
+| "seamless"                    | (Marketing word; delete)                 | Describe the actual UX                                                   |
+| "powerful"                    | (Marketing word; delete)                 | Describe the capability                                                  |
+| "thoroughly tested"           | What is tested and how?                  | Name the suite, properties, and coverage                                 |
+| "well-tested"                 | Same                                     | Same                                                                     |
+| "reliable"                    | What failure modes are handled?          | "retries on transient errors; surfaces permanent failures to the caller" |
+| "correct"                     | Correct according to what specification? | Name the invariant or formal property                                    |
+| "we will write unit tests"    | What does this tell the reader?          | Delete; state non-obvious testability choices only                       |
+| "comprehensive test coverage" | What combination surface is covered?     | State the strategy and its known gaps                                    |
 
 ### Pass 4 — Consistency
 
@@ -167,8 +163,8 @@ For every factual claim in the document:
 
 ### Pass 6 — Locale enforcement
 
-Unless the user has specified otherwise, enforce British English with
-Oxford spelling:
+Unless the user has specified otherwise, enforce British English with Oxford
+spelling:
 
 - **-ize** not -ise: organize, recognize, customize
 - **-yse** not -yze: analyse, paralyse, catalyse
@@ -182,13 +178,13 @@ Oxford spelling:
 - **Quotation marks**: single for scare quotes, double for direct
   quotation (or vice versa — pick one and stick to it)
 
-US spelling is acceptable only in code identifiers, API surfaces, and
-direct quotations from US-English sources.
+US spelling is acceptable only in code identifiers, API surfaces, and direct
+quotations from US-English sources.
 
 ### Pass 7 — Final read
 
-Read the entire document once more, start to finish, as if encountering
-it for the first time. This pass catches:
+Read the entire document once more, start to finish, as if encountering it for
+the first time. This pass catches:
 
 - Jarring transitions
 - Sections that assume context the reader does not yet have
@@ -197,11 +193,10 @@ it for the first time. This pass catches:
 
 ## The one-third rule
 
-A useful heuristic: if the editing pass does not remove at least a
-third of the draft's word count, either the drafting was unusually
-disciplined or the editing was too gentle. Most first drafts contain
-30–50% fluff. This is normal and expected.
+A useful heuristic: if the editing pass does not remove at least a third of the
+draft's word count, either the drafting was unusually disciplined or the
+editing was too gentle. Most first drafts contain 30–50% fluff. This is normal
+and expected.
 
-Do not pad the draft to make the editing pass look more impressive. Do
-not skip the editing pass because "it's already pretty tight." Run the
-passes regardless.
+Do not pad the draft to make the editing pass look more impressive. Do not skip
+the editing pass because "it's already pretty tight." Run the passes regardless.

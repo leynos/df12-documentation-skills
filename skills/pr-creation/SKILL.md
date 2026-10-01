@@ -67,9 +67,9 @@ Include all applicable references in the title:
 Use imperative mood for the action in the title.
 
 For pre-implementation execplan pull requests, describe the action being
-planned in the imperative mood. Do not use titles such as `Plan implementation
-of foo`, `Add plan for foo`, or similar meta-descriptions. Put the
-pre-implementation status in the description instead.
+planned in the imperative mood. Do not use titles such as
+`Plan implementation of foo`, `Add plan for foo`, or similar meta-descriptions.
+Put the pre-implementation status in the description instead.
 
 Examples:
 
@@ -151,9 +151,9 @@ notes or caveats last.
 
 ## Body file creation
 
-Write pull request descriptions to a temporary file with an inert
-single-quoted heredoc delimiter, then pass that file to the pull request tool.
-Do not pass long descriptions as shell arguments.
+Write pull request descriptions to a temporary file with an inert single-quoted
+heredoc delimiter, then pass that file to the pull request tool. Do not pass
+long descriptions as shell arguments.
 
 Prefer creating the pull request through the GitHub app when it is available.
 Use the body file contents as the app or connector body input. Fall back to
@@ -203,9 +203,9 @@ mentioned in the pull request description. I must point each file link at the
 relevant lines with a GFM line anchor, and I must use a branch ref so the link
 remains available after the pull request merges.
 
-I must not use a commit SHA for a file link merely because the commit is already
-pushed. I should link to a specific commit SHA only when the description references
-an issue in that exact commit.
+I must not use a commit SHA for a file link merely because the commit is
+already pushed. I should link to a specific commit SHA only when the
+description references an issue in that exact commit.
 
 ```markdown
 [docs/execplans/example.md](https://github.com/OWNER/REPO/blob/BRANCH/docs/execplans/example.md#L12)

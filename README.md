@@ -12,8 +12,8 @@ ______________________________________________________________________
 
 ## Why df12-documentation-skills?
 
-Documentation quality depends on repeatable judgement. These skills collect
-the house rules in a form Codex can load at the right moment:
+Documentation quality depends on repeatable judgement. These skills collect the
+house rules in a form Codex can load at the right moment:
 
 - **Consistent workflow artefacts**: Commit messages, draft pull requests,
   README files, terms of reference, roadmaps, and design documents follow
@@ -78,8 +78,8 @@ ______________________________________________________________________
 ## Skills
 
 - [`changelog`](skills/changelog/SKILL.md) drafts and curates `CHANGELOG.md`
-  in the Common Changelog style, with consumer-focused entries, ISO 8601
-  dates, breaking-change prefixes and linked references.
+  in the Common Changelog style, with consumer-focused entries, ISO 8601 dates,
+  breaking-change prefixes and linked references.
 - [`commit-message`](skills/commit-message/SKILL.md) writes file-backed Git
   commit messages and forbids inline `git commit -m` messages.
 - [`df12-copy`](skills/df12-copy/SKILL.md) applies the df12 Productions copy
@@ -89,8 +89,8 @@ ______________________________________________________________________
   [`logisphere-expert-profiles.md`](skills/df12-copy/references/logisphere-expert-profiles.md).
 - [`df12-readme`](skills/df12-readme/SKILL.md) creates README files in the df12
   house style.
-- [`en-gb-oxendict-style`](skills/en-gb-oxendict-style/SKILL.md) enforces British
-  English with Oxford spelling conventions.
+- [`en-gb-oxendict-style`](skills/en-gb-oxendict-style/SKILL.md) enforces
+  British English with Oxford spelling conventions.
 - [`pr-creation`](skills/pr-creation/SKILL.md) creates draft pull requests with
   branch-wide descriptions, issue and roadmap references, execplan links, and
   reviewer entrypoints.

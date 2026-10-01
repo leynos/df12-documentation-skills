@@ -113,15 +113,15 @@ ______________________________________________________________________
 
 Before writing, gather information from these project locations:
 
-| Information needed     | Where to find it                                     |
-| ---------------------- | ---------------------------------------------------- |
-| Project purpose        | `docs/design-doc.md` or principal design document    |
-| Features and scope     | Design document, `Cargo.toml`/`pyproject.toml`       |
-| Installation           | `docs/users-guide.md`, build configuration           |
-| Usage examples         | `docs/users-guide.md`, `examples/` directory         |
-| Current status         | `docs/roadmap.md`                                    |
-| Licence                | `LICENSE` file                                       |
-| Contributing info      | `AGENTS.md`, `docs/developers-guide.md`              |
+| Information needed | Where to find it                                  |
+| ------------------ | ------------------------------------------------- |
+| Project purpose    | `docs/design-doc.md` or principal design document |
+| Features and scope | Design document, `Cargo.toml`/`pyproject.toml`    |
+| Installation       | `docs/users-guide.md`, build configuration        |
+| Usage examples     | `docs/users-guide.md`, `examples/` directory      |
+| Current status     | `docs/roadmap.md`                                 |
+| Licence            | `LICENSE` file                                    |
+| Contributing info  | `AGENTS.md`, `docs/developers-guide.md`           |
 
 _Table 1: Information sources for README content._
 

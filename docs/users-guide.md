@@ -14,8 +14,8 @@ ______________________________________________________________________
 Use the skills as a sequence rather than isolated snippets:
 
 1. Use
-   [`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md)
-   before solution work when the problem space is not yet explicit.
+   [`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md) before
+   solution work when the problem space is not yet explicit.
 2. Draft or update the downstream documentation artefact in the target
    repository.
 3. Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to create a roadmap, or
@@ -29,8 +29,8 @@ Use the skills as a sequence rather than isolated snippets:
 
 At release time — a separate cadence from per-branch work — use
 [`changelog`](../skills/changelog/SKILL.md) to curate `CHANGELOG.md` from the
-commits and pull requests in the release range, then commit the changelog
-edit before creating the git tag.
+commits and pull requests in the release range, then commit the changelog edit
+before creating the git tag.
 
 This keeps the branch narrative consistent from local commit to pull request
 review, and from pull request to released changelog entry.
@@ -55,19 +55,18 @@ Screen reader caption: Documentation work starts by checking whether the
 problem space is explicit. If it is not, run `terms-of-reference-doc` before
 drafting or updating the downstream document. If it is explicit, go directly to
 the downstream document. Roadmap work then branches between `roadmap-doc` for a
-new roadmap and `roadmap-grooming` for an existing living roadmap. Then validate
-the edited files against the repository gates, run `commit-message`, run
-`pr-creation`, and leave the pull request in the appropriate ready-for-review or
-draft state.
+new roadmap and `roadmap-grooming` for an existing living roadmap. Then
+validate the edited files against the repository gates, run `commit-message`,
+run `pr-creation`, and leave the pull request in the appropriate
+ready-for-review or draft state.
 
 ______________________________________________________________________
 
 ## Terms of reference
 
-Use
-[`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md) before
-technical design or roadmap work when the project needs a defensible statement
-of why it exists, who it serves and what sits outside scope.
+Use [`terms-of-reference-doc`](../skills/terms-of-reference-doc/SKILL.md)
+before technical design or roadmap work when the project needs a defensible
+statement of why it exists, who it serves and what sits outside scope.
 
 The skill produces `docs/terms-of-reference.md` unless the user specifies a
 different target. It is an elicitation-led workflow: first read prior art, then
@@ -75,11 +74,10 @@ build a provisional sketch with `[KNOWN]`, `[ASSUMED]` and `[OPEN]` claims,
 resolve the gaps one question at a time, and only then consolidate the draft.
 
 Terms of reference belong to the problem space, not the solution space. They
-capture domain context, market context, users and stakeholders,
-job-to-be-done, goals, non-goals, success criteria, hard constraints,
-assumptions, dependencies and open questions. Architecture, implementation
-sequence and technology choices should move to downstream design or roadmap
-documents.
+capture domain context, market context, users and stakeholders, job-to-be-done,
+goals, non-goals, success criteria, hard constraints, assumptions, dependencies
+and open questions. Architecture, implementation sequence and technology
+choices should move to downstream design or roadmap documents.
 
 Use the finished terms of reference as the upstream input for
 [`tech-design-doc`](../skills/tech-design-doc/SKILL.md) and
@@ -206,9 +204,9 @@ The workflow assumes the upstream artefacts produced earlier in this guide:
    wording converges. Merge related commits into single entries with multiple
    references.
 3. Write each entry in the imperative mood, one line, with at least one
-   Markdown-linked reference (commit, pull request, issue or external
-   ticket). Use `**Breaking:**` for breaking changes and place them before
-   non-breaking changes within their category.
+   Markdown-linked reference (commit, pull request, issue or external ticket).
+   Use `**Breaking:**` for breaking changes and place them before non-breaking
+   changes within their category.
 4. Commit the changelog edit using
    [`commit-message`](../skills/commit-message/SKILL.md) before creating the
    git tag, so the tag points at a commit whose `CHANGELOG.md` already
@@ -247,8 +245,8 @@ Each skill is a directory containing a `SKILL.md` whose YAML frontmatter is an
 Agent Skills manifest. The manifest `name` is the discovery name that a strict
 loader uses; a manifest without it is not discoverable, and a directory whose
 name differs from the manifest `name` fails validation. Every shipped skill
-directory matches its manifest `name`, so a skill can be referred to by the same
-identifier on disk and at the point of discovery.
+directory matches its manifest `name`, so a skill can be referred to by the
+same identifier on disk and at the point of discovery.
 
 `make lint` validates every shipped manifest, so a malformed or non-conformant
 manifest cannot be shipped. See the

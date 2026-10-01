@@ -33,8 +33,8 @@ Follow with one to three paragraphs that:
 ### Foundational phase
 
 The first phase is permitted (and usually necessary) to cover architectural
-decisions, build infrastructure, and test scaffolding. Even so, frame it as
-an idea:
+decisions, build infrastructure, and test scaffolding. Even so, frame it as an
+idea:
 
 > Idea: if the product settles its core contracts, packaging boundary, and
 > build spine before feature work starts, later slices can converge on one
@@ -50,9 +50,9 @@ Foundational steps typically cover:
 
 ### Vertical-slice phases
 
-Each subsequent phase delivers a usable vertical slice of functionality.
-Order slices so that each one builds on the artefacts and contracts of the
-previous slice. Prefer domain-oriented slices over tier-oriented ones.
+Each subsequent phase delivers a usable vertical slice of functionality. Order
+slices so that each one builds on the artefacts and contracts of the previous
+slice. Prefer domain-oriented slices over tier-oriented ones.
 
 Good slice names describe delivered value:
 
@@ -70,8 +70,8 @@ Bad slice names describe layers:
 
 ### Deferred-extensions phase
 
-Close the roadmap with a phase that collects work the design documents
-mention but explicitly defer from the core release. Frame the phase idea as:
+Close the roadmap with a phase that collects work the design documents mention
+but explicitly defer from the core release. Frame the phase idea as:
 
 > Idea: if the core v1 promise is already trustworthy and boring to operate,
 > the project can evaluate broader extensions on their product value instead
@@ -94,8 +94,8 @@ Immediately below the heading, state the **idea** as a testable hypothesis:
 > conservative fixes, and inspectable IR output, the product will already solve
 > a real repository problem before docstrings, plugins, or heavier NLP land.
 
-Follow with one to two paragraphs of context explaining what the phase
-delivers and why this ordering matters.
+Follow with one to two paragraphs of context explaining what the phase delivers
+and why this ordering matters.
 
 ## Step anatomy
 
@@ -116,8 +116,8 @@ Cite the relevant design document sections and RFCs.
 A step groups only tasks that serve the same delivery objective. If the tasks
 under a step do not share one operational purpose, split the step.
 
-Steps are sequenced so each workstream either unlocks the next one or reduces
-a specific class of delivery risk. Steps do not need to be the same size.
+Steps are sequenced so each workstream either unlocks the next one or reduces a
+specific class of delivery risk. Steps do not need to be the same size.
 
 ## Task anatomy
 
@@ -144,15 +144,13 @@ A task is a checkbox item with dotted numbering:
   sequence, cite the dependency using dotted notation on a sub-bullet:
   `Requires 2.3.1.` or `Requires steps 1.1-1.3.`
 - **Design citations.** Cite the relevant design document section or RFC on a
-  sub-bullet: `See design-doc.md §3.2.` or
-  `See RFC 0001 §6.`
+  sub-bullet: `See design-doc.md §3.2.` or `See RFC 0001 §6.`
 - **Success criteria.** State explicit success criteria on a sub-bullet
-  prefixed with `Success:` when the criteria are not immediately obvious
-  from the task description. Success criteria must be measurable or
-  observable.
+  prefixed with `Success:` when the criteria are not immediately obvious from
+  the task description. Success criteria must be measurable or observable.
 - **Sub-tasks.** Break complex tasks into sub-bullets describing the concrete
-  build activities. Sub-tasks are indented under the headline task. They do
-  not carry dotted numbers unless the roadmap is very large.
+  build activities. Sub-tasks are indented under the headline task. They do not
+  carry dotted numbers unless the roadmap is very large.
 - **Scope.** Keep tasks small enough that each represents a coherent unit of
   delivery. Tasks should be review-sized: small enough for one realistic pull
   request review and broadly comparable in review burden to other tasks in the
@@ -163,12 +161,12 @@ A task is a checkbox item with dotted numbering:
 
 Use dotted notation for all dependency citations:
 
-|Pattern|Meaning|
-|-|-|
-|`Requires 1.1.1.`|One specific task.|
-|`Requires 1.1.1 and 1.1.2.`|Two specific tasks.|
-|`Requires steps 1.1-1.3.`|All tasks in steps 1.1 through 1.3.|
-|`Requires phase 2.`|Completion of an entire phase.|
+| Pattern                     | Meaning                             |
+| --------------------------- | ----------------------------------- |
+| `Requires 1.1.1.`           | One specific task.                  |
+| `Requires 1.1.1 and 1.1.2.` | Two specific tasks.                 |
+| `Requires steps 1.1-1.3.`   | All tasks in steps 1.1 through 1.3. |
+| `Requires phase 2.`         | Completion of an entire phase.      |
 
 ### Design citation notation
 
@@ -196,11 +194,11 @@ See adr-001-packaging-boundary.md.
 
 The roadmap hierarchy maps directly to the GIST framework:
 
-|Roadmap layer|GIST element|Purpose|
-|-|-|-|
-|Phase|Idea|Testable hypothesis about the product.|
-|Step|Workstream|Validates or falsifies the idea.|
-|Task|Task|Concrete, measurable execution unit.|
+| Roadmap layer | GIST element | Purpose                                |
+| ------------- | ------------ | -------------------------------------- |
+| Phase         | Idea         | Testable hypothesis about the product. |
+| Step          | Workstream   | Validates or falsifies the idea.       |
+| Task          | Task         | Concrete, measurable execution unit.   |
 
 ### What makes a good idea (phase)
 
@@ -236,17 +234,17 @@ A task must be:
 
 ### Principle
 
-Deliver useful functionality end-to-end in each phase rather than building
-the system tier by tier. Each slice should exercise the full stack from input
-to output for a specific domain.
+Deliver useful functionality end-to-end in each phase rather than building the
+system tier by tier. Each slice should exercise the full stack from input to
+output for a specific domain.
 
 ### Sequencing heuristics
 
 1. **Contracts and decisions before code.** Unresolved architectural
    decisions cause rework. Settle them in the foundational phase.
 2. **Narrowest useful domain first.** Start with the domain that exercises
-   the most architecture with the least scope. This is often the simplest
-   input format with the most complete design coverage.
+   the most architecture with the least scope. This is often the simplest input
+   format with the most complete design coverage.
 3. **Extend, do not rebuild.** Each subsequent slice should reuse and extend
    the loop established by the first slice, not build a parallel path.
 4. **Defer what does not block adoption.** Features the design explicitly
@@ -258,43 +256,41 @@ to output for a specific domain.
 
 ### Cross-cutting concerns
 
-Some work (caching, performance, debugging, documentation) touches every
-slice. Handle these by including relevant tasks in each slice rather than
-collecting them into a cross-cutting phase. The principle: each slice should
-be independently useful and independently testable.
+Some work (caching, performance, debugging, documentation) touches every slice.
+Handle these by including relevant tasks in each slice rather than collecting
+them into a cross-cutting phase. The principle: each slice should be
+independently useful and independently testable.
 
 ### Testing philosophy
 
-Testing is a development activity, not a delivery artefact. Apply these
-rules when deciding how to represent testing in the roadmap.
+Testing is a development activity, not a delivery artefact. Apply these rules
+when deciding how to represent testing in the roadmap.
 
-**Do not create tasks for unit or behavioural tests.** These are a normal
-part of implementing any task. A task should not exist solely to add tests;
-the tests are implied by the task's acceptance criteria. Where specific
-outcome testing is expected and may not be inferred from the task
-description, state it as a `Success:` criterion on the headline task rather
-than as a separate task.
+**Do not create tasks for unit or behavioural tests.** These are a normal part
+of implementing any task. A task should not exist solely to add tests; the
+tests are implied by the task's acceptance criteria. Where specific outcome
+testing is expected and may not be inferred from the task description, state it
+as a `Success:` criterion on the headline task rather than as a separate task.
 
-**Weave formal methods into development tasks.** Model checking,
-property-based testing, and prover integration belong alongside the work
-they validate. Developers should reach for these tools as a matter of
-course, not as an afterthought. A dedicated hardening task is appropriate
-only when the scope of model checking, lemma or axiom proofs, or invariant
-coverage clearly exceeds what a single PR can absorb alongside its
-implementation work.
+**Weave formal methods into development tasks.** Model checking, property-based
+testing, and prover integration belong alongside the work they validate.
+Developers should reach for these tools as a matter of course, not as an
+afterthought. A dedicated hardening task is appropriate only when the scope of
+model checking, lemma or axiom proofs, or invariant coverage clearly exceeds
+what a single PR can absorb alongside its implementation work.
 
-**E2E and combinatorial tests warrant their own tasks.** End-to-end suites
-— especially those covering multiple flags, features, or integration points
-in combination — cannot be collapsed into a single implementation task.
-Treat them as first-class deliverables and size them accordingly.
-Combinatorial flag coverage and multi-feature integration scenarios are
-especially high-value and should be encouraged explicitly.
+**E2E and combinatorial tests warrant their own tasks.** End-to-end suites —
+especially those covering multiple flags, features, or integration points in
+combination — cannot be collapsed into a single implementation task. Treat them
+as first-class deliverables and size them accordingly. Combinatorial flag
+coverage and multi-feature integration scenarios are especially high-value and
+should be encouraged explicitly.
 
-**Ask what testing gives real confidence.** When scoping a step, consider
-what evidence would genuinely convince users and library consumers that the
-outcome is correct and safe to depend on. Tests that answer that question
-belong in the roadmap. Tests that exist only to satisfy a coverage metric
-or to check a box do not.
+**Ask what testing gives real confidence.** When scoping a step, consider what
+evidence would genuinely convince users and library consumers that the outcome
+is correct and safe to depend on. Tests that answer that question belong in the
+roadmap. Tests that exist only to satisfy a coverage metric or to check a box
+do not.
 
 ## Formatting rules
 
@@ -332,8 +328,8 @@ British English, Oxford spelling:
 
 ## Structural example
 
-The following skeleton illustrates the expected document structure. It is not
-a complete roadmap; it shows the shape, not the substance.
+The following skeleton illustrates the expected document structure. It is not a
+complete roadmap; it shows the shape, not the substance.
 
 ```markdown
 # Widgetron roadmap
@@ -424,9 +420,8 @@ letting them destabilize the main release.
 
 ### Layer cake
 
-Phases named after technical tiers ("Parser", "Engine", "CLI", "Tests")
-rather than delivered value. Restructure so each phase delivers a usable
-slice.
+Phases named after technical tiers ("Parser", "Engine", "CLI", "Tests") rather
+than delivered value. Restructure so each phase delivers a usable slice.
 
 ### Passive headings
 
@@ -436,9 +431,9 @@ question.
 
 ### Aspirational tasks
 
-Tasks phrased as intentions ("Improve error handling") rather than
-deliverables ("Implement structured error recovery for malformed input with
-golden-file regression tests"). Rewrite with concrete acceptance criteria.
+Tasks phrased as intentions ("Improve error handling") rather than deliverables
+("Implement structured error recovery for malformed input with golden-file
+regression tests"). Rewrite with concrete acceptance criteria.
 
 ### Orphaned scope
 
@@ -462,9 +457,9 @@ boundaries.
 
 ### Date commitments
 
-Roadmaps must not promise dates, durations, or timeframes. Development
-effort should stay review-sized at the task level, but the roadmap does not
-predict calendar time.
+Roadmaps must not promise dates, durations, or timeframes. Development effort
+should stay review-sized at the task level, but the roadmap does not predict
+calendar time.
 
 ### Unit test tasks
 
@@ -475,24 +470,23 @@ instead.
 
 ### Testing theatre
 
-Tasks that add tests because they satisfy a metric or check a box, rather
-than because they provide meaningful confidence. Before including a test
-task, ask: what will users or library consumers now know that they did not
-know before? If there is no clear answer, the task should not exist.
+Tasks that add tests because they satisfy a metric or check a box, rather than
+because they provide meaningful confidence. Before including a test task, ask:
+what will users or library consumers now know that they did not know before? If
+there is no clear answer, the task should not exist.
 
 ### Isolated proving step
 
-A dedicated step or phase for model checking, formal proofs, or
-property-based testing, divorced from the implementation tasks they
-validate. Weave these activities into the relevant delivery tasks.
-A hardening task is acceptable only when the proving scope — covering
-lemmas, axioms, or invariants — clearly exceeds what can be absorbed
-in a single implementation PR alongside its other work.
+A dedicated step or phase for model checking, formal proofs, or property-based
+testing, divorced from the implementation tasks they validate. Weave these
+activities into the relevant delivery tasks. A hardening task is acceptable
+only when the proving scope — covering lemmas, axioms, or invariants — clearly
+exceeds what can be absorbed in a single implementation PR alongside its other
+work.
 
 ### Missing E2E or combinatorial coverage
 
 A roadmap that omits end-to-end or combinatorial test tasks where they are
-genuinely needed. When a feature surface involves multiple flags or
-interacting subsystems, the combinatorial test suite is a first-class
-deliverable and should appear as an explicit task, not as an implied
-afterthought.
+genuinely needed. When a feature surface involves multiple flags or interacting
+subsystems, the combinatorial test suite is a first-class deliverable and
+should appear as an explicit task, not as an implied afterthought.

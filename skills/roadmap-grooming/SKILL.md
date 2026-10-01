@@ -12,10 +12,10 @@ design documents, Requests for Comments (RFCs), and Architectural Decision
 Records (ADRs). This skill *grooms* one that is already being executed against
 and continuously fed new work. The two share the GIST model, the formatting,
 and the authoring anti-patterns — all defined in `roadmap-doc` and its
-[`references/conventions.md`](../roadmap-doc/references/conventions.md). Do
-not re-derive those here: read them, then apply the grooming discipline below.
-In short, use `roadmap-doc` to write a roadmap and `roadmap-grooming` to keep
-it true and legible as it grows.
+[`references/conventions.md`](../roadmap-doc/references/conventions.md). Do not
+re-derive those here: read them, then apply the grooming discipline below. In
+short, use `roadmap-doc` to write a roadmap and `roadmap-grooming` to keep it
+true and legible as it grows.
 
 ## Required companion skill
 

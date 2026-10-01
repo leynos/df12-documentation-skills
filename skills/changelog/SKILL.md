@@ -5,8 +5,8 @@ description: Create, update, or review CHANGELOG.md entries using Common Changel
 
 # Changelog skill
 
-Produce or update a project's `CHANGELOG.md` in the Common Changelog style:
-a human-curated, ordered list of notable changes per versioned release. The
+Produce or update a project's `CHANGELOG.md` in the Common Changelog style: a
+human-curated, ordered list of notable changes per versioned release. The
 output prioritizes consumer comprehension over machine parsing.
 
 This skill is adapted from **Common Changelog** by Vincent Weevers, which is
@@ -80,8 +80,8 @@ changelog from a `git log` dump.
 - **Skip no-op changes.** If a commit was reverted within the same release
   range, leave both out.
 - **Separate description from commit body.** Each change is one line. Long
-  explanations belong in the commit, the PR, or a dedicated upgrade guide —
-  not the changelog.
+  explanations belong in the commit, the PR, or a dedicated upgrade guide — not
+  the changelog.
 
 ### 3. Structure the entry
 
@@ -99,8 +99,8 @@ Before delivering, check for these failure modes:
 - **Verbatim copying.** Did entries get pasted from commit subjects or PR
   titles without rephrasing? Rewrite.
 - **Conventional Commit residue.** Are entries prefixed with `feat:`,
-  `fix:`, `chore:`, `docs:`, or scoped variants like `feat(api):`? Strip
-  them. The category heading carries the type; the prefix is noise.
+  `fix:`, `chore:`, `docs:`, or scoped variants like `feat(api):`? Strip them.
+  The category heading carries the type; the prefix is noise.
 - **Vague entries.** "Improve performance" or "Fix bugs" are placeholders,
   not entries. Name what improved and by how much, or what bug was fixed.
 - **Missing references.** Does every entry link to at least a commit?
@@ -143,8 +143,8 @@ Each release begins with a second-level heading:
   (the tag itself may carry a `v` prefix).
 - The date is ISO 8601 (`YYYY-MM-DD`). No regional formats.
 - The version is a reference-style link to further information — typically a
-  GitHub release page or compare view. Reference definitions sit at the foot
-  of the file.
+  GitHub release page or compare view. Reference definitions sit at the foot of
+  the file.
 
 Example:
 
@@ -165,53 +165,51 @@ _Initial release._
 
 ### Notice
 
-A release may begin with a single italicized paragraph — a **notice** —
-before any change groups. Use a notice to:
+A release may begin with a single italicized paragraph — a **notice** — before
+any change groups. Use a notice to:
 
-- Point to an upgrade guide or blog post (`_If you are upgrading: see
-  [\`UPGRADING.md\`](UPGRADING.md)._`).
+- Point to an upgrade guide or blog post
+  (`_If you are upgrading: see [\`UPGRADING.md\`](UPGRADING.md)._`).
 - Describe a first release with no prior changes (`_Initial release._`).
-- Flag a yanked release (`_This release was yanked due to a regression
-  ([#123](https://example/issues/123))._`).
-- Note that a stable release simply promotes a prerelease (`_Stable release
-  based on [3.1.0-rc.2]._`).
+- Flag a yanked release
+  (`_This release was yanked due to a regression ([#123](https://example/issues/123))._`).
+- Note that a stable release simply promotes a prerelease
+  (`_Stable release based on [3.1.0-rc.2]._`).
 
 There is at most one notice per release. Notices do **not** replace change
-groups for yanked releases that had real content; the original change list
-must remain.
+groups for yanked releases that had real content; the original change list must
+remain.
 
 ### Change groups
 
-A change group is a third-level heading followed by an unordered list.
-The category must be one of these, used in this order when more than one
-applies:
+A change group is a third-level heading followed by an unordered list. The
+category must be one of these, used in this order when more than one applies:
 
 - `### Changed` — changes in existing functionality.
 - `### Added` — new functionality.
 - `### Removed` — removed functionality.
 - `### Fixed` — bug fixes.
 
-There is no `Deprecated` and no `Security` category. Record deprecations
-under `Changed` (``Deprecate the `unsafe` option``). Record security fixes
-under `Fixed` with a clear note.
+There is no `Deprecated` and no `Security` category. Record deprecations under
+`Changed` (``Deprecate the `unsafe` option``). Record security fixes under
+`Fixed` with a clear note.
 
 "Functionality" includes documentation, supported runtime environments, build
 outputs, and anything else a consumer perceives.
 
 #### Change line shape
 
-Each list item is a single line. An optional bold prefix appears at the
-start of the line, immediately before the change description; the three
-prefix forms are mutually exclusive. References follow the description, with
-authors last:
+Each list item is a single line. An optional bold prefix appears at the start
+of the line, immediately before the change description; the three prefix forms
+are mutually exclusive. References follow the description, with authors last:
 
 ```text
 - [**Breaking:** | **<Subsystem>:** | **<Subsystem> (breaking):** ]<Change> (<references>) (<authors>)
 ```
 
 Choose at most one of the three prefix forms. When a breaking change occurs
-inside a subsystem, use the combined `**<Subsystem> (breaking):**` form
-rather than stacking `**Breaking:**` and `**<Subsystem>:**` together.
+inside a subsystem, use the combined `**<Subsystem> (breaking):**` form rather
+than stacking `**Breaking:**` and `**<Subsystem>:**` together.
 
 Concretely:
 
@@ -226,15 +224,15 @@ Concretely:
 Write each change in the imperative mood and make it self-describing without
 relying on the category heading:
 
-| Avoid | Prefer |
-| --- | --- |
-| `Support of CentOS` | `Support CentOS` |
-| `` `write()` method`` | ``Add `write()` method`` |
-| ``Documentation for the `read()` method`` | ``Document the `read()` method`` |
-| `Added support for streaming uploads` | `Add support for streaming uploads` |
+| Avoid                                     | Prefer                              |
+| ----------------------------------------- | ----------------------------------- |
+| `Support of CentOS`                       | `Support CentOS`                    |
+| `` `write()` method``                     | ``Add `write()` method``            |
+| ``Documentation for the `read()` method`` | ``Document the `read()` method``    |
+| `Added support for streaming uploads`     | `Add support for streaming uploads` |
 
-Use present-tense verbs: `Add`, `Bump`, `Document`, `Deprecate`, `Drop`,
-`Fix`, `Refactor`, `Remove`, `Rename`, `Restore`, `Support`.
+Use present-tense verbs: `Add`, `Bump`, `Document`, `Deprecate`, `Drop`, `Fix`,
+`Refactor`, `Remove`, `Rename`, `Restore`, `Support`.
 
 #### References
 
@@ -266,10 +264,10 @@ comma-separated:
 #### Authors
 
 After references, list authors in parentheses, comma-separated. With both
-references and authors on one entry, separate the two groups with a
-semicolon. References remain Markdown links — the shorthand `#194` is only
-used in this document's prose to keep examples readable; the rendered
-changelog must use the linked form:
+references and authors on one entry, separate the two groups with a semicolon.
+References remain Markdown links — the shorthand `#194` is only used in this
+document's prose to keep examples readable; the rendered changelog must use the
+linked form:
 
 ```markdown
 - Fix infinite loop ([#194](https://example/issues/194), [#195](https://example/issues/195); Alice Meerkat, Milly Moose)
@@ -285,56 +283,54 @@ the human who merged the pull request. Use each author's own preferred name
   the line. Breaking changes appear before non-breaking changes within each
   category.
 - **Subsystem:** For projects with subsystems (git submodules or other
-  internal units), prefix with the subsystem name: `**UI:**`,
-  `**Installer:**`. A breaking change within a subsystem uses
-  `**<Subsystem> (breaking):**`. Use subsystem prefixes sparingly — they
-  weaken semver signalling.
+  internal units), prefix with the subsystem name: `**UI:**`, `**Installer:**`.
+  A breaking change within a subsystem uses `**<Subsystem> (breaking):**`. Use
+  subsystem prefixes sparingly — they weaken semver signalling.
 
 ### Markdown formatting
 
 Common Changelog is not opinionated on Markdown formatting beyond the
-structural rules above. Adopt whatever line wrapping, list marker, and
-emphasis style the existing `CHANGELOG.md` uses, or the project's
-documentation conventions.
+structural rules above. Adopt whatever line wrapping, list marker, and emphasis
+style the existing `CHANGELOG.md` uses, or the project's documentation
+conventions.
 
 ## Antipatterns
 
 These reliably produce changelogs that nobody reads. Avoid them.
 
-- **Verbatim PR or commit dumps.** Lists like `docs: fix dead link
-  (#296)` mixed with `feat: support streaming (#291)` are noise. Curate.
+- **Verbatim PR or commit dumps.** Lists like `docs: fix dead link (#296)`
+  mixed with `feat: support streaming (#291)` are noise. Curate.
 - **Conventional Commit prefixes in entries.** The categories already
-  encode the kind of change; prefixes such as `feat:` and `fix(api):`
-  duplicate information and add cognitive load. Strip them when lifting
-  text from commits.
+  encode the kind of change; prefixes such as `feat:` and `fix(api):` duplicate
+  information and add cognitive load. Strip them when lifting text from commits.
 - **Regional dates.** `07/04/2024` is ambiguous across locales. Always
   use `YYYY-MM-DD`.
 - **An `Unreleased` section.** Common Changelog drops this. Pending
   changes live in commits and pull requests until release time.
 - **Multi-line entries.** A long explanation belongs in the linked
   commit, PR, or upgrade guide. The changelog stays scannable.
-- **`[YANKED]` tags.** Use a notice instead: `_This release was yanked
-  due to..._`.
+- **`[YANKED]` tags.** Use a notice instead:
+  `_This release was yanked due to…_`.
 
 ## Promoting a prerelease
 
 When promoting `X.Y.Z-rc.N` to `X.Y.Z`, pick one approach:
 
 - **Copy content.** Merge and rephrase the prerelease entries into the
-  stable entry as if the prereleases never existed. Best for public
-  projects whose consumers ignore prereleases.
+  stable entry as if the prereleases never existed. Best for public projects
+  whose consumers ignore prereleases.
 - **Skip the entry.** Acceptable only for prereleases used purely for
   internal continuous integration (CI) testing.
-- **Refer to the prerelease.** Use a notice: `_Stable release based on
-  [3.1.0-rc.2]._`. Best for private projects where all stakeholders
-  already know the prerelease contents.
+- **Refer to the prerelease.** Use a notice:
+  `_Stable release based on [3.1.0-rc.2]._`. Best for private projects where
+  all stakeholders already know the prerelease contents.
 
 ## Yanked releases
 
-A release that was public for more than a few hours stays in the
-changelog. Add a notice explaining the yank and linking to context.
-Keep the original change list. The following example uses npm (Node
-Package Manager), but the pattern applies to any package registry:
+A release that was public for more than a few hours stays in the changelog. Add
+a notice explaining the yank and linking to context. Keep the original change
+list. The following example uses npm (Node Package Manager), but the pattern
+applies to any package registry:
 
 ```markdown
 ## [8.5.1] - 2021-05-10
@@ -349,10 +345,10 @@ _This release was never published to npm due to a security regression
 
 ## Rewriting history
 
-It is acceptable, and sometimes necessary, to rewrite past changelog
-entries. A changelog is a historical record meant to answer "when did X
-change?" — improving older entries serves that purpose. Note the rewrite
-in the commit message that introduces it.
+It is acceptable, and sometimes necessary, to rewrite past changelog entries. A
+changelog is a historical record meant to answer "when did X change?" —
+improving older entries serves that purpose. Note the rewrite in the commit
+message that introduces it.
 
 ## Worked example
 
@@ -413,5 +409,5 @@ _If you are upgrading: please see [`UPGRADING.md`](UPGRADING.md)._
 This skill is adapted from **Common Changelog** by Vincent Weevers and
 contributors, available at <https://common-changelog.org/> (source:
 <https://github.com/vweevers/common-changelog>). Common Changelog is itself
-adapted from [Keep a Changelog](https://keepachangelog.com/) by Olivier
-Lacan and contributors. Both upstream documents are licensed under MIT.
+adapted from [Keep a Changelog](https://keepachangelog.com/) by Olivier Lacan
+and contributors. Both upstream documents are licensed under MIT.
