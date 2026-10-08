@@ -120,6 +120,51 @@ explanation are out of scope and are linked rather than absorbed.
 
 ______________________________________________________________________
 
+## Localization documentation
+
+Use [`localization-docs`](../skills/localization-docs/SKILL.md) to create,
+update, or review the localization documentation set modelled on Netsuke:
+
+- `docs/localization-styleguide.md` owns voice, tone, and writing mechanics.
+- `docs/localization-glossary.md` owns terminology and locale register.
+- `docs/translators-guide.md` owns runtime facts and contribution procedures.
+
+The skill preserves Netsuke's glossary schema: `title`, `preferred`,
+`allowed`, `forbidden`, with semicolon-separated alternatives and U+2014 for
+empty sets. It adapts product terminology, source locale, catalogue layout,
+registry, fallback, rendering, and validation to evidence from the target
+repository instead of copying Netsuke's implementation details.
+
+Install the whole folder, including its templates and references. It has no
+required companion skill and is included by the install-all command:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R skills/localization-docs "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+Invoke it for the complete set or a scoped update:
+
+```text
+Use $localization-docs to create the localization style guide, glossary,
+and translator's guide for this repository, grounded in its actual catalogues,
+locale registration, rendering, and tests.
+```
+
+```text
+Use $localization-docs to review only the glossary's French register and term
+mappings. Preserve unrelated accepted decisions and report runtime findings
+without modifying the catalogues or localization implementation.
+```
+
+The skill separates structural checks, exercised runtime behaviour, rendered
+layout, and linguistic review. Uncertain translations stay outside authoritative
+glossary tables. A documentation request does not authorize translation
+rewrites or an external localization-oracle run. The resulting documents give
+translators and separately authorized auditors the same reviewable policy.
+
+______________________________________________________________________
+
 ## Roadmaps
 
 Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to author a new GIST

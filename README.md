@@ -5,8 +5,8 @@ workflows.*
 
 This repository packages small, focused skills that make documentation work
 repeatable: commit messages, pull request descriptions, README files, technical
-terms of reference, design documents, roadmaps, df12 copy and en-GB Oxford
-English.
+terms of reference, design documents, roadmaps, localization documentation,
+df12 copy and en-GB Oxford English.
 
 ______________________________________________________________________
 
@@ -91,6 +91,10 @@ ______________________________________________________________________
   house style.
 - [`en-gb-oxendict-style`](skills/en-gb-oxendict-style/SKILL.md) enforces
   British English with Oxford spelling conventions.
+- [`localization-docs`](skills/localization-docs/SKILL.md) creates or updates
+  localization style guides, four-column terminology glossaries, and
+  translator's guides using the Netsuke documentation model. It includes
+  self-contained templates, evidence requirements, and review scenarios.
 - [`pr-creation`](skills/pr-creation/SKILL.md) creates draft pull requests with
   branch-wide descriptions, issue and roadmap references, execplan links, and
   reviewer entrypoints.
