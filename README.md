@@ -91,6 +91,10 @@ ______________________________________________________________________
   house style.
 - [`en-gb-oxendict-style`](skills/en-gb-oxendict-style/SKILL.md) enforces
   British English with Oxford spelling conventions.
+- [`localization-docs`](skills/localization-docs/SKILL.md) creates or maintains
+  a coordinated localization style guide, four-column glossary, and translator's
+  guide, modelled on Netsuke and verified against the target repository. It ships
+  document contracts, a pinned reference model, and a verification protocol.
 - [`pr-creation`](skills/pr-creation/SKILL.md) creates draft pull requests with
   branch-wide descriptions, issue and roadmap references, execplan links, and
   reviewer entrypoints.
