@@ -120,6 +120,59 @@ explanation are out of scope and are linked rather than absorbed.
 
 ______________________________________________________________________
 
+## Localization documentation
+
+Use [`localization-docs`](../skills/localization-docs/SKILL.md) to create,
+update, or review a coordinated localization documentation set. It produces
+`docs/localization-styleguide.md`, `docs/localization-glossary.md`, and
+`docs/translators-guide.md` by default, or maintains their existing equivalents.
+
+The style guide owns voice, tone, and writing mechanics. The glossary owns
+terminology and per-locale register decisions, using Netsuke's exact `title`,
+`preferred`, `allowed`, and `forbidden` columns. The translator's guide owns
+catalogue mechanics, the locale registry, selection and fallback, contribution
+steps, validation, and runtime limitations. The skill cross-links these owners
+rather than duplicating policy across the three documents.
+
+Install the folder with its bundled references; it has no companion-skill
+dependency:
+
+```bash
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R skills/localization-docs "${CODEX_HOME:-$HOME/.codex}/skills/"
+```
+
+Invoke it explicitly, for example:
+
+```text
+Use $localization-docs to create the localization style guide, glossary,
+and translator's guide for this repository, following the Netsuke model.
+```
+
+For an existing set, scope the change without starting again:
+
+```text
+Use $localization-docs to update the glossary's locale register notes.
+Inspect the companion guides and report any consistency changes needed.
+```
+
+The skill inspects real catalogues, call sites, registries, and tests before
+writing implementation claims. It preserves region and script variants,
+separates numeric plural support from valid FTL syntax, and distinguishes bidi
+isolation from output direction. Unverified terminology remains an explicit
+review question, not an invented approved translation.
+
+The scope is documentation authoring, not catalogue translation, runtime repair,
+or automatic linguistic-oracle execution. Documentation uses British Oxford
+English; source and target catalogues retain their own verified language policy.
+Read the bundled
+[document contracts](../skills/localization-docs/references/document-contracts.md),
+[Netsuke model](../skills/localization-docs/references/netsuke-model.md), and
+[verification protocol](../skills/localization-docs/references/verification.md)
+for the detailed workflow.
+
+______________________________________________________________________
+
 ## Roadmaps
 
 Use [`roadmap-doc`](../skills/roadmap-doc/SKILL.md) to author a new GIST
