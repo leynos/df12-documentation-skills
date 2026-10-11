@@ -1,3 +1,28 @@
+# Every uv call goes through the vendored helper, which cleans the environment,
+# uses the global uv cache, runs offline first and goes online at most once. See
+# https://github.com/leynos/shared-actions/tree/main/uv_gate for the contract.
+UV_GATE ?= python3 scripts/uv_gate.py
+UV ?= uv
+# The helper finds uv on PATH, so a caller's UV=/path/to/uv is honoured by putting
+# that uv's directory first on PATH for every recipe.
+export PATH := $(if $(findstring /,$(UV)),$(patsubst %/,%,$(dir $(UV))):)$(PATH)
+# A UV given on the command line or in the environment must be uv itself or an executable
+# file named uv: the helper finds uv on PATH by that name and would otherwise use another.
+ifneq ($(filter command line environment,$(origin UV)),)
+ifneq ($(UV),uv)
+ifeq ($(findstring /,$(UV)),)
+$(error UV=$(UV) must be uv or a path to an executable file named uv)
+endif
+ifeq ($(shell test -f '$(UV)' -a -x '$(UV)' && printf y),)
+$(error UV=$(UV) is not an executable file)
+endif
+ifneq ($(notdir $(UV)),uv)
+$(error UV=$(UV) must be named uv)
+endif
+endif
+endif
+
+
 SHELL := /usr/bin/env
 .SHELLFLAGS := bash -c
 
@@ -17,8 +42,8 @@ CHANGED_SKILLS := $(sort $(shell \
 	| awk -F/ 'NF >= 3 { print $$1 "/" $$2 }' | sort -u))
 
 SKILL_DIRS ?= $(sort $(dir $(wildcard skills/*/SKILL.md)))
-SKILLS_REF := uv run --group dev skills-ref
-YAMLLINT := uv run --group dev yamllint
+SKILLS_REF := $(UV_GATE) run --group dev -- skills-ref
+YAMLLINT := $(UV_GATE) run --group dev -- yamllint
 SKILL_YAMLLINT_CONFIG := {extends: default, rules: {line-length: disable}}
 
 PYTHON_TESTS := tests
@@ -32,7 +57,12 @@ MDTABLEFIX ?= mdtablefix
 MDTABLEFIX_SELECT = --git --include-untracked
 MDTABLEFIX_RULES = --wrap --renumber --breaks --ellipsis --fences
 
-.PHONY: markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test fmt
+.PHONY: prepare markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test fmt
+
+.DEFAULT_GOAL := markdownlint
+
+prepare: ## Install the locked development environment, offline first
+	$(UV_GATE) prepare --group dev
 
 markdownlint:
 	@if [ -n "$(CHANGED_MARKDOWN)" ]; then \
@@ -48,24 +78,24 @@ nixie:
 		echo "No changed Markdown files to validate with nixie."; \
 	fi
 
-check-fmt:
+check-fmt: prepare
 	git diff --check
-	uv run --group dev ruff format --check $(PYTHON_TESTS)
+	$(UV_GATE) run --group dev -- ruff format --check $(PYTHON_TESTS)
 	$(MAKE) markdownlint
 	$(MDTABLEFIX) --check $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
 
-lint: nixie skill-manifest-check
-	uv run --group dev ruff check $(PYTHON_TESTS)
-	uv run --group dev interrogate --fail-under 100 $(PYTHON_TESTS)
+lint: nixie skill-manifest-check prepare
+	$(UV_GATE) run --group dev -- ruff check $(PYTHON_TESTS)
+	$(UV_GATE) run --group dev -- interrogate --fail-under 100 $(PYTHON_TESTS)
 
-skill-frontmatter-lint:
+skill-frontmatter-lint: prepare
 	@set -euo pipefail; for skill_dir in $(SKILL_DIRS); do \
 		skill_file="$${skill_dir%/}/SKILL.md"; \
 		echo "yamllint $$skill_file frontmatter"; \
 		awk 'NR == 1 { if ($$0 != "---") exit 1; print; next } $$0 == "---" { found = 1; print; exit } { print } END { if (!found) exit 1 }' "$$skill_file" | $(YAMLLINT) -d '$(SKILL_YAMLLINT_CONFIG)' -; \
 	done
 
-skill-manifest-validate:
+skill-manifest-validate: prepare
 	@set -eu; for skill_dir in $(SKILL_DIRS); do \
 		echo "skills-ref validate $$skill_dir"; \
 		$(SKILLS_REF) validate "$$skill_dir"; \
@@ -73,10 +103,10 @@ skill-manifest-validate:
 
 skill-manifest-check: skill-frontmatter-lint skill-manifest-validate
 
-typecheck: skill-creator-validate
-	uv run --group dev ty check $(PYTHON_TESTS)
+typecheck: skill-creator-validate prepare
+	$(UV_GATE) run --group dev -- ty check $(PYTHON_TESTS)
 
-skill-creator-validate:
+skill-creator-validate: prepare
 	@set -eu; \
 	if [ ! -f "$(QUICK_VALIDATE)" ]; then \
 		echo "WARNING: skill-creator not found; skipping quick_validate.py."; \
@@ -90,11 +120,11 @@ skill-creator-validate:
 	fi; \
 	for skill in $(CHANGED_SKILLS); do \
 		echo "quick_validate $$skill"; \
-		uv run --with pyyaml python "$(QUICK_VALIDATE)" "$$skill"; \
+		$(UV_GATE) run --group dev -- python "$(QUICK_VALIDATE)" "$$skill"; \
 	done
 
-test: typecheck
-	uv run --group dev pytest -v $(PYTHON_TESTS)
+test: typecheck prepare
+	$(UV_GATE) run --group dev -- pytest -v $(PYTHON_TESTS)
 
 fmt: ## Format Markdown sources
 	$(MDTABLEFIX) --in-place $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
