@@ -47,6 +47,13 @@ YAMLLINT := $(UV_GATE) run --group dev -- yamllint
 SKILL_YAMLLINT_CONFIG := {extends: default, rules: {line-length: disable}}
 
 PYTHON_TESTS := tests
+# `scripts/uv_gate.py` is the shared-actions helper, vendored byte for byte, so it
+# is not edited here; it ships with complete docstrings, so the gate covers it.
+INTERROGATE_TARGETS ?= $(PYTHON_TESTS) scripts
+# Level 2 prints a MISSED row per undocumented definition, which the
+# `interrogate` target fails on: the rounded percentage alone can pass a lone gap.
+INTERROGATE_FLAGS ?= -vv --fail-under 100
+INTERROGATE ?= $(UV_GATE) run --group dev -- interrogate
 
 # `make fmt` and `make check-fmt` call mdtablefix directly. `--git` selects the
 # Markdown files Git tracks and `--include-untracked` adds the untracked files
@@ -57,7 +64,7 @@ MDTABLEFIX ?= mdtablefix
 MDTABLEFIX_SELECT = --git --include-untracked
 MDTABLEFIX_RULES = --wrap --renumber --breaks --ellipsis --fences
 
-.PHONY: prepare markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test fmt
+.PHONY: prepare markdownlint nixie check-fmt lint skill-frontmatter-lint skill-manifest-validate skill-manifest-check skill-creator-validate typecheck test fmt interrogate
 
 .DEFAULT_GOAL := markdownlint
 
@@ -84,9 +91,20 @@ check-fmt: prepare
 	$(MAKE) markdownlint
 	$(MDTABLEFIX) --check $(MDTABLEFIX_SELECT) $(MDTABLEFIX_RULES)
 
-lint: nixie skill-manifest-check prepare
+# Interrogate rounds its percentage to one decimal, so `--fail-under 100` alone
+# can pass a lone gap in a large repository; fail on any MISSED row as well.
+interrogate: prepare ## Enforce complete Python docstring coverage
+	@report="$$($(INTERROGATE) $(INTERROGATE_FLAGS) $(INTERROGATE_TARGETS))"; \
+	  status=$$?; \
+	  printf '%s\n' "$$report"; \
+	  test "$$status" -eq 0 || exit "$$status"; \
+	  if printf '%s\n' "$$report" | grep -q '| *MISSED *|'; then \
+	    printf '%s\n' 'interrogate: undocumented definitions remain; see the MISSED rows above' >&2; \
+	    exit 1; \
+	  fi
+
+lint: interrogate nixie skill-manifest-check prepare
 	$(UV_GATE) run --group dev -- ruff check $(PYTHON_TESTS)
-	$(UV_GATE) run --group dev -- interrogate --fail-under 100 $(PYTHON_TESTS)
 
 skill-frontmatter-lint: prepare
 	@set -euo pipefail; for skill_dir in $(SKILL_DIRS); do \

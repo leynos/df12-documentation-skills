@@ -48,6 +48,20 @@ driver, so automation can invoke the same targets as local development.
 
 ______________________________________________________________________
 
+## Docstring coverage
+
+`make lint` first runs `make interrogate`, which needs `uv` and fails on any
+Python definition it scans under `tests` and `scripts` without a docstring. It
+also fails on any `MISSED` row, because interrogate rounds its percentage to
+one decimal and so can pass a lone gap in a sufficiently large codebase.
+Interrogate 1.7.0 skips a path whose first component below a target begins with
+`.tox`, `.venv`, `venv`, `.git` or `.hg`; `tests/test_interrogate_gate.py`
+fails if a tracked Python file sits at such a name, or in a directory of that
+name, directly under a target. `scripts/uv_gate.py` is the vendored
+shared-actions helper; it is not edited here, and it ships with complete
+docstrings. Add a new Python directory to `INTERROGATE_TARGETS`; the same test
+asserts the wiring.
+
 ## Skill manifest validation
 
 Each skill directory under [`skills/`](../skills) carries a `SKILL.md` whose
