@@ -11,7 +11,12 @@ Give a fresh agent the relevant skill directories, scenario inputs, and a
 bounded authoring request. Do not supply the expected outcome to that agent. A
 separate reviewer compares the artefacts with the oracle below and records the
 input revision, skill revisions, agent/model, output, result, and evidence. Do
-not allow a scenario to publish changes or execute a deployment.
+not allow a scenario to publish changes or execute a deployment. Record the
+installed `execplans` skill's source and content hash, obtained with
+`git hash-object SKILL.md`, alongside the documentation skill revisions. The
+runs recorded here used `leynos/agent-helper-scripts` `skills/execplans` at
+content hash `4fdba07976ac6a6f3b93bae5aa750230a0149379`; another installation
+or revision is a different input set, not the same evaluation.
 
 Run the four compatibility-negative cases independently, then the positive
 control. This detects a policy that appears correct only because every fixture

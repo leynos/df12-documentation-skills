@@ -145,7 +145,10 @@ Produce a working note that catalogues:
 Build a section-level sketch of the terms of reference from the prior art
 alone. For every section, mark each claim with one of three tags:
 
-- `[KNOWN]` — established from an explicit source in the prior art.
+- `[KNOWN]` — established from an explicit source in the prior art, within
+  the scope that source supports. A brief or request establishes what the
+  sponsor asks for, not the truth of an empirical claim inside it; that claim
+  needs its own evidence.
 - `[ASSUMED]` — the prior art implies it but does not state it; or it
   is a reasonable inference that needs confirmation.
 - `[OPEN]` — no answer in the prior art.

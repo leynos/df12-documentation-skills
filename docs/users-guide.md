@@ -79,11 +79,46 @@ goals, non-goals, success criteria, hard constraints, assumptions, dependencies
 and open questions. Architecture, implementation sequence and technology
 choices should move to downstream design or roadmap documents.
 
+The skill hands downstream a traceable contract rather than a summary. Material
+goals, constraints, success criteria, assumptions, and open questions carry
+stable project-local identifiers that a revision preserves rather than silently
+redefines. Evidence, approval, and delivery state stay separate records, so a
+claim supported within its stated scope is not mistaken for an accepted
+decision or for delivered work. Each dependency record names the capability,
+provider, availability condition, and the work it gates. Source-API
+compatibility machinery is excluded for private, test-only, pre-1.0, and
+unreleased APIs, which change together with their callers; persisted data and
+wire formats are assessed separately.
+
 Use the finished terms of reference as the upstream input for
 [`tech-design-doc`](../skills/tech-design-doc/SKILL.md) and
 [`roadmap-doc`](../skills/roadmap-doc/SKILL.md). If it introduces domain terms
 that are not already in `docs/context.md`, list those as companion context
 additions during hand-off.
+
+______________________________________________________________________
+
+## Technical design
+
+Use [`tech-design-doc`](../skills/tech-design-doc/SKILL.md) to turn settled
+problem-space intent into an evidence-backed design. The skill pins a
+conformance basis to the upstream revisions the design answers, separates the
+baseline from the target and records each gap with a disposition, derives views
+from named stakeholder concerns rather than illustrating the architecture for
+its own sake, and states governing principles it has discovered rather than
+invented. Its verification plan names the invariants, methods, and external
+assumptions that discharge each obligation, and argues that those obligations
+are non-vacuous: a check that cannot fail demonstrates nothing about the
+property it claims.
+
+The skill's contract with `execplans` divides responsibility: the design owns
+intent and verification obligations, and the plan owns execution. A deviation
+discovered during implementation is recorded in the plan's `Decision log`, and
+the plan enters `BLOCKED` until the authoritative upstream artefact accepts the
+change; the plan reaches `COMPLETE` only after that reconciliation is recorded
+upstream. Design acceptance is not implementation approval, so the plan maps
+the handoff to its `Conformance basis`, `Verification plan`, milestones, and
+acceptance evidence without inventing approvals or past results.
 
 ______________________________________________________________________
 
