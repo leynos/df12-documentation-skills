@@ -22,6 +22,8 @@ USERS_GUIDE_FILE = REPOSITORY_ROOT / "docs" / "users-guide.md"
 
 GLOSSARY_COLUMNS = ("title", "preferred", "allowed", "forbidden")
 EMPTY_SET_CODE_POINT = "U+2014"
+EMPTY_SET_USE = f"Use the single {EMPTY_SET_CODE_POINT} character"
+EMPTY_SET_INVERSION = "Do not use the single U+2014 character"
 EMPTY_SET_PROHIBITIONS = ("Do not use an empty cell", "`N/A`")
 WORKFLOW_STAGES = (
     "Establish scope and evidence",
@@ -37,13 +39,15 @@ DRAFTING_STAGE_OUTPUTS = (
     (4, "style guide"),
     (5, "translator's guide"),
 )
-README_REQUIREMENTS = ("skills/localization-docs/SKILL.md", "localization-docs")
-USERS_GUIDE_REQUIREMENTS = (
+REFERENCE_FILES = ("document-contracts.md", "netsuke-model.md", "verification.md")
+MINIMUM_STAGE_WORDS = 15
+PLACEHOLDER_MARKERS = ("placeholder", "todo", "tbd")
+README_REQUIREMENTS = (
+    "skills/localization-docs/SKILL.md",
     "localization-docs",
-    "document-contracts.md",
-    "netsuke-model.md",
-    "verification.md",
+    *REFERENCE_FILES,
 )
+USERS_GUIDE_REQUIREMENTS = ("localization-docs", *REFERENCE_FILES)
 
 _STAGE_HEADING = re.compile(r"^### (?P<number>\d+)\. (?P<title>.+)$", re.MULTILINE)
 _INLINE_LINK = re.compile(r"\[[^\]]*\]\((?P<target>[^)\s]+)(?:\s+\"[^\"]*\")?\)")
@@ -84,9 +88,11 @@ def _replace_table_header(text: str, columns: tuple[str, ...]) -> str:
 
 
 def _declares_empty_set_convention(text: str) -> bool:
-    """Return whether ``text`` documents the glossary empty-set convention."""
-    return EMPTY_SET_CODE_POINT in text and all(
-        marker in text for marker in EMPTY_SET_PROHIBITIONS
+    """Return whether ``text`` affirms the glossary empty-set convention."""
+    return (
+        EMPTY_SET_USE in text
+        and EMPTY_SET_INVERSION not in text
+        and all(marker in text for marker in EMPTY_SET_PROHIBITIONS)
     )
 
 
@@ -109,22 +115,42 @@ def _workflow_stage_titles(text: str) -> tuple[str, ...]:
     return tuple(title for _, title, _ in _workflow_stages(text))
 
 
-def _missing_stage_outputs(text: str) -> tuple[int, ...]:
-    """Return drafting stages that omit their required output document."""
-    named = {
-        number: f"{title}\n{body}" for number, title, body in _workflow_stages(text)
-    }
-    return tuple(
-        number
-        for number, document in DRAFTING_STAGE_OUTPUTS
-        if document not in named.get(number, "")
+def _stage_guidance_is_substantive(body: str) -> bool:
+    """Return whether a stage body contains real guidance, not a placeholder."""
+    lowered = body.lower()
+    return len(body.split()) >= MINIMUM_STAGE_WORDS and not any(
+        marker in lowered for marker in PLACEHOLDER_MARKERS
     )
+
+
+def _missing_stage_outputs(text: str) -> tuple[int, ...]:
+    """Return drafting stages that omit their document or substantive guidance."""
+    stages = {number: (title, body) for number, title, body in _workflow_stages(text)}
+    gaps: list[int] = []
+    for number, document in DRAFTING_STAGE_OUTPUTS:
+        title, body = stages.get(number, ("", ""))
+        if document not in title or not _stage_guidance_is_substantive(body):
+            gaps.append(number)
+    return tuple(gaps)
 
 
 def _rename_workflow_stage(text: str, number: int, title: str) -> str:
     """Return ``text`` with one workflow stage retitled."""
     pattern = re.compile(rf"^### {number}\. .+$", re.MULTILINE)
     return pattern.sub(f"### {number}. {title}", text, count=1)
+
+
+def _replace_workflow_stage_body(text: str, number: int, body: str) -> str:
+    """Return ``text`` with one workflow stage body replaced."""
+    pattern = re.compile(
+        rf"^### {number}\. .+$(?P<body>.*?)(?=^### |^## |\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    return pattern.sub(
+        lambda match: f"{match.group(0).splitlines()[0]}\n\n{body}\n\n",
+        text,
+        count=1,
+    )
 
 
 def _remove_workflow_stage(text: str, number: int) -> str:
@@ -197,6 +223,17 @@ def test_empty_set_convention_is_declared() -> None:
     assert _declares_empty_set_convention(text)
 
 
+def test_empty_set_convention_rejects_an_inverted_rule() -> None:
+    """Ensure negating the empty-set rule is detected despite its strings."""
+    text = CONTRACTS_FILE.read_text(encoding="utf-8").replace(
+        EMPTY_SET_USE,
+        EMPTY_SET_INVERSION,
+    )
+
+    assert EMPTY_SET_CODE_POINT in text
+    assert not _declares_empty_set_convention(text)
+
+
 @pytest.mark.parametrize(
     ("original", "replacement"),
     [
@@ -266,6 +303,14 @@ def test_drafting_stage_output_requirement_is_enforced() -> None:
     assert _missing_stage_outputs(mutated) != ()
 
 
+def test_drafting_stage_body_must_be_substantive() -> None:
+    """Ensure a filled-in heading cannot hide placeholder body text."""
+    text = SKILL_FILE.read_text(encoding="utf-8")
+    mutated = _replace_workflow_stage_body(text, 4, "Placeholder guidance.")
+
+    assert _missing_stage_outputs(mutated) != ()
+
+
 @pytest.mark.parametrize(
     "document",
     NEW_DOCUMENTS,
@@ -313,16 +358,29 @@ def test_discovery_check_rejects_placeholder_skill_names(placeholder: str) -> No
     assert _discovery_gaps(readme, guide) != ()
 
 
-@pytest.mark.parametrize(
-    "reference",
-    ["document-contracts.md", "netsuke-model.md", "verification.md"],
-)
-def test_discovery_check_requires_each_bundled_reference(reference: str) -> None:
+@pytest.mark.parametrize("reference", REFERENCE_FILES)
+def test_discovery_check_requires_each_reference_in_the_users_guide(
+    reference: str,
+) -> None:
     """Ensure the users' guide names every bundled reference file."""
     readme = README_FILE.read_text(encoding="utf-8")
     guide = USERS_GUIDE_FILE.read_text(encoding="utf-8").replace(
         reference,
         "reference.md",
     )
+
+    assert _discovery_gaps(readme, guide) != ()
+
+
+@pytest.mark.parametrize("reference", REFERENCE_FILES)
+def test_discovery_check_requires_each_reference_in_the_readme(
+    reference: str,
+) -> None:
+    """Ensure the README catalogue names every bundled reference file."""
+    readme = README_FILE.read_text(encoding="utf-8").replace(
+        reference,
+        "reference.md",
+    )
+    guide = USERS_GUIDE_FILE.read_text(encoding="utf-8")
 
     assert _discovery_gaps(readme, guide) != ()
