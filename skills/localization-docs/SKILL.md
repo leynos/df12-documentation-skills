@@ -60,8 +60,9 @@ companion change rather than silently expanding the task.
    terminology schema and document roles. Rediscover paths, source locale,
    message domains, supported tags, runtime types, and tests for each project.
 4. **Preserve the interface.** Separate translatable prose from literal
-   identifiers, commands, options, paths, message keys, interpolation contracts,
-   and machine-readable fields. A style decision must not change an interface.
+   identifiers, commands, options, paths, message keys, interpolation
+   contracts, and machine-readable fields. A style decision must not change an
+   interface.
 5. **Do not invent linguistic authority.** Support locale-specific terminology
    and register decisions with existing reviewed translations, relevant primary
    guidance, or a recorded reviewer decision. Label unverified proposals and
@@ -131,9 +132,9 @@ mechanics, locale integrity, machine-readable boundaries, and a review
 checklist. Use actual message families for examples and explain protected
 literals.
 
-Keep locale-specific address forms and term choices in the glossary. Explain how
-meaning and professional distance survive translation without imposing English
-word order, punctuation, grammatical gender, or plural categories.
+Keep locale-specific address forms and term choices in the glossary. Explain
+how meaning and professional distance survive translation without imposing
+English word order, punctuation, grammatical gender, or plural categories.
 
 ### 5. Draft the translator's guide
 
@@ -144,8 +145,9 @@ claim to code, configuration, a test, or explicit approved policy.
 
 Separate valid catalogue syntax from runtime capabilities. Inspect numeric
 argument types and actual selector behaviour before claiming plurals work.
-Separate inline isolation from paragraph direction and explain the tested policy
-for each output channel. Do not copy Netsuke's CLI or build commands verbatim.
+Separate inline isolation from paragraph direction and explain the tested
+policy for each output channel. Do not copy Netsuke's CLI or build commands
+verbatim.
 
 ### 6. Reconcile and verify
 
@@ -160,12 +162,12 @@ Do not change code or broaden translation-service access to make prose true.
 
 ### 7. Deliver
 
-Update the relevant documentation index or README. Report the documents changed,
-source revision, checks actually run, checks blocked or not run, unresolved
-locale decisions, and any implementation follow-up. Never claim native-speaker
-approval, translation completeness, or successful runtime validation without
-evidence.
+Update the relevant documentation index or README. Report the documents
+changed, source revision, checks actually run, checks blocked or not run,
+unresolved locale decisions, and any implementation follow-up. Never claim
+native-speaker approval, translation completeness, or successful runtime
+validation without evidence.
 
-For a requested pull request, follow the repository's commit and PR conventions.
-Do not create a recurring audit, invoke paid model services, merge, or publish a
-release merely because this documentation skill ran.
+For a requested pull request, follow the repository's commit and PR
+conventions. Do not create a recurring audit, invoke paid model services,
+merge, or publish a release merely because this documentation skill ran.

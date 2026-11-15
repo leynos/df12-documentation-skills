@@ -1,7 +1,7 @@
 # Verification and hand-off
 
-Verification has two separate obligations: the documentation set must agree with
-itself, and its instructions must agree with the target product. Neither a
+Verification has two separate obligations: the documentation set must agree
+with itself, and its instructions must agree with the target product. Neither a
 Markdown linter nor a translation model alone establishes both.
 
 ## Evidence map
@@ -35,8 +35,9 @@ Before delivery, verify:
   Source and locale records have non-empty titles and preferred forms;
   semicolons delimit alternatives; U+2014 means an empty set, not uncertainty.
 - Each locale-table title maps to a source concept. Every published preferred
-  term has evidence or a recorded approval. Open proposals sit outside normative
-  tables, and invariant names do not acquire conflicting locale preferences.
+  term has evidence or a recorded approval. Open proposals sit outside
+  normative tables, and invariant names do not acquire conflicting locale
+  preferences.
 - Definitions, forbidden forms, address choices, plural guidance, and bidi
   instructions do not contradict their owning document.
 - There are no leftover Netsuke-specific paths, commands, tags, or domain terms
@@ -51,17 +52,17 @@ validator or weaken existing checks merely to finish this task.
 
 Inspect the repository's instructions, Makefile or task runner, dependency
 configuration, and CI before choosing commands. Run the required documentation
-gates in their prescribed order. Use existing inexpensive tests and fixtures; do
-not launch an estate-wide build or translation campaign.
+gates in their prescribed order. Use existing inexpensive tests and fixtures;
+do not launch an estate-wide build or translation campaign.
 
 For commands documented in the translator's guide, check the working directory,
-prerequisites, input files, generated files, and expected observations. Exercise
-safe read-only or isolated paths when tools permit. Use a temporary copy or
-worktree for locale-addition examples; do not register a test locale in the real
-project under documentation-only authority.
+prerequisites, input files, generated files, and expected observations.
+Exercise safe read-only or isolated paths when tools permit. Use a temporary
+copy or worktree for locale-addition examples; do not register a test locale in
+the real project under documentation-only authority.
 
-Where the runtime is available, validate representative cases appropriate to the
-product:
+Where the runtime is available, validate representative cases appropriate to
+the product:
 
 1. Existing source and translated resources parse through the real loader.
 2. Required message keys, attributes, variable names, and protected literals
@@ -85,13 +86,14 @@ retain the distinction between current behaviour and intended policy.
 ## Technical review and linguistic review
 
 A successful parser or key-coverage test does not establish natural language
-quality. A linguistically plausible translation does not prove that the software
-preserves its variables or selects its plural branches.
+quality. A linguistically plausible translation does not prove that the
+software preserves its variables or selects its plural branches.
 
 Review terminology, register, meaning, script conventions, and contextual
 alternatives separately from technical checks. Existing reviewed catalogues and
-relevant style guides provide evidence; they do not prove a new passage received
-human review. Name the actual review performed and the remaining uncertainty.
+relevant style guides provide evidence; they do not prove a new passage
+received human review. Name the actual review performed and the remaining
+uncertainty.
 
 An oracle or auditor report can inform a separate authorized review, but its
 recommendations remain findings until checked against code, glossary scope, and
@@ -115,14 +117,14 @@ reference repository's suppression to make the documentation appear validated.
 
 ## Delivery contract
 
-Summarize the changed document paths, the inspected repository revision, and the
-Netsuke baseline when relevant. State checks and outcomes, unresolved
+Summarize the changed document paths, the inspected repository revision, and
+the Netsuke baseline when relevant. State checks and outcomes, unresolved
 terminology or policy decisions, incomplete locale coverage, and implementation
 follow-ups. Update user-facing discovery documentation alongside a new skill
 installation.
 
 For a pull request, preserve the repository's draft/readiness convention and
-include purpose-first review entry points plus validation evidence. Do not claim
-that documentation work completed translation, added runtime support, obtained
-linguistic approval, or repaired a known defect unless that work actually ran
-within the user's authorization.
+include purpose-first review entry points plus validation evidence. Do not
+claim that documentation work completed translation, added runtime support,
+obtained linguistic approval, or repaired a known defect unless that work
+actually ran within the user's authorization.

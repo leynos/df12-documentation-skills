@@ -162,14 +162,14 @@ separates numeric plural support from valid FTL syntax, and distinguishes bidi
 isolation from output direction. Unverified terminology remains an explicit
 review question, not an invented approved translation.
 
-The scope is documentation authoring, not catalogue translation, runtime repair,
-or automatic linguistic-oracle execution. Documentation uses British Oxford
-English; source and target catalogues retain their own verified language policy.
-Read the bundled
-[document contracts](../skills/localization-docs/references/document-contracts.md),
-[Netsuke model](../skills/localization-docs/references/netsuke-model.md), and
-[verification protocol](../skills/localization-docs/references/verification.md)
-for the detailed workflow.
+The scope is documentation authoring, not catalogue translation, runtime
+repair, or automatic linguistic-oracle execution. Documentation uses British
+Oxford English; source and target catalogues retain their own verified language
+policy. Read the bundled references for the detailed workflow:
+
+- [document contracts](../skills/localization-docs/references/document-contracts.md)
+- [Netsuke model](../skills/localization-docs/references/netsuke-model.md)
+- [verification protocol](../skills/localization-docs/references/verification.md)
 
 ______________________________________________________________________
 

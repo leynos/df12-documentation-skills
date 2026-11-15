@@ -1,7 +1,7 @@
 # The Netsuke model and adaptation boundary
 
-This skill derives its document roles, glossary schema, and practical translator
-workflow from `leynos/netsuke` at commit
+This skill derives its document roles, glossary schema, and practical
+translator workflow from `leynos/netsuke` at commit
 `27d7eade290543fe0e92354ef66440788d89ce4d`, inspected on 2026-10-08. The
 baseline describes the provenance of this skill, not the current state of any
 repository where an agent later invokes it.
@@ -23,9 +23,9 @@ repository where an agent later invokes it.
 [translator]: https://github.com/leynos/netsuke/blob/27d7eade290543fe0e92354ef66440788d89ce4d/docs/translators-guide.md
 
 Read the pinned documents when checking why this skill requires a structure.
-Inspect the target repository at its own revision before making statements about
-its implementation. Newer source documents may improve the model, but changes to
-this baseline should record what changed and why.
+Inspect the target repository at its own revision before making statements
+about its implementation. Newer source documents may improve the model, but
+changes to this baseline should record what changed and why.
 
 ## What to carry forward
 
@@ -35,9 +35,10 @@ alternatives, and the U+2014 empty-set convention. Keep localizability
 explanations and locale register notes beside the tables rather than extending
 their schema.
 
-Also retain the distinction between invariant product voice and contextual tone,
-protected literals and translated prose, source and target locales, technical
-checks and linguistic review, and completed translations versus scaffolding.
+Also retain the distinction between invariant product voice and contextual
+tone, protected literals and translated prose, source and target locales,
+technical checks and linguistic review, and completed translations versus
+scaffolding.
 
 Do not transplant the source term inventory. Netsuke's distinctions between a
 target, an action, and a rule illustrate why domain terminology matters; they
@@ -58,21 +59,23 @@ These are Netsuke examples, not a default architecture.
 
 For another repository, identify its actual registry, resources, metadata,
 selection phases, and fallback. Do not turn deliberate language-specific rules
-into a universal BCP 47 algorithm. Distinguish the language of an input tag from
-the regional or script-specific catalogue that the application selects.
+into a universal BCP 47 algorithm. Distinguish the language of an input tag
+from the regional or script-specific catalogue that the application selects.
 
 ### Plural syntax versus runtime behaviour
 
-The baseline guide includes plural examples but explicitly reports a string-only
-argument limitation in its localization API. It says this prevents numeric CLDR
-category selection as intended. Treat that as a documented limitation to verify
-at the relevant revision, not a permanent property of Netsuke or Fluent.
+The baseline guide includes plural examples but explicitly reports a
+string-only argument limitation in its localization API. It says this prevents
+numeric CLDR category selection as intended. Treat that as a documented
+limitation to verify at the relevant revision, not a permanent property of
+Netsuke or Fluent.
 
-Fluent's [selector documentation][selectors] distinguishes string selectors from
-numeric selectors and requires a default variant. Its [variable documentation]
-[variables] also explains locale-aware numeric formatting. Therefore, inspect
-types and formatting ownership at call sites, then render representative values.
-Passing a catalogue parser does not establish runtime plural correctness.
+Fluent's [selector documentation][selectors] distinguishes string selectors
+from numeric selectors and requires a default variant. Its [variable
+documentation] [variables] also explains locale-aware numeric formatting.
+Therefore, inspect types and formatting ownership at call sites, then render
+representative values. Passing a catalogue parser does not establish runtime
+plural correctness.
 
 Do not copy the reference guide's category table into a new product. Determine
 what the installed engine implements and what values the API can reach, and
@@ -88,15 +91,15 @@ limitations explicitly instead of presenting an obsolete table as universal.
 The Netsuke guide describes dotted logical message keys. Before reusing those
 examples, inspect how that project's loader or preprocessing layer represents
 them to the parser. Do not teach a repository-specific naming convention as
-portable Fluent grammar. Preserve application keys during documentation work and
-use the target parser to validate examples.
+portable Fluent grammar. Preserve application keys during documentation work
+and use the target parser to validate examples.
 
 ### Directionality is channel-specific
 
 The baseline translator guide distinguishes Fluent's isolation of interpolated
 values from Netsuke's rules for the first strong character in terminal output.
-It describes U+200F prefixes for certain RTL message values and select variants,
-with explicit exceptions in tests.
+It describes U+200F prefixes for certain RTL message values and select
+variants, with explicit exceptions in tests.
 
 The baseline glossary's Arabic prose also refers to wrapping embedded Latin
 runs. Do not combine that wording into a second blanket rule or double-wrap

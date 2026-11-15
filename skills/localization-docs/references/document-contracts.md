@@ -11,9 +11,10 @@ Default path: `docs/localization-styleguide.md`.
 ### Opening and voice
 
 State the audience, covered product surfaces, and relationship to the glossary
-and translator's guide. Distinguish constant product voice from contextual tone.
-For operational messages, use clear, calm, capable, respectful language: state
-facts, avoid blame, preserve relevant values, and give only supported remedies.
+and translator's guide. Distinguish constant product voice from contextual
+tone. For operational messages, use clear, calm, capable, respectful language:
+state facts, avoid blame, preserve relevant values, and give only supported
+remedies.
 
 Do not turn product positioning or public-facing copy personality into a rule
 for diagnostics. Record a different established product voice explicitly rather
@@ -42,15 +43,15 @@ source locations. Label invented examples as illustrative and non-normative.
 
 Define the base professional distance and link to each locale's glossary notes
 for address forms, politeness, honorifics, and gender conventions. Preserve a
-consistent, natural register without translating English formality literally. Do
-not impose English grammatical constructions on another language. Prefer
+consistent, natural register without translating English formality literally.
+Do not impose English grammatical constructions on another language. Prefer
 established inclusive forms; record genuinely unsettled choices for review.
 
 ### Usage rules
 
 Provide concrete do and do-not guidance. Preserve diagnostic meaning, ordering
-where significant, technical distinctions, and repeated message-family patterns.
-Do not invent advice, guarantees, prompts, warnings, or blame.
+where significant, technical distinctions, and repeated message-family
+patterns. Do not invent advice, guarantees, prompts, warnings, or blame.
 
 Distinguish explanatory prose from frozen tokens. Identify product names,
 executables, package names, API symbols, option values, paths, and machine
@@ -78,8 +79,8 @@ guide rather than duplicating direction-mark rules.
 
 Identify the actual boundary between localized prose and machine-consumed data.
 A human-readable field can translate while its field name, schema, enum values,
-identifiers, and exit-status meaning remain stable. Do not claim that every JSON
-value must remain English. Derive each rule from the interface contract.
+identifiers, and exit-status meaning remain stable. Do not claim that every
+JSON value must remain English. Derive each rule from the interface contract.
 
 ### Quality checklist
 
@@ -113,9 +114,9 @@ Replace it with evidence-backed records in a real glossary.
   between distinct concepts, separated by semicolons.
 
 Use the single U+2014 character as Netsuke's empty-set marker in `allowed` and
-`forbidden` cells. Do not use an empty cell, a hyphen, `N/A`, or that marker for
-an unknown preferred translation. Empty means no alternatives or prohibitions;
-it does not mean nobody has decided yet.
+`forbidden` cells. Do not use an empty cell, a hyphen, `N/A`, or that marker
+for an unknown preferred translation. Empty means no alternatives or
+prohibitions; it does not mean nobody has decided yet.
 
 Keep `title` and `preferred` non-empty. Do not add `locale`, `status`, `notes`,
 or `source` columns: headings establish locale scope, and surrounding prose
@@ -131,8 +132,9 @@ reference repository without reproducing the underlying problem.
 
 State the authoritative source locale and catalogue paths before the tables.
 Group terms according to the product's real domain. Netsuke uses product and
-ecosystem names, build-model concepts, template language, localization concepts,
-and command-line vocabulary; another repository needs its own domain groups.
+ecosystem names, build-model concepts, template language, localization
+concepts, and command-line vocabulary; another repository needs its own domain
+groups.
 
 Record invariant product and interface names once and state the scope of the
 invariant. Explain distinctions between adjacent concepts. Keep prohibitions
@@ -146,8 +148,9 @@ false friends, loans, noun/verb differences, domain-specific distinctions,
 identifier-versus-prose usage, constrained status labels, and script hazards.
 Explain what the term means and what would go wrong with a tempting alternative.
 
-Reference the domain model or code when a distinction carries product semantics.
-Do not turn personal stylistic preferences into technical prohibitions.
+Reference the domain model or code when a distinction carries product
+semantics. Do not turn personal stylistic preferences into technical
+prohibitions.
 
 ### Locale terminology
 
@@ -219,9 +222,10 @@ preprocessing separately from portable Fluent syntax.
 ### 4. Message key conventions
 
 Map real message families to purposes and representative keys. Identify
-code-facing constants or extraction sources where present. Distinguish a logical
-application key from a parsed Fluent identifier and from an attribute reference.
-Do not rename keys to make documentation examples resemble another project.
+code-facing constants or extraction sources where present. Distinguish a
+logical application key from a parsed Fluent identifier and from an attribute
+reference. Do not rename keys to make documentation examples resemble another
+project.
 
 ### 5. Variable usage
 
@@ -239,16 +243,17 @@ data version where discoverable, not only the latest CLDR documentation.
 
 Check that call sites pass numeric values. Cover representative reachable
 integers, zero, fractions, and larger values where the API permits them.
-Separate cardinal and ordinal handling when relevant. Document unsupported types
-and string-only argument limitations rather than claiming a syntax example
-proves runtime support. Do not copy English category sets into other locales.
+Separate cardinal and ordinal handling when relevant. Document unsupported
+types and string-only argument limitations rather than claiming a syntax
+example proves runtime support. Do not copy English category sets into other
+locales.
 
 ### 7. Adding or updating a locale
 
 Write an executable workflow: prerequisites, source resource, translation,
 terminology review, registration and metadata, fallback updates, validation,
-rendering checks, and submission. For an existing locale, explain source changes
-and terminology updates without suggesting duplicate registration.
+rendering checks, and submission. For an existing locale, explain source
+changes and terminology updates without suggesting duplicate registration.
 
 Use real repository commands, working directories, and expected observations. A
 copied source catalogue is a scaffold, not a completed translation. Do not
@@ -275,8 +280,8 @@ validation from linguistic review; neither substitutes for the other.
 ### 10. Validation during build or CI
 
 Identify actual validation entry points, diagnostic meanings, and enforcement
-level. Do not promise a compile-time audit when the project only has a script or
-manual check. State known gaps and proposed improvements separately.
+level. Do not promise a compile-time audit when the project only has a script
+or manual check. State known gaps and proposed improvements separately.
 
 ### 11. Testing translations
 
@@ -287,5 +292,5 @@ commands and interpretation of results. Identify missing coverage honestly.
 ### 12. Resources
 
 Link repository authorities, primary localization-system documentation, the
-applicable plural data, locale-specific style references, and review procedures.
-Keep implementation claims traceable to the inspected revision.
+applicable plural data, locale-specific style references, and review
+procedures. Keep implementation claims traceable to the inspected revision.
