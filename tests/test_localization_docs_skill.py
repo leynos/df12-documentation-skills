@@ -41,6 +41,7 @@ USERS_GUIDE_FILE = REPOSITORY_ROOT / "docs" / "users-guide.md"
 
 GLOSSARY_COLUMNS = ("title", "preferred", "allowed", "forbidden")
 EMPTY_SET_CODE_POINT = "U+2014"
+EMPTY_SET_SUBJECTS = (EMPTY_SET_CODE_POINT, "empty cell", "no alternatives")
 EMPTY_SET_RULES = (
     (
         "Use the single U+2014 character as Netsuke's empty-set marker in "
@@ -49,6 +50,10 @@ EMPTY_SET_RULES = (
     (
         "Do not use an empty cell, a hyphen, `N/A`, or that marker for an "
         "unknown preferred translation."
+    ),
+    (
+        "Empty means no alternatives or prohibitions; it does not mean "
+        "nobody has decided yet."
     ),
 )
 WORKFLOW_STAGES = (
@@ -95,11 +100,11 @@ def _sentences(text: str) -> tuple[str, ...]:
 
 
 def _empty_set_rules(text: str) -> tuple[str, ...]:
-    """Return the sentences that state the empty-set marker and prohibitions."""
+    """Return the sentences stating the marker, prohibitions, and absence rule."""
     return tuple(
         sentence
         for sentence in _sentences(text)
-        if EMPTY_SET_CODE_POINT in sentence or "empty cell" in sentence
+        if any(marker in sentence for marker in EMPTY_SET_SUBJECTS)
     )
 
 
@@ -284,8 +289,17 @@ def test_empty_set_convention_is_declared() -> None:
         ("U+2014", "U+2013"),
         ("Do not use an empty cell", "Use an empty cell"),
         ("Use the single U+2014 character", "Do not use the single U+2014 character"),
+        (
+            "it does not mean nobody has decided yet",
+            "it may mean nobody has decided yet",
+        ),
     ],
-    ids=["copied-hyphen-code-point", "empty-cell-allowed", "inverted-rule"],
+    ids=[
+        "copied-hyphen-code-point",
+        "empty-cell-allowed",
+        "inverted-rule",
+        "decided-absence-inverted",
+    ],
 )
 def test_empty_set_rule_mutations_are_detected(
     original: str,
