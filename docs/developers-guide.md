@@ -109,6 +109,35 @@ dependency of any skill.
 
 ______________________________________________________________________
 
+## Skill reference contract
+
+The terms-of-reference and technical-design skills hand their downstream
+contract through named reference files.
+`tests/test_skill_reference_contract.py` enforces two things about them.
+
+- Every contract reference — `architecture-contract.md` and
+  `field-evidence.md` for `tech-design-doc`, `problem-contract.md` for
+  `terms-of-reference-doc` — ships in its skill's `references/` directory, and
+  some Markdown file in that skill other than the reference itself names it. A
+  reference that is deleted, renamed, or reachable only from itself would
+  otherwise remove the guidance from an installing agent without any gate
+  noticing.
+- Each rule the contract rests on is still stated in the document that owns
+  it: the reading order before intake, outlining, and handoff; the four
+  independent source-API compatibility prohibitions for private, test-only,
+  pre-1.0, and unreleased APIs, with released contracts, persisted data, and
+  wire formats assessed separately; the `BLOCKED`/`COMPLETE` reconciliation
+  that logs a deviation and waits for explicit acceptance; and the traceable
+  handoff records the next skill and the ExecPlan consume.
+
+The packaging and rule checks read the shipped Markdown, so they fail when a
+reference disappears or a rule is deleted or inverted; the test module proves
+that sensitivity against temporary fixtures. They do not evaluate whether an
+agent obeys the guidance. That is the subject of the fresh-agent scenarios in
+[`architecture-contract-validation.md`](architecture-contract-validation.md).
+
+______________________________________________________________________
+
 ## Markdown linting
 
 The repository uses `markdownlint-cli2`, configured by
