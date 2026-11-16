@@ -106,7 +106,11 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design prohibitions are independent, not preferences",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
-        text="These are independent prohibitions, not preferences.",
+        text=(
+            "These are independent prohibitions, not preferences. Naming a "
+            "consumer or citing an older ADR does not create an exception "
+            "within these categories."
+        ),
     ),
     _RetainedRule(
         rule="design reference blocks a deviation until accepted",
@@ -167,8 +171,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         rule="terms reference prohibition governs its list",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
         text=(
-            "Terms of reference MUST NOT impose source-API compatibility "
-            "machinery on:"
+            "Terms of reference MUST NOT impose source-API compatibility machinery on:"
         ),
     ),
     _RetainedRule(
