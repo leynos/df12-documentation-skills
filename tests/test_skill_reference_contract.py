@@ -74,6 +74,11 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         ),
     ),
     _RetainedRule(
+        rule="design reference prohibition governs its list",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text="Designs MUST NOT prescribe source-API compatibility machinery for:",
+    ),
+    _RetainedRule(
         rule="design prohibits compatibility for private APIs",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
         text=(
@@ -156,6 +161,14 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "Existing released 1.0+ contracts and deployed-data or wire-format "
             "obligations require separate, sourced assessment; an internal "
             "change does not erase a released contract."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms reference prohibition governs its list",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Terms of reference MUST NOT impose source-API compatibility "
+            "machinery on:"
         ),
     ),
     _RetainedRule(
@@ -348,3 +361,33 @@ def test_an_inverted_rule_is_reported(tmp_path: Path) -> None:
     missing = _missing_rules(tmp_path)
 
     assert missing == ["design compatibility prohibition summary"]
+
+
+def test_an_inverted_design_reference_prohibition_is_reported(tmp_path: Path) -> None:
+    """Inverting a reference's governing prohibition is reported."""
+    _materialise_rule_documents(tmp_path)
+    document = tmp_path / "skills/tech-design-doc/references/architecture-contract.md"
+    text = document.read_text(encoding="utf-8").replace(
+        "Designs MUST NOT prescribe source-API compatibility machinery for:",
+        "Designs MAY prescribe source-API compatibility machinery for:",
+    )
+    document.write_text(text, encoding="utf-8")
+
+    missing = _missing_rules(tmp_path)
+
+    assert missing == ["design reference prohibition governs its list"]
+
+
+def test_an_inverted_terms_reference_prohibition_is_reported(tmp_path: Path) -> None:
+    """Inverting the problem reference's governing prohibition is reported."""
+    _materialise_rule_documents(tmp_path)
+    document = tmp_path / "skills/terms-of-reference-doc/references/problem-contract.md"
+    text = document.read_text(encoding="utf-8").replace(
+        "Terms of reference MUST NOT impose source-API compatibility machinery on:",
+        "Terms of reference MAY impose source-API compatibility machinery on:",
+    )
+    document.write_text(text, encoding="utf-8")
+
+    missing = _missing_rules(tmp_path)
+
+    assert missing == ["terms reference prohibition governs its list"]
