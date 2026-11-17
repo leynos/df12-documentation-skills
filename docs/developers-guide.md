@@ -113,7 +113,7 @@ ______________________________________________________________________
 
 The terms-of-reference and technical-design skills hand their downstream
 contract through named reference files.
-`tests/test_skill_reference_contract.py` enforces two things about them.
+`tests/test_skill_reference_contract.py` enforces three things about them.
 
 - Every contract reference — `architecture-contract.md` and
   `field-evidence.md` for `tech-design-doc`, `problem-contract.md` for
@@ -125,20 +125,32 @@ contract through named reference files.
 - Each rule the contract rests on is still stated in the document that owns
   it: the reading order before intake, outlining, and handoff; the four
   independent source-API compatibility prohibitions for private, test-only,
-  pre-1.0, and unreleased APIs, with released contracts, persisted data, and
-  wire formats assessed separately; the `BLOCKED`/`COMPLETE` reconciliation
-  that logs a deviation and waits for explicit acceptance; and the traceable
-  handoff records the next skill and the ExecPlan consume.
+  pre-1.0, and unreleased APIs under their governing `MUST NOT` sentences, with
+  released contracts, persisted data, and wire formats assessed separately;
+  baseline, target, and gap records; dependency records and stale-blocker
+  reconciliation; evidence expiry at rebases and upstream change; stakeholder
+  decision rights and their separation from advisory review; the
+  `BLOCKED`/`COMPLETE` reconciliation that logs a deviation and waits for
+  explicit acceptance; and the traceable handoff records, including handoff
+  readiness by scope and the ExecPlan approval gate.
+- No sentence in those documents permits the compatibility machinery the
+  prohibitions deny. The check rejects permissive wording such as "may
+  prescribe … compatibility" or "should impose … compatibility", so a later
+  edit cannot reopen a prohibited category without deleting the prohibition
+  itself.
 
 The packaging and rule checks read the shipped Markdown, so they fail when a
 reference disappears or a rule is deleted or inverted; the test module proves
 that sensitivity against temporary fixtures, including one generated case per
-retained rule that removes just that rule's wording and requires exactly its
-own diagnostic. They do not evaluate whether an agent obeys the guidance, and
-they do not guard baseline/target/gap analysis, stakeholder decision rights
-beyond the retained sentences, or stale-blocker and dependency handling. Those
-remain the subject of the fresh-agent scenarios in
+retained rule, and a fixture that inserts a permissive sentence into each
+prohibition section. The checks assert wording, not semantics: they do not
+evaluate whether an agent obeys the guidance. Baseline/target/gap analysis,
+stakeholder decision rights, stale-blocker and dependency handling, rebase
+handling, and the execution-skill handoff have retained wording, but whether an
+agent applies them is covered only by the fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
+Those scenarios are manual evidence, rerun by hand on a named revision rather
+than by CI, and they carry no automated behavioural guard.
 
 ______________________________________________________________________
 

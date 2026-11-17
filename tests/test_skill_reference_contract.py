@@ -8,9 +8,12 @@ shipped inside its skill and named somewhere in that skill's Markdown other
 than the reference itself.
 
 They also retain the rules the contract rests on: the reading order, the
-independent compatibility prohibitions, the ``BLOCKED``/``COMPLETE``
-reconciliation, and the traceable handoff records. The rule checks read the
-shipped Markdown and fail when wording is deleted. Whether an agent obeys that
+independent compatibility prohibitions, baseline/target/gap records,
+dependency and stale-blocker handling, evidence expiry, stakeholder decision
+rights, the ``BLOCKED``/``COMPLETE`` reconciliation, and the traceable handoff
+records. The rule checks read the shipped Markdown and fail when wording is
+deleted. One further check rejects a permissive sentence that would grant the
+compatibility machinery the prohibitions deny. Whether an agent obeys that
 guidance is the subject of the fresh-agent scenarios in
 ``docs/architecture-contract-validation.md``, not of a phrase assertion here.
 """
@@ -18,6 +21,7 @@ guidance is the subject of the fresh-agent scenarios in
 from __future__ import annotations
 
 import dataclasses as dc
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -139,6 +143,45 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "The ExecPlan chooses the work breakdown and records milestone IDs, "
             "assigned gaps, validated end states, acceptance evidence, "
             "conformance checks, recovery paths, and remaining gaps."
+        ),
+    ),
+    _RetainedRule(
+        rule="design records baseline, target, and gap evidence",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "A useful gap record contains ID, upstream requirement, baseline "
+            "evidence, target state, missing capability or mismatch, "
+            "disposition, resolution owner, unblock condition, and verification "
+            "obligation."
+        ),
+    ),
+    _RetainedRule(
+        rule="design records each dependency and its unblock condition",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Each dependency needs a provider, consumer, required capability, "
+            "scope, linked evidence, and exact unblock condition. Separate a "
+            "prerequisite for one milestone from a release blocker or a later "
+            "outcome-validation dependency."
+        ),
+    ),
+    _RetainedRule(
+        rule="design expires evidence at rebases and upstream change",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Record evidence expiry triggers: rebases, changed external "
+            "contracts, upstream merges, moved symbols, altered benchmark "
+            "paths, and release/deployment changes. Re-check affected claims "
+            "before downstream work uses them."
+        ),
+    ),
+    _RetainedRule(
+        rule="design marks handoff readiness by scope",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Mark readiness by scope: ready for an implementation plan, bounded "
+            "discovery only, or blocked. Design acceptance does not bypass the "
+            "ExecPlan's approval gate."
         ),
     ),
     _RetainedRule(
@@ -271,6 +314,30 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "completing the parent goal."
         ),
     ),
+    _RetainedRule(
+        rule="terms keeps decision rights distinct from advisory review",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Ask who may accept a scope change, resolve an assumption, or "
+            "accept residual risk. Advisory review, technical approval, release "
+            "authority, and product prioritization are not interchangeable."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms reconciles stale blocker edges",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Reconcile stale blocker edges against their actual unblock "
+            "condition, not only a recent activity window."
+        ),
+    ),
+)
+
+_PERMISSIVE_COMPATIBILITY = re.compile(
+    r"\b(?:may|should|is permitted to|are permitted to|is allowed to|"
+    r"are allowed to)\b[^.]{0,80}?\b(?:compatibility|compatible|shims?|"
+    r"aliases?|facades?|wrappers?|entrypoints?)\b",
+    re.IGNORECASE,
 )
 
 
@@ -307,6 +374,21 @@ def _missing_rules(root: Path) -> list[str]:
         if not path.is_file() or rule.text not in _normalised(path):
             missing.append(rule.rule)
     return missing
+
+
+def _permissive_compatibility_claims(root: Path) -> list[str]:
+    """Return one report per sentence that permits compatibility machinery."""
+    problems: list[str] = []
+    documents = sorted({rule.document for rule in _RETAINED_RULES})
+    for document in documents:
+        path = root / document
+        if not path.is_file():
+            continue
+        for sentence in re.split(r"(?<=[.!?])\s+", _normalised(path)):
+            match = _PERMISSIVE_COMPATIBILITY.search(sentence)
+            if match is not None:
+                problems.append(f"{document}: {match.group(0)}")
+    return problems
 
 
 def _materialise_contract_skills(skills_root: Path) -> None:
@@ -452,3 +534,33 @@ def test_each_retained_rule_is_individually_detectable(tmp_path: Path) -> None:
         assert _missing_rules(tmp_path) == [rule.rule], rule.rule
 
         document.write_text(original, encoding="utf-8")
+
+
+def test_no_shipped_sentence_permits_compatibility_machinery() -> None:
+    """No shipped contract sentence grants what the prohibitions deny."""
+    assert _permissive_compatibility_claims(ROOT) == []
+
+
+def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None:
+    """A permissive sentence in either prohibition section is reported."""
+    _materialise_rule_documents(tmp_path)
+    design = tmp_path / "skills/tech-design-doc/references/architecture-contract.md"
+    terms = tmp_path / "skills/terms-of-reference-doc/references/problem-contract.md"
+    design.write_text(
+        design.read_text(encoding="utf-8")
+        + "\nDesigns may prescribe source-API compatibility machinery for private"
+        " APIs.\n",
+        encoding="utf-8",
+    )
+    terms.write_text(
+        terms.read_text(encoding="utf-8")
+        + "\nTerms of reference should impose compatibility requirements on"
+        " test-only APIs.\n",
+        encoding="utf-8",
+    )
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert len(problems) == 2
+    assert problems[0].startswith("skills/tech-design-doc/")
+    assert problems[1].startswith("skills/terms-of-reference-doc/")
