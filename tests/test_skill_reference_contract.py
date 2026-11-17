@@ -142,6 +142,20 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         ),
     ),
     _RetainedRule(
+        rule="design requires non-vacuous verification obligations",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Non-vacuity is local to each obligation. Show that preconditions "
+            "admit a witness, generators reach material classes, and model "
+            "states and transitions are reachable."
+        ),
+    ),
+    _RetainedRule(
+        rule="design requires a model to correspond to repository logic",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text="A model must correspond to the repository's actual logic.",
+    ),
+    _RetainedRule(
         rule="terms reading order before intake and at handoff",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
         text=(
@@ -225,6 +239,36 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "Before handoff, identify the accepted revision, material IDs, "
             "stakeholder concerns, success criteria, governing constraints, "
             "assumption expiry triggers, and dependency conditions."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms keeps evidence status separate from approval",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Keep the existing `[KNOWN]`, `[ASSUMED]`, and `[OPEN]` evidence "
+            "labels, but record approval separately when the claim directs work."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms keeps identifiers stable across editorial changes",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text="Keep IDs stable across editorial changes.",
+    ),
+    _RetainedRule(
+        rule="terms denies self-approval by repetition",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Agent summaries, reviewer suggestions, and generated documents do "
+            "not approve themselves by repetition. Identify the actual decision "
+            "authority, or leave it unknown."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms separates a recommendation from delegated approval",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "A discovery agent may recommend a change without approving it or "
+            "completing the parent goal."
         ),
     ),
 )
@@ -394,3 +438,17 @@ def test_an_inverted_terms_reference_prohibition_is_reported(tmp_path: Path) -> 
     missing = _missing_rules(tmp_path)
 
     assert missing == ["terms reference prohibition governs its list"]
+
+
+def test_each_retained_rule_is_individually_detectable(tmp_path: Path) -> None:
+    """Removing one rule's wording reports exactly that rule."""
+    _materialise_rule_documents(tmp_path)
+
+    for rule in _RETAINED_RULES:
+        document = tmp_path / rule.document
+        original = document.read_text(encoding="utf-8")
+        document.write_text(original.replace(rule.text, ""), encoding="utf-8")
+
+        assert _missing_rules(tmp_path) == [rule.rule], rule.rule
+
+        document.write_text(original, encoding="utf-8")
