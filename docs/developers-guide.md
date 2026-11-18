@@ -123,34 +123,36 @@ contract through named reference files.
   otherwise remove the guidance from an installing agent without any gate
   noticing.
 - Each rule the contract rests on is still stated in the document that owns
-  it: the reading order before intake, outlining, and handoff; the four
-  independent source-API compatibility prohibitions for private, test-only,
-  pre-1.0, and unreleased APIs under their governing `MUST NOT` sentences, with
+  it. That covers the reading order; the four independent source-API
+  compatibility prohibitions under their governing `MUST NOT` sentences, with
   released contracts, persisted data, and wire formats assessed separately;
-  baseline, target, and gap records; dependency records and stale-blocker
-  reconciliation; evidence expiry at rebases and upstream change; stakeholder
-  decision rights and their separation from advisory review; the
-  `BLOCKED`/`COMPLETE` reconciliation that logs a deviation and waits for
-  explicit acceptance; and the traceable handoff records, including handoff
-  readiness by scope and the ExecPlan approval gate.
+  compact contract records, concern-driven views, principle discovery, and
+  component reuse; baseline, target, and gap records with their valid
+  dispositions; dependency records, stale-blocker reconciliation, and evidence
+  expiry at rebases and upstream change; verification planned jointly and
+  non-vacuously against a corresponding model; approval, evidence, and delivery
+  kept distinct; stable identifiers, measurable success criteria, stakeholder
+  decision rights, and the implementation states; the `BLOCKED`/`COMPLETE`
+  reconciliation that logs a deviation and waits for explicit acceptance; and
+  the traceable handoff, including readiness by scope and the ExecPlan approval
+  gate.
 - No sentence in those documents permits the compatibility machinery the
   prohibitions deny. The check rejects permissive wording such as "may
-  prescribe … compatibility" or "should impose … compatibility", so a later
-  edit cannot reopen a prohibited category without deleting the prohibition
-  itself.
+  prescribe … compatibility", "should impose … compatibility", or "may preserve
+  pre-1.0 APIs with compatibility wrappers", so a later edit cannot reopen a
+  prohibited category without deleting the prohibition itself.
 
 The packaging and rule checks read the shipped Markdown, so they fail when a
 reference disappears or a rule is deleted or inverted; the test module proves
 that sensitivity against temporary fixtures, including one generated case per
-retained rule, and a fixture that inserts a permissive sentence into each
-prohibition section. The checks assert wording, not semantics: they do not
-evaluate whether an agent obeys the guidance. Baseline/target/gap analysis,
-stakeholder decision rights, stale-blocker and dependency handling, rebase
-handling, and the execution-skill handoff have retained wording, but whether an
-agent applies them is covered only by the fresh-agent scenarios in
+retained rule, and a fixture that injects a permissive sentence into each
+prohibition section. The checks assert wording, not semantics: no behavioural
+claim is guarded. Whether a concern warrants a view, whether evidence is
+adequate, whether a target is honest, and whether a handoff is proportionate
+are judgement calls covered only by the fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
 Those scenarios are manual evidence, rerun by hand on a named revision rather
-than by CI, and they carry no automated behavioural guard.
+than by CI, and they are not a repeatable harness.
 
 ______________________________________________________________________
 

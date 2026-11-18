@@ -78,6 +78,24 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         ),
     ),
     _RetainedRule(
+        rule="design drafting discloses principles and their rationale",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "Discover existing principles and express their statement, "
+            "rationale, and implications; do not invent principles or mistake "
+            "preferences for hard constraints."
+        ),
+    ),
+    _RetainedRule(
+        rule="design drafting records component reuse",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "For each major component, record the requirements it satisfies, "
+            "reused assets and their contracts, and the rationale for custom "
+            "implementation."
+        ),
+    ),
+    _RetainedRule(
         rule="design reference prohibition governs its list",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
         text="Designs MUST NOT prescribe source-API compatibility machinery for:",
@@ -182,6 +200,65 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "Mark readiness by scope: ready for an implementation plan, bounded "
             "discovery only, or blocked. Design acceptance does not bypass the "
             "ExecPlan's approval gate."
+        ),
+    ),
+    _RetainedRule(
+        rule="design keeps compact contract records",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Record ID, source, requirement/design response, verification "
+            "obligation, disposition, and known consumers in a compact table or "
+            "prose record. Keep one authoritative definition."
+        ),
+    ),
+    _RetainedRule(
+        rule="design records a view for each stakeholder concern",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "For each important view, name the stakeholder, question, "
+            "representation, and relevant requirement IDs."
+        ),
+    ),
+    _RetainedRule(
+        rule="design derives principles with rationale and source",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Discover governing principles from accepted standards, ADRs, and "
+            "user intent. Record statement, rationale, implications, and source. "
+            "Distinguish a decision guide from a hard constraint."
+        ),
+    ),
+    _RetainedRule(
+        rule="design records each component's requirements and reused assets",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "For each major component, record requirements satisfied, "
+            "responsibility, contracts, failure modes, and existing assets "
+            "reused. Name the asset's version and contract when relevant."
+        ),
+    ),
+    _RetainedRule(
+        rule="design names the valid gap dispositions",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Valid dispositions include already satisfied, proposed work, "
+            "accepted/deferred scope, blocked, and intentionally removed. Record "
+            "acceptance for deferral rather than silently renaming incomplete "
+            "work as out of scope."
+        ),
+    ),
+    _RetainedRule(
+        rule="design plans implementation and verification together",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text="Plan implementation and verification together.",
+    ),
+    _RetainedRule(
+        rule="design separates approval, evidence, and delivery state",
+        document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        text=(
+            "Approval, evidence, and delivery state are independent. An approved "
+            "design can remain unimplemented; code on a branch can remain "
+            "unverified; a merged PR can remain unreleased or undeployed."
         ),
     ),
     _RetainedRule(
@@ -331,12 +408,38 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "condition, not only a recent activity window."
         ),
     ),
+    _RetainedRule(
+        rule="terms records measurable success criteria",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "For each material success criterion, record the baseline if known, "
+            "target, measurement conditions, evidence source, and accountable "
+            "owner."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms separates the implementation states",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "For implementation claims, distinguish at least the relevant "
+            "states: proposed, approved, implemented, verified, released, "
+            "deployed, and outcome-validated."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms skips a scenario that adds no information",
+        document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        text=(
+            "Skip the scenario when it adds no useful information to a small or "
+            "already explicit brief."
+        ),
+    ),
 )
 
 _PERMISSIVE_COMPATIBILITY = re.compile(
     r"\b(?:may|should|is permitted to|are permitted to|is allowed to|"
-    r"are allowed to)\b[^.]{0,80}?\b(?:compatibility|compatible|shims?|"
-    r"aliases?|facades?|wrappers?|entrypoints?)\b",
+    r"are allowed to)\b(?:(?![.!?](?:\s|$)).){0,80}?\b(?:compatibility|"
+    r"compatible|shims?|aliases?|facades?|wrappers?|entrypoints?)\b",
     re.IGNORECASE,
 )
 
@@ -549,7 +652,8 @@ def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None
     design.write_text(
         design.read_text(encoding="utf-8")
         + "\nDesigns may prescribe source-API compatibility machinery for private"
-        " APIs.\n",
+        " APIs.\n"
+        + "\nDesigns may preserve pre-1.0 APIs with compatibility wrappers.\n",
         encoding="utf-8",
     )
     terms.write_text(
@@ -561,6 +665,8 @@ def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None
 
     problems = _permissive_compatibility_claims(tmp_path)
 
-    assert len(problems) == 2
+    assert len(problems) == 3
     assert problems[0].startswith("skills/tech-design-doc/")
-    assert problems[1].startswith("skills/terms-of-reference-doc/")
+    assert problems[1].startswith("skills/tech-design-doc/")
+    assert "pre-1.0" in problems[1]
+    assert problems[2].startswith("skills/terms-of-reference-doc/")
