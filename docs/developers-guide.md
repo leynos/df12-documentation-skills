@@ -161,6 +161,15 @@ are judgement calls covered only by the fresh-agent scenarios in
 Those scenarios are manual evidence, rerun by hand on a named revision rather
 than by CI, and they are not a repeatable harness.
 
+The guards cover the two `SKILL.md` files and the two contract references. Four
+further reference documents carry operative guidance that no phrase guard
+covers: `tech-design-doc/references/document-anatomy.md`,
+`editing-checklist.md`, and `research-protocol.md`, and
+`terms-of-reference-doc/references/elicitation-protocol.md`. Guarding their
+wording is separate work: no rule in this branch's change set touches them.
+`field-evidence.md` is covered for packaging only, because it records rationale
+rather than obligations. These are the areas that remain unguarded.
+
 ______________________________________________________________________
 
 ## Markdown linting
