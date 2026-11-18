@@ -13,8 +13,9 @@ dependency and stale-blocker handling, evidence expiry, stakeholder decision
 rights, the ``BLOCKED``/``COMPLETE`` reconciliation, and the traceable handoff
 records. The rule checks read the shipped Markdown and fail when wording is
 deleted. One further check rejects a permissive sentence that would grant the
-compatibility machinery the prohibitions deny. Whether an agent obeys that
-guidance is the subject of the fresh-agent scenarios in
+compatibility machinery the prohibitions deny; generated sentences exercise
+that rejection across verbs, wording, and version-number dots. Whether an agent
+obeys that guidance is the subject of the fresh-agent scenarios in
 ``docs/architecture-contract-validation.md``, not of a phrase assertion here.
 """
 
@@ -22,7 +23,11 @@ from __future__ import annotations
 
 import dataclasses as dc
 import re
+import tempfile
 from pathlib import Path
+
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "skills"
@@ -434,12 +439,66 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "already explicit brief."
         ),
     ),
+    _RetainedRule(
+        rule="design drafting designs verification with the implementation",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "Design implementation and verification together. Name invariants, "
+            "intermediate lemmas, external axioms, methods, bounds, and residual "
+            "gaps. Include a non-vacuity argument and real-boundary coverage "
+            "where repository-owned logic relies on an external contract."
+        ),
+    ),
+    _RetainedRule(
+        rule="design editing re-checks stale inputs",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "Re-check stale symbols, baselines, assumptions, blocker edges, and "
+            "evidence scope."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms elicitation uses the contract probes",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "Also use the concern, scenario, authority, and dependency probes in "
+            "`references/problem-contract.md`."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms editing reconciles the contract record",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "Check trace IDs, source revisions, stakeholder concerns, approval "
+            "state, compatibility exclusions, and dependency unblock conditions "
+            "against `references/problem-contract.md`."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms handoff supplies the inherited record",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "Supply the revision, approval state, stable IDs, stakeholder "
+            "concerns, success measures, and scoped dependency conditions that "
+            "the design and ExecPlan will inherit. Distinguish "
+            "ready-for-design, bounded-discovery-only, and blocked work; name "
+            "what each open item gates."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms dependencies re-check stale edges",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "Re-check stale edges against current evidence; a related issue is "
+            "not necessarily a blocker."
+        ),
+    ),
 )
 
 _PERMISSIVE_COMPATIBILITY = re.compile(
     r"\b(?:may|should|is permitted to|are permitted to|is allowed to|"
     r"are allowed to)\b(?:(?![.!?](?:\s|$)).){0,80}?\b(?:compatibility|"
-    r"compatible|shims?|aliases?|facades?|wrappers?|entrypoints?)\b",
+    r"compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?)\b",
     re.IGNORECASE,
 )
 
@@ -670,3 +729,105 @@ def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None
     assert problems[1].startswith("skills/tech-design-doc/")
     assert "pre-1.0" in problems[1]
     assert problems[2].startswith("skills/terms-of-reference-doc/")
+
+
+_PERMISSIVE_VERBS: tuple[str, ...] = (
+    "may",
+    "should",
+    "is permitted to",
+    "are permitted to",
+    "is allowed to",
+    "are allowed to",
+)
+_COMPATIBILITY_TERMS: tuple[str, ...] = (
+    "compatibility",
+    "compatible",
+    "shim",
+    "alias",
+    "facade",
+    "wrapper",
+    "entrypoint",
+)
+_NEUTRAL_WORDS: tuple[str, ...] = (
+    "the",
+    "design",
+    "records",
+    "evidence",
+    "scope",
+    "reviewers",
+    "note",
+    "that",
+    "for",
+    "private",
+    "and",
+    "its",
+)
+
+
+def _append_design_sentence(root: Path, sentence: str) -> None:
+    """Append one generated sentence to the design reference fixture."""
+    document = root / "skills/tech-design-doc/references/architecture-contract.md"
+    document.write_text(
+        document.read_text(encoding="utf-8") + f"\n{sentence}\n", encoding="utf-8"
+    )
+
+
+@given(
+    verb=st.sampled_from(_PERMISSIVE_VERBS),
+    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=6),
+    term=st.sampled_from(_COMPATIBILITY_TERMS),
+)
+@settings(max_examples=50, deadline=None)
+def test_a_generated_permissive_sentence_is_always_reported(
+    verb: str, words: list[str], term: str
+) -> None:
+    """Every generated permissive compatibility sentence is reported."""
+    sentence = f"Designs {verb} preserve {' '.join(words)} {term} machinery."
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        _materialise_rule_documents(root)
+        _append_design_sentence(root, sentence)
+
+        problems = _permissive_compatibility_claims(root)
+
+    assert len(problems) >= 1, sentence
+    assert any(term in problem for problem in problems), sentence
+
+
+@given(words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=8))
+@settings(max_examples=50, deadline=None)
+def test_a_generated_neutral_sentence_is_never_reported(words: list[str]) -> None:
+    """A generated sentence without a permissive verb is never reported."""
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        _materialise_rule_documents(root)
+        _append_design_sentence(
+            root, f"Designs must not prescribe {' '.join(words)} machinery."
+        )
+
+        problems = _permissive_compatibility_claims(root)
+
+    assert problems == []
+
+
+@given(
+    major=st.integers(min_value=0, max_value=99),
+    minor=st.integers(min_value=0, max_value=99),
+)
+@settings(max_examples=50, deadline=None)
+def test_a_generated_version_number_stays_inside_one_sentence(
+    major: int, minor: int
+) -> None:
+    """A dot inside a generated version number does not end the window."""
+    sentence = (
+        f"Designs may preserve pre-{major}.{minor} APIs with compatibility wrappers."
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        _materialise_rule_documents(root)
+        _append_design_sentence(root, sentence)
+
+        problems = _permissive_compatibility_claims(root)
+
+    assert len(problems) == 1, sentence
+    assert f"pre-{major}.{minor}" in problems[0]
