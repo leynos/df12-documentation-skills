@@ -140,7 +140,10 @@ contract through named reference files.
   prohibitions deny. The check rejects permissive wording such as "may
   prescribe … compatibility", "should impose … compatibility", or "may preserve
   pre-1.0 APIs with compatibility wrappers", so a later edit cannot reopen a
-  prohibited category without deleting the prohibition itself.
+  prohibited category without deleting the prohibition itself. The scan is
+  sentence-scoped, so distance from the verb cannot hide a permission, and a
+  negated modality such as "should not prescribe … compatibility" is not
+  treated as one.
 
 The packaging and rule checks read the shipped Markdown, so they fail when a
 reference disappears or a rule is deleted or inverted; the test module proves
@@ -148,11 +151,12 @@ that sensitivity against temporary fixtures, including one generated case per
 retained rule, and a fixture that injects a permissive sentence into each
 prohibition section. Hypothesis properties then exercise the permissive-claim
 scanner over generated sentences: every permissive verb paired with a
-compatibility term is reported, neutral wording is not, and a generated version
-number does not end the match window. The checks assert wording, not semantics:
-no behavioural claim is guarded. Whether a concern warrants a view, whether
-evidence is adequate, whether a target is honest, and whether a handoff is
-proportionate are judgement calls covered only by the fresh-agent scenarios in
+compatibility term is reported however far apart they sit, a negated or
+prohibition-only sentence is not, and a generated version number does not end
+the match window. The checks assert wording, not semantics: no behavioural
+claim is guarded. Whether a concern warrants a view, whether evidence is
+adequate, whether a target is honest, and whether a handoff is proportionate
+are judgement calls covered only by the fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
 Those scenarios are manual evidence, rerun by hand on a named revision rather
 than by CI, and they are not a repeatable harness.

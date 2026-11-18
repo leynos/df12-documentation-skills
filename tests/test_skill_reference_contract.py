@@ -493,13 +493,52 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
             "not necessarily a blocker."
         ),
     ),
+    _RetainedRule(
+        rule="terms handoff names the feedback route",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "Name the upstream sections and decision authority to revisit if "
+            "implementation falsifies an assumption. Record proposed changes "
+            "without presenting them as accepted. Reconcile affected design, "
+            "roadmap, and ExecPlan links before claiming the change complete."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms keeps a sponsor request from proving its own claim",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        text=(
+            "A brief or request establishes what the sponsor asks for, not the "
+            "truth of an empirical claim inside it; that claim needs its own "
+            "evidence."
+        ),
+    ),
+    _RetainedRule(
+        rule="design corrects transcription drift without rewriting intent",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "Correct transcription drift; otherwise record a proposed deviation "
+            "and its impacts. Do not rewrite requirements to legitimize a "
+            "generated artefact or current code."
+        ),
+    ),
+    _RetainedRule(
+        rule="design reopens claims when implementation falsifies them",
+        document=Path("skills/tech-design-doc/SKILL.md"),
+        text=(
+            "**Implementation falsifies the design.** Reopen the affected claim "
+            "and requirement/gap links."
+        ),
+    ),
 )
 
 _PERMISSIVE_COMPATIBILITY = re.compile(
     r"\b(?:may|should|is permitted to|are permitted to|is allowed to|"
-    r"are allowed to)\b(?:(?![.!?](?:\s|$)).){0,80}?\b(?:compatibility|"
+    r"are allowed to)\b(?P<gap>(?:(?![.!?](?:\s|$)).)*?)\b(?:compatibility|"
     r"compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?)\b",
     re.IGNORECASE,
+)
+_NEGATED_MODALITY = re.compile(
+    r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
 )
 
 
@@ -547,8 +586,9 @@ def _permissive_compatibility_claims(root: Path) -> list[str]:
         if not path.is_file():
             continue
         for sentence in re.split(r"(?<=[.!?])\s+", _normalised(path)):
-            match = _PERMISSIVE_COMPATIBILITY.search(sentence)
-            if match is not None:
+            for match in _PERMISSIVE_COMPATIBILITY.finditer(sentence):
+                if _NEGATED_MODALITY.search(match.group("gap")) is not None:
+                    continue
                 problems.append(f"{document}: {match.group(0)}")
     return problems
 
@@ -774,7 +814,7 @@ def _append_design_sentence(root: Path, sentence: str) -> None:
 
 @given(
     verb=st.sampled_from(_PERMISSIVE_VERBS),
-    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=6),
+    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=30),
     term=st.sampled_from(_COMPATIBILITY_TERMS),
 )
 @settings(max_examples=50, deadline=None)
@@ -794,20 +834,57 @@ def test_a_generated_permissive_sentence_is_always_reported(
     assert any(term in problem for problem in problems), sentence
 
 
-@given(words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=8))
+@given(
+    modal=st.sampled_from(("must", "should", "may")),
+    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=8),
+    term=st.sampled_from(_COMPATIBILITY_TERMS),
+)
 @settings(max_examples=50, deadline=None)
-def test_a_generated_neutral_sentence_is_never_reported(words: list[str]) -> None:
-    """A generated sentence without a permissive verb is never reported."""
+def test_a_generated_neutral_sentence_is_never_reported(
+    modal: str, words: list[str], term: str
+) -> None:
+    """Generated prohibitions and negations are never reported."""
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         _materialise_rule_documents(root)
         _append_design_sentence(
-            root, f"Designs must not prescribe {' '.join(words)} machinery."
+            root,
+            f"Designs {modal} not prescribe {' '.join(words)} {term} machinery.",
         )
 
         problems = _permissive_compatibility_claims(root)
 
     assert problems == []
+
+
+def test_a_distant_permission_is_still_reported(tmp_path: Path) -> None:
+    """A permission more than eighty characters from its term is reported."""
+    _materialise_rule_documents(tmp_path)
+    filler = " ".join(["the design records evidence for its scope"] * 4)
+    sentence = f"Designs may, after {filler}, prescribe compatibility shims."
+    _append_design_sentence(tmp_path, sentence)
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert len(problems) == 1
+    assert "prescribe compatibility" in problems[0]
+    assert len(problems[0]) > 80
+
+
+def test_a_negated_permission_is_not_reported(tmp_path: Path) -> None:
+    """A negated modality is not a permission, however it is worded."""
+    _materialise_rule_documents(tmp_path)
+    for sentence in (
+        "Designs should not prescribe compatibility machinery for private APIs.",
+        "Designs may never add compatibility wrappers for private APIs.",
+        "Designs should not only document, but also add compatibility shims.",
+    ):
+        _append_design_sentence(tmp_path, sentence)
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert len(problems) == 1
+    assert "should not only" in problems[0]
 
 
 @given(
