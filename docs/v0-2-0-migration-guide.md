@@ -1,7 +1,7 @@
 # Migration guide: v0.1.0 to v0.2.0
 
-*Moving `terms-of-reference-doc` and `tech-design-doc` practice onto the
-contract-aligned guidance.*
+_Moving `terms-of-reference-doc` and `tech-design-doc` practice onto the
+contract-aligned guidance._
 
 ______________________________________________________________________
 

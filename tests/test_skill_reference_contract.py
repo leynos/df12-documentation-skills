@@ -39,17 +39,24 @@ CONTRACT_REFERENCES: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 @dc.dataclass(frozen=True)
 class _RetainedRule:
-    """Describe one contract rule and the document that must state it."""
+    """Describe one contract rule, its document, and its governing section."""
 
     rule: str
     document: Path
+    section: str
     text: str
+
+
+_TERMS_COMPATIBILITY_SECTION = (
+    "Compatibility is an explicit constraint, never a milestone side effect"
+)
 
 
 _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design reading order before intake, outlining, and handoff",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Before starting",
         text=(
             "Read `references/architecture-contract.md` before intake, "
             "outlining, and handoff."
@@ -58,6 +65,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design compatibility prohibition summary",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Contract with upstream and execution skills",
         text=(
             "Designs MUST NOT prescribe source-API compatibility machinery for "
             "private APIs (including application-internal public surfaces), "
@@ -68,6 +76,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design separates released contracts from prohibited surfaces",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Contract with upstream and execution skills",
         text=(
             "Assess existing released 1.0+ contracts and deployed-data or "
             "wire-format obligations separately."
@@ -76,6 +85,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design reconciler blocks and awaits explicit acceptance",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Failure modes",
         text=(
             "An executing ExecPlan records the deviation in `Decision log`, "
             "enters `BLOCKED`, and awaits explicit acceptance. Update the ToR, "
@@ -85,6 +95,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design drafting discloses principles and their rationale",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Phase 4 — Drafting",
         text=(
             "Discover existing principles and express their statement, "
             "rationale, and implications; do not invent principles or mistake "
@@ -94,6 +105,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design drafting records component reuse",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Phase 4 — Drafting",
         text=(
             "For each major component, record the requirements it satisfies, "
             "reused assets and their contracts, and the rationale for custom "
@@ -103,11 +115,13 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design reference prohibition governs its list",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text="Designs MUST NOT prescribe source-API compatibility machinery for:",
     ),
     _RetainedRule(
         rule="design prohibits compatibility for private APIs",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text=(
             "- private APIs, including application-internal interfaces declared public;"
         ),
@@ -115,16 +129,19 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design prohibits compatibility for test-only APIs",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text="- test-only APIs and support surfaces;",
     ),
     _RetainedRule(
         rule="design prohibits compatibility for pre-1.0 APIs",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text="- pre-1.0 APIs; or",
     ),
     _RetainedRule(
         rule="design prohibits compatibility for unreleased API changes",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text=(
             "- unreleased API changes ahead of the latest applicable formal "
             "release tag."
@@ -133,6 +150,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design prohibitions are independent, not preferences",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text=(
             "These are independent prohibitions, not preferences. Naming a "
             "consumer or citing an older ADR does not create an exception "
@@ -142,6 +160,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design reference blocks a deviation until accepted",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Freshness, dependencies, and handoff",
         text=(
             "the executing plan records a proposed deviation in `Decision log`, "
             "identifies impacted IDs, enters `BLOCKED`, and awaits explicit "
@@ -152,6 +171,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design hands a traceable record to the ExecPlan",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Freshness, dependencies, and handoff",
         text=(
             "At delivery, provide the receiving ExecPlan with the conformance "
             "basis, selected requirement/design/gap IDs, verification "
@@ -162,6 +182,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="ExecPlan records milestones, gaps, and acceptance evidence",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Compatibility and coherent transition states",
         text=(
             "The ExecPlan chooses the work breakdown and records milestone IDs, "
             "assigned gaps, validated end states, acceptance evidence, "
@@ -171,6 +192,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design records baseline, target, and gap evidence",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Baseline, target, and actionable gaps",
         text=(
             "A useful gap record contains ID, upstream requirement, baseline "
             "evidence, target state, missing capability or mismatch, "
@@ -181,6 +203,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design records each dependency and its unblock condition",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Freshness, dependencies, and handoff",
         text=(
             "Each dependency needs a provider, consumer, required capability, "
             "scope, linked evidence, and exact unblock condition. Separate a "
@@ -191,6 +214,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design expires evidence at rebases and upstream change",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Freshness, dependencies, and handoff",
         text=(
             "Record evidence expiry triggers: rebases, changed external "
             "contracts, upstream merges, moved symbols, altered benchmark "
@@ -201,6 +225,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design marks handoff readiness by scope",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Freshness, dependencies, and handoff",
         text=(
             "Mark readiness by scope: ready for an implementation plan, bounded "
             "discovery only, or blocked. Design acceptance does not bypass the "
@@ -210,6 +235,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design keeps compact contract records",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Trace only what earns a link",
         text=(
             "Record ID, source, requirement/design response, verification "
             "obligation, disposition, and known consumers in a compact table or "
@@ -219,6 +245,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design records a view for each stakeholder concern",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Concern-driven views, principles, and reuse",
         text=(
             "For each important view, name the stakeholder, question, "
             "representation, and relevant requirement IDs."
@@ -227,6 +254,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design derives principles with rationale and source",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Concern-driven views, principles, and reuse",
         text=(
             "Discover governing principles from accepted standards, ADRs, and "
             "user intent. Record statement, rationale, implications, and source. "
@@ -236,6 +264,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design records each component's requirements and reused assets",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Concern-driven views, principles, and reuse",
         text=(
             "For each major component, record requirements satisfied, "
             "responsibility, contracts, failure modes, and existing assets "
@@ -245,6 +274,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design names the valid gap dispositions",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Baseline, target, and actionable gaps",
         text=(
             "Valid dispositions include already satisfied, proposed work, "
             "accepted/deferred scope, blocked, and intentionally removed. Record "
@@ -255,11 +285,13 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design plans implementation and verification together",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Verification shapes the design",
         text="Plan implementation and verification together.",
     ),
     _RetainedRule(
         rule="design separates approval, evidence, and delivery state",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Ownership and conformance basis",
         text=(
             "Approval, evidence, and delivery state are independent. An approved "
             "design can remain unimplemented; code on a branch can remain "
@@ -269,6 +301,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design requires non-vacuous verification obligations",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Verification shapes the design",
         text=(
             "Non-vacuity is local to each obligation. Show that preconditions "
             "admit a witness, generators reach material classes, and model "
@@ -278,11 +311,13 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design requires a model to correspond to repository logic",
         document=Path("skills/tech-design-doc/references/architecture-contract.md"),
+        section="Verification shapes the design",
         text="A model must correspond to the repository's actual logic.",
     ),
     _RetainedRule(
         rule="terms reading order before intake and at handoff",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Before starting",
         text=(
             "Read `references/problem-contract.md` before intake and again at handoff."
         ),
@@ -290,6 +325,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms compatibility prohibition summary",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Contract with downstream skills",
         text=(
             "Terms of reference MUST NOT create source-API compatibility "
             "requirements for private APIs (including application-internal "
@@ -300,6 +336,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms keeps released contracts as a separate assessment",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Contract with downstream skills",
         text=(
             "Existing released 1.0+ contracts and deployed-data or wire-format "
             "obligations require separate, sourced assessment; an internal "
@@ -309,6 +346,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms reference prohibition governs its list",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text=(
             "Terms of reference MUST NOT impose source-API compatibility machinery on:"
         ),
@@ -316,6 +354,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms prohibits compatibility for private APIs",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text=(
             "- private APIs, including public declarations used only within an "
             "application;"
@@ -324,16 +363,19 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms prohibits compatibility for test-only APIs",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text="- test-only APIs and support surfaces;",
     ),
     _RetainedRule(
         rule="terms prohibits compatibility for pre-1.0 APIs",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text="- pre-1.0 APIs; or",
     ),
     _RetainedRule(
         rule="terms prohibits compatibility for unreleased API changes",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text=(
             "- unreleased API changes ahead of the latest applicable formal "
             "release tag."
@@ -342,6 +384,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms exclusions are independent of a named consumer",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section=_TERMS_COMPATIBILITY_SECTION,
         text=(
             "These exclusions are independent. A named consumer does not create "
             "an exception for a pre-1.0 or test-only API."
@@ -350,6 +393,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms blocks until the resolution reaches upstream artefacts",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Handoff and feedback",
         text=(
             "The ExecPlan's `Decision log` records deviations; architectural "
             "deviations enter `BLOCKED` until explicitly accepted. Before it "
@@ -360,6 +404,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms handoff names the accepted revision and its material IDs",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Handoff and feedback",
         text=(
             "Before handoff, identify the accepted revision, material IDs, "
             "stakeholder concerns, success criteria, governing constraints, "
@@ -369,6 +414,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms keeps evidence status separate from approval",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Separate evidence, authority, and delivery state",
         text=(
             "Keep the existing `[KNOWN]`, `[ASSUMED]`, and `[OPEN]` evidence "
             "labels, but record approval separately when the claim directs work."
@@ -377,11 +423,13 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms keeps identifiers stable across editorial changes",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Selective identifiers and change impact",
         text="Keep IDs stable across editorial changes.",
     ),
     _RetainedRule(
         rule="terms denies self-approval by repetition",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Separate evidence, authority, and delivery state",
         text=(
             "Agent summaries, reviewer suggestions, and generated documents do "
             "not approve themselves by repetition. Identify the actual decision "
@@ -391,6 +439,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms separates a recommendation from delegated approval",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Stakeholder concerns and decision rights",
         text=(
             "A discovery agent may recommend a change without approving it or "
             "completing the parent goal."
@@ -399,6 +448,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms keeps decision rights distinct from advisory review",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Stakeholder concerns and decision rights",
         text=(
             "Ask who may accept a scope change, resolve an assumption, or "
             "accept residual risk. Advisory review, technical approval, release "
@@ -408,6 +458,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms reconciles stale blocker edges",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Success measures, dependencies, and resource boundaries",
         text=(
             "Reconcile stale blocker edges against their actual unblock "
             "condition, not only a recent activity window."
@@ -416,6 +467,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms records measurable success criteria",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Success measures, dependencies, and resource boundaries",
         text=(
             "For each material success criterion, record the baseline if known, "
             "target, measurement conditions, evidence source, and accountable "
@@ -425,6 +477,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms separates the implementation states",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Separate evidence, authority, and delivery state",
         text=(
             "For implementation claims, distinguish at least the relevant "
             "states: proposed, approved, implemented, verified, released, "
@@ -434,6 +487,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms skips a scenario that adds no information",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
+        section="Optional scenario probe",
         text=(
             "Skip the scenario when it adds no useful information to a small or "
             "already explicit brief."
@@ -442,6 +496,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design drafting designs verification with the implementation",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Phase 4 — Drafting",
         text=(
             "Design implementation and verification together. Name invariants, "
             "intermediate lemmas, external axioms, methods, bounds, and residual "
@@ -452,6 +507,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design editing re-checks stale inputs",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Phase 6 — Editing pass",
         text=(
             "Re-check stale symbols, baselines, assumptions, blocker edges, and "
             "evidence scope."
@@ -460,6 +516,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms elicitation uses the contract probes",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Phase 2 — Elicitation",
         text=(
             "Also use the concern, scenario, authority, and dependency probes in "
             "`references/problem-contract.md`."
@@ -468,6 +525,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms editing reconciles the contract record",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Phase 4 — Editing pass",
         text=(
             "Check trace IDs, source revisions, stakeholder concerns, approval "
             "state, compatibility exclusions, and dependency unblock conditions "
@@ -477,6 +535,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms handoff supplies the inherited record",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Phase 5 — Handoff and companion artefacts",
         text=(
             "Supply the revision, approval state, stable IDs, stakeholder "
             "concerns, success measures, and scoped dependency conditions that "
@@ -488,6 +547,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms dependencies re-check stale edges",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="8.3 Dependencies",
         text=(
             "Re-check stale edges against current evidence; a related issue is "
             "not necessarily a blocker."
@@ -496,6 +556,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms handoff names the feedback route",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Phase 5 — Handoff and companion artefacts",
         text=(
             "Name the upstream sections and decision authority to revisit if "
             "implementation falsifies an assumption. Record proposed changes "
@@ -506,6 +567,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="terms keeps a sponsor request from proving its own claim",
         document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Phase 1 — Provisional sketch and gap analysis",
         text=(
             "A brief or request establishes what the sponsor asks for, not the "
             "truth of an empirical claim inside it; that claim needs its own "
@@ -515,6 +577,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design corrects transcription drift without rewriting intent",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Failure modes",
         text=(
             "Correct transcription drift; otherwise record a proposed deviation "
             "and its impacts. Do not rewrite requirements to legitimize a "
@@ -524,6 +587,7 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     _RetainedRule(
         rule="design reopens claims when implementation falsifies them",
         document=Path("skills/tech-design-doc/SKILL.md"),
+        section="Failure modes",
         text=(
             "**Implementation falsifies the design.** Reopen the affected claim "
             "and requirement/gap links."
@@ -571,12 +635,69 @@ def _validate_contract_references(skills_root: Path) -> list[str]:
     return problems
 
 
+_HEADING = re.compile(r"^(#{2,6})\s+(\S.*?)\s*$")
+_FENCE = re.compile(r"^\s*(?:```|~~~)")
+_QUOTATION = re.compile(r"^\s*>")
+_DISAVOWAL = re.compile(r"\b(?:no longer|do not|does not|never)\b", re.IGNORECASE)
+
+
+def _sections(raw: str) -> dict[str, str]:
+    """Return each heading's stated prose, keyed by the heading's text.
+
+    Fenced code blocks and blockquotes are quotation, not statement, so their
+    lines are dropped before the prose is assembled. A heading's region runs to
+    the next heading of the same or a higher level, so a level-two section
+    covers its level-three subsections.
+    """
+    prose_lines: list[str] = []
+    headings: list[tuple[int, int, str]] = []
+    in_fence = False
+    for line in raw.splitlines():
+        if _FENCE.match(line):
+            in_fence = not in_fence
+            prose_lines.append("")
+            continue
+        if in_fence or _QUOTATION.match(line):
+            prose_lines.append("")
+            continue
+        heading = _HEADING.match(line)
+        if heading is not None:
+            headings.append((len(prose_lines), len(heading.group(1)), heading.group(2)))
+        prose_lines.append(line)
+
+    regions: dict[str, list[str]] = {}
+    for index, (start, level, title) in enumerate(headings):
+        end = len(prose_lines)
+        for later_start, later_level, _ in headings[index + 1 :]:
+            if later_level <= level:
+                end = later_start
+                break
+        region = " ".join(" ".join(prose_lines[start + 1 : end]).split())
+        regions.setdefault(title, []).append(region)
+    return {title: " ".join(parts) for title, parts in regions.items()}
+
+
+def _states_normatively(prose: str, text: str) -> bool:
+    """Return whether the prose states the wording rather than disavowing it."""
+    start = prose.find(text)
+    while start != -1:
+        prefix = re.split(r"(?<=[.!?])\s+", prose[:start])[-1]
+        if _DISAVOWAL.search(prefix) is None:
+            return True
+        start = prose.find(text, start + 1)
+    return False
+
+
 def _missing_rules(root: Path) -> list[str]:
-    """Return the rules whose required wording is absent from their document."""
+    """Return rules not stated normatively in the section that governs them."""
     missing: list[str] = []
     for rule in _RETAINED_RULES:
         path = root / rule.document
-        if not path.is_file() or rule.text not in _normalised(path):
+        if not path.is_file():
+            missing.append(rule.rule)
+            continue
+        stated = _sections(path.read_text(encoding="utf-8")).get(rule.section, "")
+        if not _states_normatively(stated, rule.text):
             missing.append(rule.rule)
     return missing
 
@@ -610,14 +731,19 @@ def _materialise_contract_skills(skills_root: Path) -> None:
 
 
 def _materialise_rule_documents(root: Path) -> None:
-    """Write each rule document with all of its required wording present."""
-    by_document: dict[Path, list[str]] = {}
+    """Write each rule document, stating each rule under its governing section."""
+    by_document: dict[Path, dict[str, list[str]]] = {}
     for rule in _RETAINED_RULES:
-        by_document.setdefault(rule.document, []).append(rule.text)
-    for document, texts in by_document.items():
+        sections = by_document.setdefault(rule.document, {})
+        sections.setdefault(rule.section, []).append(rule.text)
+    for document, sections in by_document.items():
         path = root / document
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("\n\n".join(texts) + "\n", encoding="utf-8")
+        blocks = [
+            f"## {section}\n\n" + "\n\n".join(texts)
+            for section, texts in sections.items()
+        ]
+        path.write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
 
 
 def test_contract_references_are_shipped_and_named() -> None:
@@ -681,6 +807,78 @@ def test_a_deleted_rule_is_reported(tmp_path: Path) -> None:
 
     assert "terms reading order before intake and at handoff" in missing
     assert "terms compatibility prohibition summary" in missing
+
+
+def _rule(name: str) -> _RetainedRule:
+    """Return the retained rule with the given name."""
+    return next(rule for rule in _RETAINED_RULES if rule.rule == name)
+
+
+def test_a_rule_moved_out_of_its_governing_section_is_reported(
+    tmp_path: Path,
+) -> None:
+    """Wording under another heading is not stated in the section that owns it."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("design prohibits compatibility for private APIs")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8")
+    assert target.text in text
+    document.write_text(
+        text.replace(target.text + "\n\n", "", 1)
+        + f"\n## Somewhere else\n\n{target.text}\n",
+        encoding="utf-8",
+    )
+
+    assert _missing_rules(tmp_path) == [target.rule]
+
+
+def test_a_fenced_rule_is_a_quotation_not_a_statement(tmp_path: Path) -> None:
+    """Wording reproduced in a fenced block does not state the rule."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("terms reading order before intake and at handoff")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8")
+    assert target.text in text
+    document.write_text(
+        text.replace(target.text, f"```text\n{target.text}\n```", 1),
+        encoding="utf-8",
+    )
+
+    assert _missing_rules(tmp_path) == [target.rule]
+
+
+def test_a_blockquoted_rule_is_a_quotation_not_a_statement(
+    tmp_path: Path,
+) -> None:
+    """Wording inside a blockquote does not state the rule."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("terms compatibility prohibition summary")
+    document = tmp_path / target.document
+    lines = document.read_text(encoding="utf-8").splitlines()
+    document.write_text(
+        "\n".join(f"> {line}" if target.text in line else line for line in lines)
+        + "\n",
+        encoding="utf-8",
+    )
+
+    assert _missing_rules(tmp_path) == [target.rule]
+
+
+def test_a_disavowed_rule_is_reported(tmp_path: Path) -> None:
+    """Wording the document says it no longer requires does not state a rule."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("terms keeps identifiers stable across editorial changes")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8")
+    assert target.text in text
+    document.write_text(
+        text.replace(
+            target.text, f"This guidance no longer requires it: {target.text}", 1
+        ),
+        encoding="utf-8",
+    )
+
+    assert _missing_rules(tmp_path) == [target.rule]
 
 
 def test_an_inverted_rule_is_reported(tmp_path: Path) -> None:
