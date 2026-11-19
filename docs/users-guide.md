@@ -290,6 +290,13 @@ targets and the dependency declarations behind them.
 
 ______________________________________________________________________
 
+## Migration guides
+
+Each release that changes observable behaviour carries its own migration guide.
+For the contract-aligned guidance in the terms-of-reference and
+technical-design skills, see the
+[v0.2.0 migration guide](v0-2-0-migration-guide.md).
+
 ## Validation evidence
 
 Record validation commands in the pull request description after the review

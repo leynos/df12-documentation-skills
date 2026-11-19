@@ -531,10 +531,14 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     ),
 )
 
+_MODALITY = (
+    r"(?:may|should|is permitted to|are permitted to|is allowed to|are allowed to)"
+)
 _PERMISSIVE_COMPATIBILITY = re.compile(
-    r"\b(?:may|should|is permitted to|are permitted to|is allowed to|"
-    r"are allowed to)\b(?P<gap>(?:(?![.!?](?:\s|$)).)*?)\b(?:compatibility|"
-    r"compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?)\b",
+    rf"\b{_MODALITY}\b"
+    rf"(?P<gap>(?:(?![.!?](?:\s|$))(?!(?:\b{_MODALITY}\b)).)*?)"
+    r"\b(?:compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|"
+    r"entrypoints?)\b",
     re.IGNORECASE,
 )
 _NEGATED_MODALITY = re.compile(
@@ -885,6 +889,21 @@ def test_a_negated_permission_is_not_reported(tmp_path: Path) -> None:
 
     assert len(problems) == 1
     assert "should not only" in problems[0]
+
+
+def test_a_negated_modal_does_not_hide_a_later_permission(tmp_path: Path) -> None:
+    """A negated modal cannot consume a later affirmative modal."""
+    _materialise_rule_documents(tmp_path)
+    _append_design_sentence(
+        tmp_path,
+        "Designs may not add wrappers; however, maintainers should add "
+        "compatibility shims.",
+    )
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert len(problems) == 1
+    assert "should add compatibility" in problems[0]
 
 
 @given(
