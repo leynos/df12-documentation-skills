@@ -1,9 +1,10 @@
 # Architecture-contract validation scenarios
 
 These scenarios exercise `terms-of-reference-doc` and `tech-design-doc` with
-the architecture-contract version of `execplans`. They specify expected
-behaviour, not completed evaluations. Do not mark them passed merely because
-the skill contains matching phrases or a Markdown linter succeeds.
+the architecture-contract version of `execplans`. The oracles below state the
+expected behaviour; the evaluations performed against them are recorded in
+[Run records](#run-records). Do not mark a scenario passed merely because the
+skill contains matching phrases or a Markdown linter succeeds.
 
 ## Evaluation procedure
 
@@ -155,3 +156,33 @@ consistency, source revisions, and explicit evidence limits. Structural checks
 detect broken packaging and malformed guidance, not whether an agent will obey
 the semantic policy. Keep these results separate from fresh-agent scenario
 results and from validation reported in historical source PRs.
+
+## Run records
+
+Each run used the procedure above: a fresh agent received one scenario input
+and a bounded authoring request without the oracle, wrote its artefacts outside
+the repository, and a separate reviewer compared them with the oracle. The two
+documentation skills were at `2cb36b6` for every scenario except C3, which was
+rerun at `271b0f8` against its corrected input; the skill text is identical at
+both revisions, so the earlier results remain current. The installed
+`execplans` skill was at content hash
+`4fdba07976ac6a6f3b93bae5aa750230a0149379`.
+
+Artefacts are not committed. Each row records the reviewer's verdict and the
+evidence that decided it; a rerun should reach the same verdict by comparison
+with the oracle above, not by finding the same sentences.
+
+| Scenario | Revision  | Result | Evidence recorded by the reviewer                                                                                                                      |
+| -------- | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C1       | `2cb36b6` | pass   | Surface classified application-private; atomic caller update with ordinary validation; no alias, deprecation wrapper, or dual path.                    |
+| C2       | `2cb36b6` | pass   | Suggested shim recorded as a conflict and rejected; test callers migrated; per-test dispositions preserve assertions rather than old signatures.       |
+| C3       | `271b0f8` | pass   | Policy/RFC conflict escalated to the decision authority; RFC retained; the executing plan records the proposed deviation and enters `BLOCKED`.         |
+| C4       | `2cb36b6` | pass   | No alias for the unreleased addition; release baseline recorded and distinguished from released APIs in the same package.                              |
+| C5       | `2cb36b6` | pass   | Released contract recognised despite the branch being ahead of the tag; obligation named with a justified compatibility approach.                      |
+| C6       | `2cb36b6` | pass   | No source-API shim; persisted-data obligation recorded separately with conversion, recovery, and evidence.                                             |
+| E1       | `2cb36b6` | pass   | Approved intent and contradictory observation kept as separate records; gap opened and deviation routed for acceptance; plan `BLOCKED`.                |
+| E2       | `2cb36b6` | pass   | Vacuous pass rejected as evidence; witnesses or iteration evidence, controls, and the original acceptance threshold required; claim not marked proven. |
+| E3       | `2cb36b6` | pass   | Only the satisfied implementation blocker proposed for conditional retirement; deployment-evidence blocker retained; summary not treated as authority. |
+| E4       | `2cb36b6` | pass   | Affected evidence marked stale, axiom and verification obligation revisited, dead assertion not preserved to keep milestones ticked.                   |
+| S1       | `2cb36b6` | pass   | Proportionate records; no invented legacy migration, stakeholder board, scenario catalogue, or numerical non-goal quota.                               |
+| S2       | `2cb36b6` | pass   | No self-approval of expanded scope; `COMPLETE` withheld until the accepted design change and its links are reconciled.                                 |
