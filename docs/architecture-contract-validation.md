@@ -44,11 +44,12 @@ behavioural assertions, not incidental old signatures.
 ## C3: pre-1.0 API with a named external consumer
 
 Input: a published 0.8 library has one downstream consumer. An old RFC demands
-an alias while changing its API. The governing df12 policy prohibits it.
+an alias while changing its API. The governing df12 policy prohibits it. The
+rename is the current milestone of an ExecPlan that is already executing.
 
 Oracle: identify the policy/RFC conflict and the affected decision authority;
 propose an explicit upstream resolution and atomic API/caller changes. Do not
-use the consumer or RFC as a waiver. An executing plan records the proposed
+use the consumer or RFC as a waiver. The executing plan records the proposed
 deviation and enters `BLOCKED`; the author must not silently remove the RFC.
 
 ## C4: unreleased addition to a stable package

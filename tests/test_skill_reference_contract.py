@@ -598,16 +598,34 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
 _MODALITY = (
     r"(?:may|should|is permitted to|are permitted to|is allowed to|are allowed to)"
 )
+_COMPATIBILITY_TERMS = (
+    r"compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?"
+)
 _PERMISSIVE_COMPATIBILITY = re.compile(
     rf"\b{_MODALITY}\b"
     rf"(?P<gap>(?:(?![.!?](?:\s|$))(?!(?:\b{_MODALITY}\b)).)*?)"
-    r"\b(?:compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|"
-    r"entrypoints?)\b",
+    rf"\b(?:{_COMPATIBILITY_TERMS})\b",
+    re.IGNORECASE,
+)
+# The same scan without the second-modality guard, kept only so a test can
+# show that the guard, rather than the position of the terms, is load-bearing.
+_UNGUARDED_PERMISSIVE_COMPATIBILITY = re.compile(
+    rf"\b{_MODALITY}\b(?P<gap>(?:(?![.!?](?:\s|$))[^.!?])*?)"
+    rf"\b(?:{_COMPATIBILITY_TERMS})\b",
     re.IGNORECASE,
 )
 _NEGATED_MODALITY = re.compile(
     r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
 )
+
+
+def _claims_in(sentence: str, pattern: re.Pattern[str]) -> list[str]:
+    """Return the affirmative permissions one pattern finds in a sentence."""
+    return [
+        match.group(0)
+        for match in pattern.finditer(sentence)
+        if _NEGATED_MODALITY.search(match.group("gap")) is None
+    ]
 
 
 def _normalised(path: Path) -> str:
@@ -711,10 +729,10 @@ def _permissive_compatibility_claims(root: Path) -> list[str]:
         if not path.is_file():
             continue
         for sentence in re.split(r"(?<=[.!?])\s+", _normalised(path)):
-            for match in _PERMISSIVE_COMPATIBILITY.finditer(sentence):
-                if _NEGATED_MODALITY.search(match.group("gap")) is not None:
-                    continue
-                problems.append(f"{document}: {match.group(0)}")
+            problems.extend(
+                f"{document}: {claim}"
+                for claim in _claims_in(sentence, _PERMISSIVE_COMPATIBILITY)
+            )
     return problems
 
 
@@ -1094,14 +1112,25 @@ def test_a_negated_modal_does_not_hide_a_later_permission(tmp_path: Path) -> Non
     _materialise_rule_documents(tmp_path)
     _append_design_sentence(
         tmp_path,
-        "Designs may not add wrappers; however, maintainers should add "
-        "compatibility shims.",
+        "Designs should not prescribe obsolete behaviour and may add "
+        "compatibility shims for private APIs.",
     )
 
     problems = _permissive_compatibility_claims(tmp_path)
 
     assert len(problems) == 1
-    assert "should add compatibility" in problems[0]
+    assert "may add compatibility" in problems[0]
+
+
+def test_the_second_modality_guard_is_load_bearing() -> None:
+    """The same sentence is missed when a match may span another modality."""
+    sentence = (
+        "Designs should not prescribe obsolete behaviour and may add "
+        "compatibility shims for private APIs."
+    )
+
+    assert _claims_in(sentence, _UNGUARDED_PERMISSIVE_COMPATIBILITY) == []
+    assert _claims_in(sentence, _PERMISSIVE_COMPATIBILITY) == ["may add compatibility"]
 
 
 @given(
