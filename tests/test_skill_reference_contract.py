@@ -13,8 +13,10 @@ dependency and stale-blocker handling, evidence expiry, stakeholder decision
 rights, the ``BLOCKED``/``COMPLETE`` reconciliation, and the traceable handoff
 records. The rule checks read the shipped Markdown and fail when wording is
 deleted. One further check rejects a permissive sentence that would grant the
-compatibility machinery the prohibitions deny; generated sentences exercise
-that rejection across verbs, wording, and version-number dots. Whether an agent
+compatibility machinery the prohibitions deny, except where the sentence
+justifies it for a released external contract with an explicit commitment;
+generated sentences exercise that rejection across verbs, wording, and
+version-number dots. Whether an agent
 obeys that guidance is the subject of the fresh-agent scenarios in
 ``docs/architecture-contract-validation.md``, not of a phrase assertion here.
 """
@@ -617,14 +619,35 @@ _UNGUARDED_PERMISSIVE_COMPATIBILITY = re.compile(
 _NEGATED_MODALITY = re.compile(
     r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
 )
+# The prohibitions name surfaces that never get compatibility machinery, while a
+# released external contract with an explicit commitment is assessed instead of
+# denied. A sentence that only names the latter is guidance, not a permission to
+# report; one that names a prohibited surface is reported even when it also
+# mentions a release.
+_PROHIBITED_SURFACE = re.compile(
+    r"\b(?:private|internal|test-only|unreleased|pre-1\.0|0\.\d+)\b", re.IGNORECASE
+)
+_JUSTIFIED_SURFACE = re.compile(
+    r"\b(?:released|compatibility commitment|deployed external consumer)\b",
+    re.IGNORECASE,
+)
+
+
+def _surface_is_justified(sentence: str) -> bool:
+    """Return whether the sentence permits compatibility for a released surface."""
+    return (
+        _JUSTIFIED_SURFACE.search(sentence) is not None
+        and _PROHIBITED_SURFACE.search(sentence) is None
+    )
 
 
 def _claims_in(sentence: str, pattern: re.Pattern[str]) -> list[str]:
-    """Return the affirmative permissions one pattern finds in a sentence."""
+    """Return the permissions one pattern finds that the contract denies."""
     return [
         match.group(0)
         for match in pattern.finditer(sentence)
         if _NEGATED_MODALITY.search(match.group("gap")) is None
+        and not _surface_is_justified(sentence)
     ]
 
 
@@ -989,6 +1012,38 @@ def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None
     assert problems[1].startswith("skills/tech-design-doc/")
     assert "pre-1.0" in problems[1]
     assert problems[2].startswith("skills/terms-of-reference-doc/")
+
+
+def test_a_released_contract_permission_is_not_reported(tmp_path: Path) -> None:
+    """Guidance that justifies compatibility for a released contract is allowed."""
+    _materialise_rule_documents(tmp_path)
+    _append_design_sentence(
+        tmp_path,
+        "Designs may add compatibility wrappers for released 2.1 APIs with an "
+        "explicit compatibility commitment and a deployed external consumer.",
+    )
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert problems == []
+
+
+def test_a_prohibited_surface_permission_is_reported(tmp_path: Path) -> None:
+    """A permission is reported for each prohibited surface, release or not."""
+    _materialise_rule_documents(tmp_path)
+    sentences = (
+        "Designs may add compatibility shims for test-only APIs.",
+        "Designs may add a compatibility alias for an unreleased addition.",
+        "Designs may add compatibility wrappers for released 0.8 APIs.",
+    )
+    for sentence in sentences:
+        _append_design_sentence(tmp_path, sentence)
+
+    problems = _permissive_compatibility_claims(tmp_path)
+
+    assert len(problems) == len(sentences)
+    for problem, sentence in zip(problems, sentences, strict=True):
+        assert problem.partition(": ")[2] in sentence
 
 
 _PERMISSIVE_VERBS: tuple[str, ...] = (
