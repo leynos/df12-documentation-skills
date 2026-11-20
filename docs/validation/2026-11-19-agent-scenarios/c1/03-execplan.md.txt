@@ -1,0 +1,624 @@
+# Replace the internal method signature across its three callers
+
+This ExecPlan (execution plan) is a living document. The sections
+`Constraints`, `Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`,
+`Decision log`, `Outcomes & retrospective`, `Conformance basis`, and
+`Verification plan` must be kept up to date as work proceeds.
+
+Status: DRAFT (design applied; awaiting user approval and the `EP-M0`
+reconnaissance inputs).
+
+Branch: not created. Proposed `refactor/internal-method-signature`; the
+implementing agent records the actual branch.
+
+Roadmap item: none. No roadmap was available when this plan was written.
+
+This plan was authored without access to the application repository. Every
+`<...>` placeholder is deliberate and must be replaced by `EP-M0` before the
+plan is approved or executed. A plan containing unresolved placeholders is not
+self-contained and must not leave `DRAFT`.
+
+## Purpose / big picture
+
+The application is released at version 2. One method, declared `public`, is
+called only by three modules in the same application. After this change, the
+method has the approved new signature and all three callers use it; the old
+signature no longer exists. A maintainer can then read each call site and see
+the current contract, without an obsolete overload or wrapper remaining as a
+trap.
+
+Before:
+
+```plaintext
+<method-name>(<current-parameters>) -> <current-return>
+```
+
+After:
+
+```plaintext
+<method-name>(<new-parameters>) -> <new-return>
+```
+
+The user-visible behaviour of the application is unchanged unless the approved
+change request says otherwise. No external interface, persisted record, or
+wire message changes as part of this work. This work closes no roadmap item;
+it executes the sponsor's change request carried forward from
+`01-terms-of-reference.md`.
+
+## Constraints
+
+Hard invariants. Violating one requires escalation, not a workaround.
+
+- The only authorised interface change is the method named in the approved
+  change request. No other public surface changes.
+- No source-API compatibility machinery: no overload, alias, deprecated
+  entrypoint, facade, adapter, wrapper, dual implementation, or defaulted
+  parameter kept so the old call shape compiles. The method is an
+  application-internal public surface, and df12 policy prohibits compatibility
+  machinery for it (`TOR-CONSTRAINT-001`).
+- The definition and all three callers change together. No intermediate
+  state exposes both signatures.
+- The change must not alter persisted records or wire formats. If it would,
+  stop and escalate to a separate migration assessment.
+- No dependency is added or upgraded.
+- Unrelated refactoring in the affected files is out of scope. Keep the diff
+  to the method, the three callers, and the tests the change requires.
+- Do not read or edit historical, completed ExecPlans as part of the change.
+- Implementation begins only after the user approves this plan. It has not
+  been approved.
+
+## Tolerances (exception triggers)
+
+No repository survey was possible during authoring, so these limits are
+provisional. `EP-M0` must confirm or tighten them before approval, and the
+approved values replace these without retroactive effect. No comparable
+historical ExecPlan was inspected, so there is no local evidence about past
+budget increases. ExecPlan files are excluded from every count, including this
+file when it is updated.
+
+Classification: production source, tests, and executable build logic count as
+code. Declarative settings, manifests, lockfiles, and CI configuration count as
+configuration. Prose and guides count as documentation. Change counts are net
+lines (additions minus deletions); state the comparison base in `EP-M0`.
+
+- Files: more than 6 non-ExecPlan files changed, stop and escalate.
+- Code: more than 60 net lines changed, stop and escalate.
+- Configuration: any net configuration change, stop and escalate.
+- Documentation: more than 40 net documentation lines changed, stop and
+  escalate.
+- Interface: any interface change beyond the authorised method, stop and
+  escalate.
+- Dependencies: any dependency change, stop and escalate.
+- Architecture: any change to a trust boundary, persisted format, wire
+  protocol, or the method's responsibility, stop and escalate.
+- Iterations: if a focused test still fails after 3 corrective attempts, stop
+  and escalate.
+- Time: if a milestone exceeds 4 hours of work, stop and escalate.
+- Ambiguity: if the new signature admits more than one materially different
+  reading, stop and present the interpretations.
+
+## Risks
+
+- Risk: an external or cross-package consumer exists despite the brief.
+  Severity: high. Likelihood: low. Mitigation: `EP-M0` inventories the call
+  sites and searches for re-exports and published entrypoints; stop if one is
+  found.
+- Risk: the method is invoked reflectively, through a serializer, or by name
+  in configuration, so the compiler and a text search miss a caller.
+  Severity: high. Likelihood: medium. Mitigation: `EP-M0` searches for the
+  dynamic idioms of the language and reviews registration points.
+- Risk: the new signature changes behaviour, not just shape. Severity: medium.
+  Likelihood: medium. Mitigation: resolve `TOR-OPEN-001` before approval; add
+  tests for the intended behaviour rather than assuming preservation.
+- Risk: a parameter or return value is persisted or sent to a peer.
+  Severity: high. Likelihood: low. Mitigation: `EP-M0` serialisation review;
+  escalate to a separate migration if found.
+- Risk: the provisional tolerances are too tight for the real callers.
+  Severity: low. Likelihood: medium. Mitigation: `EP-M0` corrects them before
+  approval.
+- Risk: a reviewer requests a deprecation shim. Severity: medium. Likelihood:
+  low. Mitigation: cite `TOR-CONSTRAINT-001`; record a conflict and escalate
+  rather than implement one.
+
+## Progress
+
+- [x] (2026-11-19 00:17Z) Terms of reference, technical design, and initial
+  ExecPlan drafted. No repository access; placeholders recorded.
+- [ ] Plan approved by the user.
+- [ ] `EP-M0` reconnaissance complete; all placeholders replaced; tolerances
+  confirmed.
+- [ ] `EP-M1` signature replaced and all three callers updated.
+- [ ] `EP-M2` repository-wide verification and negative control complete.
+- [ ] `EP-M3` delivery closure complete.
+
+## Surprises & discoveries
+
+None. No implementation has occurred. This section stays empty rather than
+recording anticipated risks as discoveries.
+
+## Decision log
+
+- `D1` Decision: classify the method as a private API for compatibility
+  purposes because it is an application-internal interface declared `public`,
+  and the three callers are its only known consumers.
+  Rationale: contract scope follows consumers and commitments, not the
+  `public` keyword or the application's version number. The df12 prohibition
+  applies to this category. Alternatives that preserve the old interface have
+  no consumer to be compatible with and would be compatibility theatre.
+  Date/Author: 2026-11-19, authoring agent.
+
+- `D2` Decision: change the definition and all three callers atomically; add
+  no shim.
+  Rationale: the change is a single coherent edit; a compatibility window
+  would be an invented promise. Date/Author: 2026-11-19, authoring agent.
+
+- `D3` Decision: insert `EP-M0` as a reconnaissance gate before any code edit.
+  Rationale: the authoring session could not inspect the repository, so a
+  self-contained plan requires an explicit step that records the symbol,
+  paths, base revision, toolchain, dynamic-invocation inventory, and
+  serialisation boundary. It changes no production code.
+  Date/Author: 2026-11-19, authoring agent.
+
+- `D4` Decision: provisional tolerances rather than invented budgets.
+  Rationale: the ExecPlan skill requires budgets set after surveying the
+  affected code; that survey was impossible here. `EP-M0` confirms them
+  before approval. Date/Author: 2026-11-19, authoring agent.
+
+- `D5` Decision: verify by compiler enforcement plus exhaustive search, not
+  model checking or proof.
+  Rationale: the property is whole-program source consistency within a small
+  scope. A stronger method would restate the compiler's rules and still miss
+  dynamic dispatch; targeted dynamic-path review is the proportionate check.
+  Date/Author: 2026-11-19, authoring agent.
+
+- `D6` Decision: keep no compatibility default parameter.
+  Rationale: a default whose purpose is to let the old call shape compile is
+  the prohibited shim in another spelling. If the approved new signature
+  genuinely has an optional parameter, that is a design fact to record, not a
+  migration device. Date/Author: 2026-11-19, authoring agent.
+
+- `D7` Decision: no Mermaid diagram, so nixie is not run.
+  Rationale: the change is three call edges from one definition; prose and
+  tables state it completely. Date/Author: 2026-11-19, authoring agent.
+
+## Outcomes & retrospective
+
+Not applicable yet. The plan is a draft and no implementation has occurred.
+At completion, compare the delivered state with `TOR-GOAL-001` to
+`TOR-GOAL-004`, record the actual diff against the tolerances, and note
+whether reconnaissance found any fact that falsified `TOR-ASSUMPTION-001`,
+`TOR-ASSUMPTION-002`, or `TOR-ASSUMPTION-005`. Reconcile the upstream
+artefacts before setting `COMPLETE`.
+
+## Context and orientation
+
+Orientation: one method is defined once and called from three modules in the
+same application. The change touches four production locations plus tests. The
+repository, language, and build tool are unknown at authoring time.
+
+Known now:
+
+- Definition: `<definition-path>`, symbol `<method-name>`, current signature
+  `<current-signature>`.
+- Callers: `<caller-1-path>`, `<caller-2-path>`, `<caller-3-path>`.
+- Base revision: `<base-revision>` (not inspected).
+- Branch: proposed `refactor/internal-method-signature`.
+- Build and test tooling: `<build-command>`, `<focused-test-command>`,
+  `<full-test-command>`. The project's Makefile targets, where they exist,
+  take precedence over invoking underlying tools directly.
+- Gate order for `EP-M3`: the application repository's documented sequence,
+  run sequentially. If it adopts the df12 documentation-skills convention,
+  the sequence is `make check-fmt`, `make lint`, `make typecheck`, then
+  `make test`.
+- Installed skill inspected: `/home/leynos/.claude/skills/execplans/SKILL.md`
+  and `references/execplan-template.md`, read on 2026-11-19. The skill file
+  declares no version.
+- Budget-setting survey: not performed; see `Tolerances` and `D4`. This is a
+  repository-level limitation, not an estimate.
+
+Terms used here: a *referrer* is any source location that names the method.
+*Conforming* means using the new signature with arguments of the new types and
+order and consuming the new return. *Negative control* means a deliberately
+broken variant that the verification must reject.
+
+## Conformance basis
+
+- Terms of reference: `/tmp/val-c1/01-terms-of-reference.md`, draft 1,
+  2026-11-19. Not approved.
+- Technical design: `/tmp/val-c1/02-technical-design.md`, draft 1,
+  2026-11-19. Not accepted. Compatibility classification: none.
+- ADRs and governing standards: none available. The applicable policy is the
+  df12 compatibility prohibition quoted in the terms of reference and the
+  technical design.
+- Application base revision: `<base-revision>`, unrecorded.
+
+Requirements used by this plan:
+
+- `REQ-ATOMIC-001` The definition and all three callers change in one
+  coherent state.
+- `REQ-NOCOMPAT-001` No compatibility machinery exists in the final diff.
+- `REQ-CALLERS-001` All three callers supply the new arguments and consume the
+  new return.
+- `REQ-BEHAVIOUR-001` Observable behaviour is preserved for the named
+  outcomes, unless an approved behavioural change says otherwise.
+- `REQ-NOSERIAL-001` No persisted record or wire format changes.
+- `REQ-COMPLETE-001` No live source location refers to the old signature.
+
+Trace links:
+
+```plaintext
+TOR-GOAL-001 -> REQ-ATOMIC-001   -> EP-M1 -> EP-M1 red/green transcript
+TOR-GOAL-002 -> REQ-CALLERS-001  -> EP-M1 -> focused caller tests
+TOR-GOAL-003 -> REQ-BEHAVIOUR-001-> EP-M2 -> affected test suite
+TOR-GOAL-004 -> REQ-COMPLETE-001 -> EP-M2 -> search result and build
+TOR-NONGOAL-001 -> REQ-NOCOMPAT-001 -> EP-M2 -> diff review
+TOR-NONGOAL-004 -> REQ-NOSERIAL-001 -> EP-M0 -> serialisation review
+```
+
+If a traced item changes, record the upstream and downstream impacts here and
+in the technical design before accepting the change.
+
+## Verification plan
+
+### Abstract model
+
+Let `R` be the set of source locations that refer to the method: the
+definition `d`, the three callers `m1`, `m2`, `m3`, and any tests. A referrer
+is conforming when it uses the new signature; a caller must also supply
+arguments of the new types in the new order and consume the new return. The
+target program has every referrer conforming and no remaining old-signature
+entrypoint. The malformed states are a referrer with the old argument list or
+an invocation that the inventory of `R` misses. The latter is handled by the
+`GAP-DYNAMIC` check rather than by the model.
+
+### Invariants and lemmas
+
+- `INV-CALLSITES-001` No live source location refers to the old signature
+  after the change. Links to `REQ-COMPLETE-001`.
+- `INV-COVERAGE-001` The referrer inventory is complete: the search finds all
+  syntactic references, and no dynamic path invokes the method. Links to
+  `REQ-COMPLETE-001`.
+- `INV-BEHAVIOUR-001` For each named caller-visible outcome, the post-change
+  result equals the pre-change result for the same inputs. Links to
+  `REQ-BEHAVIOUR-001`.
+- `L-COMPILE-001` If every referrer is statically resolved, the old signature
+  is removed, and the build succeeds, then every referrer uses the new
+  signature. Depends on `AXIOM-COMPILER`.
+- `L-COVERAGE-001` If the search finds all syntactic occurrences and no
+  dynamic invocation exists, `R` is complete. Depends on `AXIOM-SEARCH` and
+  the `GAP-DYNAMIC` result.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-COMPILER` The language rejects a call with the wrong argument count,
+  order, or type. Source: the language specification. Boundary: the affected
+  modules. Fails if the language is dynamically typed.
+- `AXIOM-SEARCH` The search tool reports every syntactic occurrence of the
+  identifier. Boundary: the working tree.
+- `AXIOM-TESTS` The test runner executes the named tests and fails on
+  assertion error. Boundary: the configured framework.
+
+### Methods per obligation
+
+- Obligation: `INV-CALLSITES-001`.
+  Method: exhaustive search plus compiler enforcement.
+  Rationale: whole-program source consistency is directly observable by both.
+  Domain: working tree, excluding vendored dependencies and recorded
+  historical paths.
+  Artefact: `EP-M2` search command and the build gate.
+  Evidence: the search returns no live old-shape reference and the build
+  passes.
+  Non-vacuity: the same search must find the definition and all three callers
+  before the change; that positive control proves the pattern is not empty.
+
+- Obligation: `INV-COVERAGE-001`.
+  Method: identifier search plus a review of dynamic idioms and registration
+  points for `<language>`.
+  Rationale: runtime dispatch cannot be enumerated generically; a targeted
+  inventory is proportionate.
+  Domain: reflect, serialiser, FFI, and dependency-injection surfaces named in
+  `EP-M0`.
+  Artefact: baseline inventory in `Artefacts and notes`.
+  Evidence: no unexplained match; the inventory contains the three known
+  callers.
+  Non-vacuity: an inventory missing the three known callers is a failed
+  strategy, not a clean result.
+
+- Obligation: `INV-BEHAVIOUR-001`.
+  Method: parameterized tests per caller, plus the affected existing tests.
+  Rationale: the outcomes are a finite set, not a generated input space.
+  Domain: the inputs already covered by the caller tests and boundary values
+  for any new parameter.
+  Artefact: `<test-paths>`.
+  Evidence: the focused tests pass before and after the change; the expected
+  case count is recorded.
+  Non-vacuity: at least one case must fail if a caller passes arguments in the
+  wrong order or drops a transformed value.
+
+- Obligation: `L-COMPILE-001` and `L-COVERAGE-001`.
+  Method: argument from the recorded build and search evidence.
+  Rationale: separate experiments would restate their premises.
+  Evidence: `EP-M2` records the build result, the search result, and the
+  `GAP-DYNAMIC` outcome. If the language is dynamic, `AXIOM-COMPILER` is false,
+  `L-COMPILE-001` does not apply, and runtime tests carry the obligation.
+  Non-vacuity: the build must fail when one caller is deliberately left on the
+  old signature (see `EP-M2` negative control).
+
+### Formal verification decision
+
+No model checking or formal proof. The property is static whole-program
+consistency over four production locations, which the compiler and an
+exhaustive search establish directly. Stronger methods would restate the
+compiler's rules without covering dynamic dispatch, and the proportionate
+response to dynamic dispatch is a targeted inventory, not a model. This is
+`D5`.
+
+### Suggested BDD features
+
+Proposed only; the project's BDD availability is unknown.
+
+```gherkin
+Feature: Internal method signature replacement
+  Scenario: Every internal caller uses the new signature
+    Given the method has the approved new signature
+    And the three calling modules have been updated
+    When the application is built and the affected tests run
+    Then no source location refers to the old signature
+    And each caller produces its previous observable outcome
+```
+
+If no BDD runner exists, `EP-M1` and `EP-M2` exercise the same scenario through
+the focused tests and the search evidence. Adding a framework requires
+separate authorisation.
+
+## Plan of work
+
+### `EP-M0` reconnaissance gate
+
+Assigned: `GAP-RECON`, `GAP-DYNAMIC`, `GAP-SERIALISATION`, `REQ-NOSERIAL-001`.
+This milestone changes no production code and is required, not optional.
+
+Record in `Artefacts and notes`: the base revision; branch; language and
+build tooling; the exact symbol and definition path; the three caller paths
+and their call lines; the current and approved new signatures; the test
+files and focused test command; and the result of the dynamic-invocation and
+serialisation searches. Replace every `<...>` placeholder in this plan.
+
+Acceptance: the plan contains no unresolved placeholder, the referrer
+inventory is complete, and the tolerances are confirmed or corrected. If an
+external consumer, a dynamic invocation, or a persisted/wire coupling is
+found, stop and escalate; `D1`, `D2`, or `REQ-NOSERIAL-001` must be revisited.
+
+### `EP-M1` atomic signature replacement
+
+Assigned: `REQ-ATOMIC-001`, `REQ-CALLERS-001`, `REQ-BEHAVIOUR-001`,
+`TOR-GOAL-001`, `TOR-GOAL-002`, `TOR-GOAL-004`.
+
+Red: add or update the smallest test that calls the method with the new
+signature and asserts its unchanged outcome. Run it. It must fail for the
+intended reason: the new signature does not exist (a missing-symbol or arity
+error in a static language, or an unexpected-argument error in a dynamic one).
+Record the failure text.
+
+Green: change the definition to `<new-signature>` and update all three callers
+to supply the new arguments and consume the new return. Change nothing else.
+Run the focused test and the affected caller tests; they must pass.
+
+Refactor: clean up the edited regions without changing behaviour; rerun the
+focused tests. The old signature must not survive in any form.
+
+End state: the application builds, the focused tests pass, the old signature
+is gone, and no compatibility construct exists. This plateau is coherent on
+its own; a later milestone is not required for the repository to be usable.
+
+Recovery: revert the milestone commit and re-apply. The step is idempotent
+from a clean tree.
+
+### `EP-M2` repository-wide verification
+
+Assigned: `REQ-COMPLETE-001`, `REQ-NOCOMPAT-001`, `REQ-BEHAVIOUR-001`.
+
+Search for the old signature and the old call shape across the working tree.
+Every hit must be a historical record on the agreed exclusion list or part of
+the new definition. Review the diff for any compatibility construct. Run the
+negative control: temporarily restore one caller's old argument list, run the
+build and focused tests, and observe the intended failure; then remove the
+fault and confirm it is gone. Run the affected test suite.
+
+Acceptance: empty live search, no compatibility construct, the negative
+control rejected for the intended reason, and the suite passing. Record the
+transcripts.
+
+### `EP-M3` delivery closure
+
+Assigned: final gate sequence and upstream reconciliation.
+
+Update the changelog or release note if the project keeps one. Search live
+guides for references to the old signature and update them; do not edit
+historical or completed ExecPlans. Run the project's format, lint, typecheck,
+and test gates sequentially, preferring Makefile targets, with `pipefail` and
+output captured under `/tmp`. Open the change for review, stating the
+compatibility classification and the evidence for it. Reconcile
+`01-terms-of-reference.md` and `02-technical-design.md` against any discovery.
+
+Acceptance: every gate passes, the review states "no compatibility
+machinery", and no upstream item is left unrecorded.
+
+## Milestones and plateaus
+
+- `EP-M0`, reconnaissance.
+  Requirements and gaps: `GAP-RECON`, `GAP-DYNAMIC`, `GAP-SERIALISATION`,
+  `REQ-NOSERIAL-001`.
+  Acceptance evidence: a completed baseline record; no production change.
+  Conformance check:
+  - Reconnaissance satisfies the recorded gaps.
+  - The design's classification still follows from the consumers found.
+  - `TOR-ASSUMPTION-001`, `002`, and `005` are confirmed or falsified.
+  - No interface or dependency change has been made.
+  - No trust-boundary, persisted-format, or wire change has been proposed.
+  - Tolerances and trace links are current.
+  Recovery: none needed; no code changed.
+  Remaining gaps: none when complete.
+  Compatibility decision: none.
+
+- `EP-M1`, atomic replacement.
+  Requirements and gaps: `REQ-ATOMIC-001`, `REQ-CALLERS-001`,
+  `REQ-BEHAVIOUR-001`, `TOR-GOAL-001`, `TOR-GOAL-002`, `TOR-GOAL-004`.
+  Acceptance evidence: red transcript, green transcript, focused test results.
+  Conformance check:
+  - `REQ-ATOMIC-001`, `REQ-CALLERS-001`, `REQ-BEHAVIOUR-001` are satisfied.
+  - The design is followed; no extra interface change appears.
+  - Upstream assumptions still hold.
+  - No unapproved public interface or dependency change exists.
+  - No trust-boundary or persisted-format change exists.
+  - Trace links are current.
+  Recovery: revert the milestone commit.
+  Remaining gaps: repository-wide search and negative control (`EP-M2`).
+  Compatibility decision: none.
+
+- `EP-M2`, verification.
+  Requirements and gaps: `REQ-COMPLETE-001`, `REQ-NOCOMPAT-001`.
+  Acceptance evidence: search transcript, diff review, negative-control
+  transcript, suite result.
+  Conformance check:
+  - `REQ-COMPLETE-001` and `REQ-NOCOMPAT-001` are satisfied.
+  - The design is followed.
+  - No upstream assumption is falsified.
+  - No unapproved interface or dependency change exists.
+  - No trust-boundary or persisted-format change exists.
+  - Trace links are current.
+  Recovery: fix and rerun; the negative control is always reverted.
+  Remaining gaps: delivery closure only.
+  Compatibility decision: none.
+
+- `EP-M3`, delivery closure.
+  Requirements and gaps: all above, plus gate success.
+  Acceptance evidence: gate logs, review link, reconciled upstream documents.
+  Conformance check: all requirements satisfied; design followed; trace links
+  current; no unapproved change; upstream documents reconciled.
+  Recovery: rerun the failing gate; revert if the change is rejected.
+  Remaining gaps: none at completion.
+  Compatibility decision: none.
+
+## Concrete steps
+
+```plaintext
+Working directory: <application repository root>
+
+EP-M0 inventory:
+  git rev-parse HEAD
+  rg -n --hidden --glob '!vendor' --glob '!node_modules' \
+     --glob '!target' '\b<method-name>\b' .
+  rg -n '<dynamic-invocation idiom for the language>' .
+  <serialisation registration search>
+
+EP-M1 red:
+  <focused-test-command> <new-test-selector>
+  -> fails: new signature missing / unexpected argument
+
+EP-M1 green:
+  <build-command>                         -> passes
+  <focused-test-command> <affected>       -> <N> passed
+
+EP-M2:
+  rg -n '\b<old-signature-shape>\b' .     -> only recorded historical paths
+  <negative-control edit>                 -> build or focused tests fail
+  <revert negative control>               -> build and tests pass
+  <affected-test-command>                 -> passes
+
+EP-M3:
+  <format-check-command>
+  <lint-command>
+  <typecheck-command>
+  <full-test-command>
+```
+
+Run gates sequentially, not in parallel. Capture long output with `tee` to
+`/tmp/<action>-<project>-<branch>.out` and enable `pipefail` so a failed gate
+cannot appear to pass. Do not run the negative control in a commit.
+
+## Validation and acceptance
+
+A human can verify completion by observing:
+
+- The build passes with the old signature deleted. The new test, named
+  `<new-test-name>`, fails before the change for the expected missing-symbol or
+  argument error and passes afterwards.
+- The search for the old signature returns only recorded historical paths.
+- The three callers each pass their tests, and the affected suite passes with
+  its previous case count.
+- The diff contains no overload, alias, deprecated entrypoint, facade,
+  adapter, wrapper, dual implementation, or compatibility default.
+- The diff touches the definition, the three callers, and the required tests;
+  it does not touch unrelated files.
+
+Quality criteria:
+
+- Tests: focused red/green evidence and the affected suite pass.
+- Verification: `INV-CALLSITES-001`, `INV-COVERAGE-001`, and
+  `INV-BEHAVIOUR-001` are discharged; `L-COMPILE-001` and `L-COVERAGE-001` are
+  recorded with their axioms.
+- Lint and typecheck: the project's gates pass.
+- Performance: no claim and no benchmark; the change is call-shape only.
+- Security: no trust-boundary change, so no additional scan is required; say
+  so in the review if the project's policy asks.
+
+Quality method: the `EP-M3` gate sequence plus the `EP-M2` evidence.
+
+## Idempotence and recovery
+
+Every step reruns safely from a clean tree. The negative control is a
+temporary edit that must be reverted before any commit; verify with a diff
+that it is gone. If the build or tests fail for an unrelated baseline reason,
+record it separately with evidence rather than waiving the gate. A rejected
+change is recovered by reverting the milestone commit; no dual-interface state
+is ever needed for recovery.
+
+## Artefacts and notes
+
+Baseline record to complete in `EP-M0` (no values obtained during authoring):
+
+```plaintext
+Base revision: <base-revision>
+Branch: <branch>
+Language and toolchain: <language-version> / <build-tool-version>
+Definition: <definition-path>::<method-name>
+Current signature: <current-signature>
+New signature: <new-signature>
+Callers: <caller-1-path>:<line>, <caller-2-path>:<line>, <caller-3-path>:<line>
+Dynamic invocation inventory: <matches and dispositions>
+Serialisation boundary: <none found | path and assessment>
+Focused test command: <command>
+Full test command: <command>
+Gate sequence: <commands in order>
+```
+
+Evidence obtained: none. Authoring produced documents only. No build, test,
+search, or gate was run against the application.
+
+## Interfaces and dependencies
+
+At the end of `EP-M1`, `<definition-path>` must define:
+
+```plaintext
+<new-signature>
+```
+
+The method keeps its name and responsibility. Its visibility stays
+`public`; no caller outside the application is introduced or removed. The
+three callers access it exactly as before, through the same module boundary.
+Error contracts are unchanged. No new type, trait, interface, module, or
+dependency is required; if the new signature needs a new type, that is an
+interface expansion beyond this plan and requires escalation.
+
+Reuse policy: the existing method remains the single implementation. No
+parallel implementation, forwarding method, or temporary delegate may be
+introduced.
+
+## Revision note
+
+- 2026-11-19: initial draft. Created the terms of reference, technical design,
+  and this plan from the sponsor's request. No repository access was available,
+  so `EP-M0` was added to capture the baseline before approval and the
+  tolerance budgets are provisional. Remaining work: resolve `TOR-OPEN-001` to
+  `TOR-OPEN-007`, approve the plan, then execute `EP-M0` to `EP-M3`.

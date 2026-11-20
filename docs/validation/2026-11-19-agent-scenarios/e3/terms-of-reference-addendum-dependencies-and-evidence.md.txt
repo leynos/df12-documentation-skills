@@ -1,0 +1,214 @@
+# Programme blocker and deployment evidence – terms of reference addendum
+
+Status: v0.1 draft, reconciliation only. Not accepted and not approved.
+
+Audience: the programme owner, the delivery lead, and the maintainers of the
+programme record and the daily summary.
+
+Companion documents: `phase0-intake-working-note.md` and
+`proposed-record-corrections.md` in the same directory. The underlying
+programme record, implementation merge record, and deployment record were not
+supplied and were not inspected.
+
+Date: 2026-11-19.
+
+Authority and evidence basis: prepared from the supplied scenario alone. No
+approval authority is established here. The addendum proposes corrections; it
+does not apply them.
+
+## 1. Purpose and scope
+
+Two records disagree about the same programme item, and a third claims
+completion while deployment evidence is absent. This addendum reconciles the
+dependency and blocker edges, states what each delivery state can support, and
+assesses the completion claim.
+
+The scope is limited to what the supplied material supports: dependency edges,
+delivery-state claims, and a proposed correction. It does not extend to users,
+market, goals, or success measures, none of which was supplied. It does not
+authorize implementation work.
+
+Definitions used below:
+
+- A **blocker edge** is a dependency asserted to gate named work until a stated
+  unblock condition is met.
+- **Deployment evidence** is a record that a named revision reached a named
+  environment and passed an observable post-deployment check.
+- **Programme status** is the programme-level state derived from the delivery
+  states below, not a single word copied from a summary.
+
+## 2. Evidence basis and limits
+
+The supplied material establishes the content of the records it reports. It
+does not pin any underlying revision, and it cites no merge, release, or
+deployment record. Those records were outside this task's authorized and
+available scope.
+
+Consequently every disposition below is a proposal. The correction file names
+the facts that must be filled in before any external record is edited. No
+diagram is used; the structured content is small enough for tables, so no
+diagram-validation gate applies.
+
+## 3. Claim record
+
+| ID | Kind | Statement | Source | Last check | Evidence status |
+| --- | --- | --- | --- | --- | --- |
+| TOR-CLAIM-001 | Observation of record content | The programme record still blocks work on the gated item. | Supplied scenario | 2026-11-19 | `[KNOWN]` as the record's assertion |
+| TOR-CLAIM-002 | Observation, reported | The gated implementation merged months ago. | Supplied scenario | 2026-11-19 | `[KNOWN]` as reported; revision unpinned |
+| TOR-CLAIM-003 | Evidence gap | No deployment evidence is available. | Supplied scenario | 2026-11-19 | `[KNOWN]` for the supplied material |
+| TOR-CLAIM-004 | Observation of summary content | A daily summary says complete. | Supplied scenario | 2026-11-19 | `[KNOWN]` as summary content; `[OPEN]` as a status claim |
+| TOR-ASSUMPTION-001 | Assumption | The blocker under review gated implementation, not release or deployment. | Inferred from "blocks work on an implementation" | 2026-11-19 | `[ASSUMED]` |
+
+TOR-CLAIM-001 establishes only what the record asserts. Whether its premise
+still holds is assessed in §5.
+
+TOR-CLAIM-002 is reported, not verified. A merge record, when produced, would
+establish what implementation landed. It would not establish verification,
+release, deployment, or an outcome. Month-old age is irrelevant to whether the
+unblock condition is met; age is not a condition.
+
+TOR-CLAIM-003 records an absence within the supplied material. Because the
+search scope is unspecified, it is not proof that no deployment occurred, and
+it is certainly not a licence to assume one did.
+
+TOR-ASSUMPTION-001 is load-bearing. If the blocker gates release or deployment
+rather than implementation, closing it would remove a live gate. Failure
+consequence: deployment acceptance would proceed with no recorded blocker.
+Verification route: read the blocker's stated unblock condition and its
+declared gate. Expiry trigger: the record's condition text becoming available
+or changing.
+
+No claim here is approved. Approval authority is `TOR-OPEN-003`.
+
+## 4. Delivery-state assessment
+
+| State | Assessment | Basis |
+| --- | --- | --- |
+| Proposed | Not addressed | No proposal record supplied |
+| Approved | Not evidenced | No approval record supplied |
+| Implemented | Reported merged | TOR-CLAIM-002; revision not pinned |
+| Verified | Not evidenced | No verification record supplied |
+| Released | Not evidenced | No release record supplied |
+| Deployed | Not evidenced; reported absent | TOR-CLAIM-003 |
+| Outcome-validated | Not evidenced | No outcome measure supplied |
+
+These states are independent. A merged change establishes what implementation
+landed, not that a product outcome occurred. Deployment is never inferred from
+a merge, availability is never inferred from an unmerged change, and
+abandonment is never inferred from a quiet workstream. The reported quiet
+period does not classify the blocker either way.
+
+## 5. Dependency and blocker register
+
+### TOR-DEP-001 – implementation blocker
+
+| Field | Value |
+| --- | --- |
+| Required capability | The gated implementation, reported merged |
+| Provider | Not named in the supplied material (`[OPEN]`) |
+| Consumer | The work the programme record gates (`[OPEN]`) |
+| Unblock condition | The condition stated in the record; if it is the implementation merge, it is met |
+| Linked evidence | Reported merge; no revision or date pinned |
+| Last check | 2026-11-19, intake only |
+| Classification | Implementation milestone, on the reported reading |
+| Disposition | Retire, as a proposed correction |
+
+Rationale: a blocker is stale when its own unblock condition is met. Continuing
+to block work on an implementation already merged preserves an obsolete edge
+solely because a tracker still shows it. The disposition rests on the
+condition, not on the record's age and not on the summary.
+
+Conditions on the proposal:
+
+1. Confirm from the record itself that the stated unblock condition is the
+   implementation merge. If it is not, do not close the entry; re-scope it
+   under TOR-DEP-002.
+2. Pin the merge revision, the merge date, and the accepting owner in the
+   closure note. If the merge record cannot be produced, the proposal remains
+   pending; the blocker is not retired on the strength of the summary.
+
+### TOR-DEP-002 – deployment evidence
+
+| Field | Value |
+| --- | --- |
+| Required capability | A deployment record for the merged revision |
+| Provider | The deployment pipeline or environment owner (`[OPEN]`) |
+| Consumer | Programme record, release and deployment acceptance, outcome validation |
+| Availability condition | A record naming environment, deployed revision, deployment time, and a passed post-deployment check |
+| Linked evidence | None supplied |
+| Last check | 2026-11-19 |
+| Classification | Release and deployment acceptance; later outcome validation |
+| Disposition | Retain; record as an open dependency if no entry exists |
+
+Rationale: the reported merge cannot establish deployment, and the absent
+evidence cannot be replaced by a summary's assertion. The edge is scoped to
+release, deployment, and outcome validation. It does not gate the already
+merged implementation, and it must not be used to re-open completed
+implementation work. An evidence gap is discharged by evidence, not by
+re-labeling the work.
+
+If the programme record has no deployment entry, this record is new. Its
+existence is proposed, not asserted; the supplied material evidences only the
+absence of deployment evidence, not a pre-existing tracker item.
+
+## 6. Treatment of the daily summary
+
+The daily summary is a discovery aid. It aggregates reports; it is not a status
+authority. Its "complete" has no named delivery dimension and cites no
+underlying record, so it is `[OPEN]` as a programme status.
+
+The word is also ambiguous. "Complete" could mean implementation merged, a
+release cut, a deployment performed, or an outcome observed. Only the first is
+consistent with the supplied merge report. The second, third, and fourth are
+unsupported, and the third conflicts with the reported absence of deployment
+evidence.
+
+The summary is therefore not accepted as certification, and the programme is
+not treated as complete. Its wording should be corrected at source, preserving
+the original entry and recording the correction as a dated note. The proposed
+wording is in `proposed-record-corrections.md` (`PC-3`).
+
+## 7. Conflicts and open questions
+
+| ID | Question | Why it matters | Resolution criteria | Owner |
+| --- | --- | --- | --- | --- |
+| TOR-OPEN-001 | What does TOR-DEP-001 gate: implementation, release, or outcome validation? | Decides retire versus re-scope | Quoted condition from the record | `[OPEN]` |
+| TOR-OPEN-002 | What merge revision and date satisfy the unblock condition? | Evidence for closure | Merge record with PR or SHA and date | `[OPEN]` |
+| TOR-OPEN-003 | Who may accept these corrections? | Authority to edit the record and summary | Named owner with decision right | `[OPEN]` |
+| TOR-OPEN-004 | What evidence discharges TOR-DEP-002, for which environment and release? | Prevents an endless open edge | Agreed evidence definition and accepting environment | `[OPEN]` |
+
+The most important first question is TOR-OPEN-001. It gates the blocker's
+disposition and must be answered from the record, not inferred. Ask it alone;
+do not bundle it with the other three.
+
+## 8. Handoff and readiness
+
+Readiness is scoped. The reconciliation is ready to support a records
+correction. It is not ready to certify completion, and it is not a design or
+implementation input. Blocked work: any programme status claiming complete, and
+any deployment acceptance, remain blocked on TOR-OPEN-004.
+
+Proposed corrections are handed off in `proposed-record-corrections.md`. None
+has been applied. The receiving owner must fill the pinned facts, preserve
+existing identifiers, and record acceptance.
+
+Feedback route: if the programme owner establishes that TOR-DEP-001 gates
+deployment rather than implementation, change its disposition from retire to
+re-scope under TOR-DEP-002, record the resolution here, and update the
+correction proposal before any record is edited.
+
+## 9. Deliberate non-actions
+
+- The programme record was not edited, closed, or re-scoped.
+- The daily summary was not edited or overwritten.
+- No issue, pull request, release, or deployment record was created or changed.
+- No owner, approval date, consumer, or measurement was invented.
+- No ExecPlan was authored: no implementation slice was supplied, and the work
+  is a records correction whose external writes are not authorized.
+- No technical design was authored: no design question was supplied.
+
+## 10. Open questions summary
+
+Four open questions remain: the gate scope, the merge revision, the accepting
+authority, and the deployment-evidence definition. None is resolved by the
+supplied material. This addendum does not record them as accepted or closed.

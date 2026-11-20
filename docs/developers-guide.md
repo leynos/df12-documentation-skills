@@ -148,7 +148,10 @@ contract through named reference files.
   prohibited category without deleting the prohibition itself. The scan is
   sentence-scoped, so distance from the verb cannot hide a permission, and a
   negated modality such as "should not prescribe … compatibility" is not
-  treated as one.
+  treated as one. A sentence that justifies compatibility for a released
+  external contract with an explicit commitment and a deployed consumer is
+  guidance rather than a permission, so it is not reported; a prohibited
+  surface is reported even when the same sentence mentions a release.
 
 The packaging and rule checks read the shipped Markdown, so they fail when a
 reference disappears or a rule is deleted or inverted; the test module proves
@@ -164,8 +167,14 @@ warrants a view, whether evidence is adequate, whether a target is honest, and
 whether a handoff is proportionate are judgement calls covered only by the
 fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
-Those scenarios are manual evidence, rerun by hand on a named revision rather
-than by CI, and they are not a repeatable harness.
+Their artefacts are published under `docs/validation/`, so a reader can inspect
+what the reviewer judged, but rerunning a scenario still needs an agent: the
+verdicts are manual evidence, not CI results.
+`tests/test_workflow_boundary_contract.py` decides one boundary mechanically
+from those artefacts: a record that carries an unaccepted deviation must not
+claim `COMPLETE`, and a handoff must state its approval state, readiness,
+stable identifiers, and feedback route. That check decides the recorded output,
+not whether an agent obeys the skill.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard

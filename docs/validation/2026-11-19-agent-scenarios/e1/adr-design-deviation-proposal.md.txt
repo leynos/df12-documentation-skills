@@ -1,0 +1,133 @@
+# Cancellation promise – ADR and design deviation proposal
+
+This record applies the technical-design contract to an observed conflict
+between an approved Architecture Decision Record (ADR) and the running system.
+It proposes a deviation; it does not accept one. The ADR decision remains in
+force, and no technical design has been rewritten.
+
+Status: proposed deviation, not accepted. The related ExecPlan is `BLOCKED`.
+
+Ownership: the ADR owner holds the decision; the design owner holds the
+architecture response; the ExecPlan owns execution tolerances, milestones, and
+acceptance evidence. This record does not create a new approval mechanism or
+status vocabulary.
+
+## 1. Affected decision and baseline
+
+| Item | Record |
+| --- | --- |
+| Decision | `LOCAL-ADR-DECISION-CANCEL-STOPS-WORKERS` (local handle; upstream ID, path, and revision `[OPEN]`). |
+| Decision statement | Cancelling a supervisor stops its workers. |
+| Kind | Accepted durable decision. |
+| Status | Believed accepted; approval evidence `[OPEN]`. |
+| Baseline evidence | `LOCAL-PROBE-WORKERS-ALIVE-AFTER-EXIT`: an integration probe observed workers alive after the supervisor exited. Command, output, timestamps, and worker census `[OPEN]`. |
+| Technical design | Not supplied. Its existence and revision are `[OPEN]`. |
+| Governing ToR | `LOCAL-TOR-PROMISE-CANCEL-STOPS-WORKERS`; the same promise. |
+
+The ADR and the Terms of Reference (ToR) agree with each other. The conflict is
+between their promise and the observed baseline, not between the two upstream
+documents.
+
+## 2. Gap register entry
+
+The register uses the minimum fields needed to resolve the question. Replace
+the local identifier with the design's own when one is found.
+
+| Field | Record |
+| --- | --- |
+| ID | `GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT` |
+| Upstream requirement | `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`, derived from the ToR and ADR promise. |
+| Baseline evidence | Integration probe observed at least one worker alive after supervisor exit, within the probe's stated scope. |
+| Target state | No worker started by a cancelled supervisor is alive after that supervisor exits, subject to the definition agreed in `OPEN-1`. |
+| Missing capability or mismatch | The cancellation path does not deliver the promise; either termination is not requested, not enforced, not awaited, or the worker set is incomplete. The cause is `[OPEN]`. |
+| Disposition | Blocked pending decision. Not "already satisfied", not "accepted/deferred scope", and not "intentionally removed". |
+| Resolution owner | `[OPEN]`; the ADR owner and design owner must choose. |
+| Unblock condition | Explicit acceptance of O1, O2, or O3, with the promise's operational definition settled. |
+| Verification obligation | `INV-CANCEL-TERMINATES` in the ExecPlan's `Verification plan`. |
+| Related risk | Probe scope may not match the promise; see the ToR record's `OPEN-1` and `OPEN-2`. |
+
+The gap is capability or defect work, not a roadmap item invented here. If the
+repository already tracks the defect, reuse that item rather than creating a
+parallel one. No external tracker was changed.
+
+## 3. Proposed deviation and required document changes
+
+These options mirror the ToR record. None is accepted.
+
+- **O1 – honour the decision.** No ADR change. The implementation is corrected
+  so that cancellation terminates the workers. The technical design changes
+  only if the current lifecycle or termination mechanism cannot support the
+  guarantee; in that case update the design's failure modes and the
+  supervisor–worker contract, and record the design revision in the ADR's
+  implementation notes if the repository does that. Verification: the red
+  integration test in `EP-M1`, then green in `EP-M2`.
+- **O2 – amend the decision.** The ADR is amended or superseded to promise a
+  weaker guarantee, with explicit rationale and consequences. The ToR is
+  revised to match. The design and roadmap are reconciled. This must not be
+  presented as a mechanical implementation difference. Verification: a test
+  that expresses the revised promise and does not overclaim termination.
+- **O3 – qualify the decision.** The ADR keeps the guarantee but bounds it by
+  a grace period, worker set, or cooperative-worker condition. The ToR and
+  design gain the same qualification. Verification: the test measures the
+  bound exactly, including the boundary at the end of the grace period.
+
+Indicative ADR amendment wording, **only if O2 is accepted**. It is not a
+proposed default and must not be applied without the owner's decision:
+
+```plaintext
+Decision (proposed supersession):
+  Cancelling a supervisor requests that its workers stop. The supervisor may
+  exit before a worker has exited; the implementation does not guarantee that
+  every worker is gone when the supervisor exits.
+
+Consequences (proposed):
+  Operators must check for surviving workers after cancellation, or rely on a
+  separate reaper. The former guarantee is withdrawn deliberately because
+  <owner-supplied rationale>.
+```
+
+If O3 is accepted instead, state the bound in the decision rather than this
+text: the grace period, the worker set covered, the liveness check, and what
+happens to workers that do not cooperate.
+
+## 4. Compatibility assessment
+
+No source-API compatibility machinery is required or authorised. The affected
+surface is the supervisor's cancellation behaviour, not a released interface,
+wire format, or deployed peer. No external consumer is named. If the fix
+changes an internal function signature, update every caller in the same
+plateau; do not add a shim to keep an old path alive. If inspection later
+reveals a released 1.0-or-later API or a persisted format with a real external
+consumer, stop and record the commitment before designing a migration.
+
+## 5. Verification obligations handed to the ExecPlan
+
+- `INV-CANCEL-TERMINATES`: no worker started by a cancelled supervisor is alive
+  after the supervisor exits, under the agreed definition.
+- `INV-CANCEL-REACHES-WORKERS`: every covered live worker receives a
+  termination request, or is already dead.
+- `L-NO-LOSS`: the worker census used by the test equals the set the supervisor
+  started, so the check cannot pass vacuously.
+- `AXIOM-PROBE-GOVERNS-PROMISE`: the probe's observation window and worker set
+  fall under the promise. Unverified; resolving it is part of `EP-M0`.
+- Non-vacuity: the supplied probe is a negative witness that the assertion can
+  fail. Add a seeded fault and a cooperative positive control, then revert the
+  fault.
+
+The ExecPlan owns the exact commands, artefact paths, Red-Green-Refactor
+evidence, and gate sequence. This record supplies the claim and its discharge
+condition, not an execution script.
+
+## 6. Handoff and readiness
+
+Readiness: blocked for implementation approval; ready only for bounded
+discovery that reproduces the probe and settles the definition of "stops". The
+ADR is not amended, the design is not rewritten, and the gap is not closed.
+
+Before the ExecPlan may reach `COMPLETE`, the accepted resolution must appear in
+the ToR, the ADR, the technical design if one exists, the roadmap acceptance
+evidence if it cites the guarantee, and every affected trace link. An
+unaccepted deviation must not disappear into a follow-up list.
+
+Revision note: 2026-11-19, initial proposal created from the supplied scenario
+and the observed probe. No upstream document was edited.

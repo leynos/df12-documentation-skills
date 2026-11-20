@@ -1,0 +1,112 @@
+# ADR candidate – record the approved architectural change
+
+Status: proposed, not accepted.
+
+Date: 2026-11-19.
+
+This is a candidate record for the ADR owner. It is not an accepted ADR, and it
+does not substitute for one. The ADR-authoring skill owns the final document;
+this record supplies the fields that a reviewer needs to decide.
+
+## Why a candidate rather than an ADR
+
+The change is reported as approved, but the approval record was not available
+in this session. The decision's approved text was not available either.
+Writing an accepted ADR from an implementation report would reverse-engineer
+intent from code, which the problem contract and the architecture contract both
+prohibit. The candidate therefore records what is established, what must be
+transcribed, and what must be decided.
+
+## Candidate ADR
+
+### Title
+
+Record the approved change to `<component or boundary>` in the architecture.
+
+The angle-bracketed field is unresolved, not decorative. It is filled from the
+approval record, not from the implementation's file layout.
+
+### Context
+
+Implementation has produced an architectural change that an approval record
+apparently authorises. The technical design and the ADR set do not carry it.
+The design therefore describes an architecture that no longer matches either
+the approved intent or the delivered system, and readers of the design cannot
+tell which statement is authoritative.
+
+A discovery agent separately recommends additional hardening. That
+recommendation is not part of this decision. Bundling it here would attribute
+an unapproved proposal to an approved decision.
+
+### Decision to record
+
+`[OPEN]`. The decision statement must be transcribed from the approval record
+and attributed to its decision owner. The candidate cannot state the decision
+on the implementation's authority.
+
+### Options for handling the record
+
+1. Record the approved change and its rationale, then update the design.
+   This preserves the decision's provenance and is the correct outcome when
+   the approval record is produced. Cost: a design revision and link audit.
+2. Treat the change as an unapproved deviation and return it for explicit
+   acceptance. This is the correct outcome when no approval record exists.
+   Cost: implementation may need to pause while the deviation is adjudicated.
+3. Revert the implementation to match the design. This is the correct outcome
+   when the approval is invalid or was granted outside the decision owner's
+   authority. Cost: discarded work and possible loss of a beneficial change.
+
+The strongest alternative to option 1 is option 2, because it preserves the
+rule that implementation does not approve itself. Option 1 is preferable once,
+and only once, approval can be evidenced.
+
+### Consequences
+
+Positive, if option 1 applies:
+
+- The design and ADR set become consistent with the approved architecture.
+- Downstream plans inherit a conformance basis that names a real decision.
+- Verification obligations can be re-derived against the correct target.
+
+Negative or unresolved:
+
+- The design revision may reopen requirement and verification links beyond the
+  changed component.
+- Compatibility classification must be completed before any interface
+  machinery is added; private, test-only, pre-1.0, and unreleased surfaces
+  prohibit it.
+- Existing verification evidence gathered against the older architecture
+  becomes stale and must be re-established rather than inherited.
+
+### Evidence required before acceptance
+
+1. The approval record, with its author, date, scope, and revision.
+2. The decision's exact text, or a faithful quotation of it.
+3. The affected components, interfaces, trust boundaries, and persisted or
+   wire formats.
+4. The terms-of-reference impact: whether an assumption, constraint, or
+   success criterion is falsified.
+5. The superseded or related ADRs, if any.
+6. The verification obligations the change introduces or invalidates.
+
+None of these was available in this session. Each is an open question in
+`05-handoff-and-open-questions.md`.
+
+### Related decisions
+
+None identified. This is a statement of absent evidence, not a claim that no
+related ADR exists.
+
+## Hardening recommendation
+
+No ADR candidate is raised for the discovery agent's hardening proposal.
+A candidate ADR presupposes an accepted decision. Until the proposal is
+accepted as a requirement, the correct record is `GAP-HARDEN-001` in the gap
+register. If it is later accepted, it needs its own decision record, and it
+must not be folded into the architectural change's ADR.
+
+## Handling note
+
+The candidate is input to the ADR owner. It does not authorize a design edit,
+a code change, or a plan resumption. Its acceptance state changes only when the
+named decision owner accepts it.

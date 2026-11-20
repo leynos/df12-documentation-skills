@@ -1,0 +1,98 @@
+# Phase 0 intake working note: programme blocker and deployment evidence
+
+Status: working note. Not a deliverable and not an accepted record.
+
+Date: 2026-11-19.
+
+Input: one supplied scenario statement. No repository, tracker export, merge
+record, release record, deployment record, or summary archive accompanied it.
+
+Skills applied: `terms-of-reference-doc` (Phases 0 and 1),
+`tech-design-doc` (`references/architecture-contract.md`, freshness and
+dependency rules), and `execplans` (completion reconciliation).
+
+## Scope
+
+This note catalogues the prior art available to the reconciliation, records
+what each artefact can and cannot establish, and names the conflicts and
+absences that drive elicitation. It does not draft the addendum.
+
+## Artefact inventory
+
+| ID | Artefact | Reported state | Informs |
+| --- | --- | --- | --- |
+| A1 | Programme record | Still blocks work on an implementation | Dependency register (§8.3), handoff, delivery state |
+| A2 | Implementation merge | Merged months ago | Delivery state, A1's unblock condition |
+| A3 | Deployment evidence | Absent | Release, deployment, and outcome states |
+| A4 | Daily summary | Says complete | Discovery lead only; status claim to test |
+
+Evidence limits:
+
+- A1: the record was not inspected. The input establishes what it is reported
+  to assert, not the truth of the blocker's premise.
+- A2: no pull-request number, commit SHA, merge date, or release tag was
+  supplied. The merge is reported, not pinned.
+- A3: the search scope for deployment evidence is unspecified. Absence in the
+  supplied material is not proof that no deployment occurred.
+- A4: a generated aggregate with no cited underlying record. "Complete" does
+  not name a delivery dimension.
+
+## What each artefact is authoritative for
+
+A1 is authoritative for the programme record's current assertion. It is not
+authoritative for whether the gated work is still blocked.
+
+A2, once its record is inspected, establishes what implementation landed. It
+cannot establish verification, release, deployment, or an outcome.
+
+A3 is an evidence gap. It is not evidence of absence and it does not license
+an inference in either direction.
+
+A4 is a discovery aid. It points at records to inspect; it does not certify
+them. Generated summaries and agent reports do not approve themselves by
+repetition.
+
+## Conflicts and gaps
+
+- C1: A1 reports a block, while A2 reports that the gated implementation
+  merged. Either the block is stale or it gates something other than the
+  implementation. Resolve against the blocker's stated unblock condition, not
+  against the more recent or more convenient artefact.
+- C2: A4 reports complete, while A3 is absent. "Complete" is ambiguous across
+  proposed, approved, implemented, verified, released, deployed, and
+  outcome-validated. The claim selects none of them.
+- C3: no artefact states whether the blocker gates a design decision, an
+  implementation milestone, a release, or outcome validation.
+- G1: no revision is pinned for A2.
+- G2: no owner or decision authority is named for A1 or A4.
+- G3: no definition of acceptable deployment evidence is supplied.
+- G4: no acceptance evidence exists for any state beyond the reported merge.
+
+## Provisional sketch of the affected sections
+
+The evidence supports only a narrow addendum, not a full terms of reference.
+
+- Front matter, authority: `[OPEN]`. The owner and approver of the programme
+  record are not identified.
+- §7 Success criteria: `[OPEN]`. No success measure or deployment acceptance
+  criterion was supplied.
+- §8.3 Dependencies: `[KNOWN]` that two edges are in question; `[OPEN]` on who
+  provides and consumes each edge and on the exact unblock condition text.
+- §9 Open questions: populated from C1 to C3 and G1 to G4.
+- Users, market, jobs, goals, and non-goals: `[OPEN]`. No problem-space input
+  was supplied, so these sections are not drafted. Inventing them would
+  violate the skill's prohibition on manufactured owners, consumers, and
+  measurements.
+
+## Exit from Phase 0
+
+The material supports a dependency and evidence reconciliation plus a
+completion-claim assessment. It does not support a technical design, an
+ExecPlan, or a full terms of reference: no design question, implementation
+slice, or problem-space brief was supplied.
+
+## Inputs not inspected and external state not changed
+
+No repository, issue, pull request, release, deployment system, tracker, or
+summary archive was read or written. All output is confined to `/tmp/val-e3/`.
+No external record was corrected, and no approval was recorded.

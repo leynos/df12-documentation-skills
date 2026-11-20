@@ -1,0 +1,223 @@
+# Test-only helper reshape – terms of reference
+
+Status: Draft v0.1. Not accepted. Two open questions remain; see §8.
+
+Audience: maintainers of the repository, the reviewer of the change, and the
+author of the technical design.
+
+Companion documents: `intake-note.md` (working note, this directory),
+`tech-design.md`, `execplan.md`. No `docs/context.md`, ADR, roadmap, or ExecPlan
+was inspected; none is assumed to exist.
+
+Date and version: 2026-11-19, v0.1.
+
+Authority and evidence basis: the request brief, plus the compatibility policy
+in the installed `terms-of-reference-doc`, `tech-design-doc`, and `execplans`
+skills, inspected on 2026-11-19. The brief establishes what the sponsor asks
+for. It does not establish the repository facts this document would normally
+cite, and no approval has been recorded. Where a repository fact is needed, it
+is named as an assumption or an open question rather than invented.
+
+## 1. Background and motivation
+
+A stable repository exposes a helper that only its tests call. The helper's
+shape no longer serves the code, and maintaining it in its current form costs
+more than reshaping it. The suggested route is to keep the old tests compiling
+through a compatibility shim.
+
+The suggestion is worth naming precisely because it is attractive: it makes the
+test suite appear untouched. The hidden cost is an interface that exists only
+for tests, retained after its purpose has gone. This document settles what the
+work is for, what it will not do, and how the tests' real value survives the
+change.
+
+## 2. Domain and market context
+
+This section does not apply in the usual form. The work is an internal
+maintenance change to a library's test support, with no market, competitor, or
+external field of practice at stake. Prior art is limited to the repository's
+own test suite and the generic refactoring conventions below. Recording this
+explicitly prevents padding the document with invented landscape.
+
+The one domain convention that does apply is the distinction between an
+interface's *shape* and the *behaviour* its tests assert. A test is evidence
+about behaviour. Its call text is not evidence about anything a consumer needs.
+
+## 3. Users and stakeholders
+
+| Stakeholder | Concern | Question the design must answer | Evidence needed | Decision right |
+| --- | --- | --- | --- | --- |
+| Maintainer (primary) | Change the helper's shape without inheriting a permanent compatibility burden. | Does the reshape remove the old surface while keeping the tests that mattered? | Passing suite, absence search, test disposition record | Approves or rejects the change |
+| Reviewer (secondary) | No accidental public surface or hidden production coupling appears. | Is the helper's visibility the minimum the current test locations require? | Visibility audit against the tree and release tags | May block the change |
+| Continuous integration (actor) | Every committed state builds and passes. | Does each commit compile with no mixed old and new interfaces? | Gate transcripts | None |
+
+There are no external users. That absence is the reason the compatibility
+question has the answer it does, so it belongs in the record rather than being
+left implicit.
+
+## 4. Job to be done
+
+> When a maintainer needs to change how an internal test-only helper works,
+> they want to reshape the helper and its test callers in one movement, so they
+> can stop carrying an interface that exists only to keep old test text
+> compiling.
+
+The job's outcome is a coherent internal surface, not preserving a particular
+signature. A reader who expects the opposite should read §6.2 before designing.
+
+## 5. Scope
+
+### 5.1 Goals
+
+`TOR-GOAL-001` – Reshape the helper into one coherent interface without
+changing the observable behaviour its tests assert.
+
+`TOR-GOAL-002` – Retain the behavioural coverage the existing tests provide.
+Coverage means the assertions, not the source text of the tests.
+
+### 5.2 Non-goals
+
+`TOR-NONGOAL-001` – No compatibility shim, alias, `deprecated` forwarding
+entrypoint, dual implementation, facade, or temporary wrapper for the old
+helper, including one introduced only for the duration of the change. A caller
+needing the old shape is a caller that has not yet been migrated.
+
+`TOR-NONGOAL-002` – No change to production behaviour, no new public API, no
+new dependency, and no feature flag unless a test location requires one to
+compile at all.
+
+`TOR-NONGOAL-003` – No rewrite of unrelated tests, modules, or fixtures beyond
+what the migration needs.
+
+## 6. Success criteria
+
+`TOR-SUCCESS-001` – The tree builds and the suite passes with the old surface
+deleted, not merely marked deprecated.
+
+`TOR-SUCCESS-002` – Every pre-change test has a recorded disposition: migrated,
+rewritten to assert behaviour rather than shape, or retired with a stated
+reason. No test disappears silently, and no assertion is dropped because it
+failed to compile.
+
+`TOR-SUCCESS-003` – A search of the source tree finds no reference to the old
+symbol. The build is the primary check; the search is corroboration.
+
+`TOR-SUCCESS-004` – The helper's visibility is no wider than the current test
+locations require, and a reviewer can see why the chosen visibility is the
+minimum.
+
+User-facing and strategic success measures do not apply; this change produces
+no product-visible outcome. Operational success is §6.1 and §6.2. Recording the
+inapplicable categories avoids inventing adoption metrics for a refactor.
+
+## 7. Constraints and assumptions
+
+### 7.1 Hard constraints
+
+`TOR-CONSTRAINT-001` – The helper is a test-only support surface. Source-API
+compatibility machinery is prohibited for that category. The prohibition is
+independent of repository maturity and is not waived by naming a consumer.
+
+`TOR-CONSTRAINT-002` – All callers change in the same coherent change. On the
+current evidence the callers are tests only; §7.3 records the possibility that
+this is false.
+
+`TOR-CONSTRAINT-003` – The change must not widen the helper's surface to make
+migration easier.
+
+### 7.2 Conflicts and inherited commitments
+
+`CR-1` – The brief suggests a compatibility shim. It conflicts with
+`TOR-CONSTRAINT-001`. Disposition: the suggestion is not adopted, and the
+conflict is recorded here rather than resolved silently. Preserving the tests'
+intent satisfies the brief's evident purpose. Preserving their old call shape
+does not.
+
+### 7.3 Assumptions
+
+`TOR-ASSUMPTION-001` – No consumer outside this repository can reach the helper
+in a released artefact.
+
+Failure consequence: if false, the surface is not test-only as described, the
+classification and policy assessment must be redone, and the work stops.
+Verification route: visibility audit of the tree and release tags before any
+edit. Expiry: any visibility change, new release, or rebase.
+
+`TOR-ASSUMPTION-002` – The existing tests exercise the helper's observable
+behaviour closely enough that behaviour preservation is observable.
+
+Failure consequence: if false, the reshape may change behaviour without any
+test noticing. Verification route: a seeded behavioural fault that the migrated
+suite must reject. Expiry: when the suite's coverage is materially reduced or
+replaced.
+
+### 7.4 Dependencies
+
+None external. The only tooling dependency is the repository's own build and
+test toolchain, which the execution plan must name from the tree rather than
+assume.
+
+## 8. Open questions
+
+`TOR-OPEN-001` – Is any part of the helper's current surface reachable by a
+consumer outside this repository in a released artefact?
+
+Why it matters: it gates the classification that justifies rejecting the shim.
+Resolution criteria: a visibility audit of the module, the crate or package
+manifest, and the latest formal release tag, showing whether the symbol is
+exported and consumed. Owner: maintainer. Resolution path: the execution plan's
+inventory milestone. Suggested default if no consumer is found: proceed, and
+record the audit as evidence.
+
+`TOR-OPEN-002` – Which existing tests assert incidental implementation detail
+rather than behaviour, and therefore need rewriting or retirement rather than a
+mechanical migration?
+
+Why it matters: it decides individual test dispositions and protects against
+coverage loss disguised as migration. Resolution criteria: each test read and
+classified. Owner: implementing agent. Resolution path: the inventory and
+reconciliation milestones.
+
+A terms of reference with no open questions would be a claim of certainty this
+document cannot support.
+
+## Appendix – identifier register
+
+| ID | Statement | Provenance | Evidence status | Downstream |
+| --- | --- | --- | --- | --- |
+| TOR-GOAL-001 | One coherent helper interface, behaviour unchanged | Brief | `[KNOWN]` | TDD-REQ-001, TDD-REQ-005 |
+| TOR-GOAL-002 | Retain asserted behavioural coverage | Brief | `[ASSUMED]` as a goal statement | TDD-REQ-003 |
+| TOR-NONGOAL-001 | No compatibility machinery of any kind | Policy plus `CR-1` | `[KNOWN]` | TDD-REQ-001, TDD-REQ-004 |
+| TOR-NONGOAL-002 | No production, public API, or dependency change | Brief plus policy | `[KNOWN]` | TDD-REQ-005 |
+| TOR-NONGOAL-003 | No unrelated rewrites | Inferred scope | `[ASSUMED]` | Plan tolerances |
+| TOR-SUCCESS-001 | Builds and passes with old surface deleted | Derived | `[ASSUMED]` | TDD-REQ-004, INV-absence |
+| TOR-SUCCESS-002 | Every test has a recorded disposition | Derived | `[ASSUMED]` | TDD-REQ-003, INV-coverage |
+| TOR-SUCCESS-003 | No residual reference to the old symbol | Derived | `[ASSUMED]` | TDD-REQ-004, INV-absence |
+| TOR-SUCCESS-004 | Minimum visibility for current test locations | Derived | `[ASSUMED]` | TDD-REQ-005, GAP-reachability |
+| TOR-CONSTRAINT-001 | Compatibility prohibited for test-only surface | Skill policy | `[KNOWN]` | TDD-REQ-004 |
+| TOR-CONSTRAINT-002 | All callers change together | Skill policy | `[KNOWN]` | TDD-REQ-002 |
+| TOR-CONSTRAINT-003 | No widening to ease migration | Skill policy | `[KNOWN]` | TDD-REQ-005, INV-visibility |
+| TOR-ASSUMPTION-001 | No external reachability | Brief | `[ASSUMED]` | TOR-OPEN-001 |
+| TOR-ASSUMPTION-002 | Tests observe the helper's behaviour | Inferred | `[ASSUMED]` | L-behaviour |
+| TOR-OPEN-001 | Released reachability unknown | Missing evidence | `[OPEN]` | EP-M0 gate |
+| TOR-OPEN-002 | Incidental-detail tests unknown | Missing evidence | `[OPEN]` | Test dispositions |
+
+## Handoff readiness
+
+Ready for design on the problem statement and scope. Not approved for
+implementation. The terms of reference does not authorise the design of the new
+interface, the sequencing of the change, or its acceptance evidence; those
+belong to `tech-design.md` and `execplan.md`. `TOR-OPEN-001` is a design gate,
+not a reason to delay design work: the design can proceed on the stated
+assumption and must treat a contrary finding as a blocking deviation.
+
+Companion artefacts: three domain terms are candidates for `docs/context.md` if
+it exists – *test-only surface*, *disposition*, and *compatibility shim*. No ADR
+candidate arises: the compatibility decision follows existing policy rather
+than making a new, hard-to-reverse choice. There is no roadmap implication; the
+change has one coherent slice and no sequencing decision.
+
+Feedback route: if implementation falsifies `TOR-ASSUMPTION-001` or
+`TOR-ASSUMPTION-002`, reopen §7 here first, then impact-check `tech-design.md`
+and `execplan.md` before claiming the change complete. A proposed revision is
+recorded as a proposal until the maintainer accepts it.

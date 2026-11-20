@@ -1,0 +1,318 @@
+# Internal method signature replacement – technical design
+
+Status: draft, 2026-11-19. Not accepted. This design was authored without
+access to the application repository; placeholders marked `<...>` identify
+facts that reconnaissance must supply.
+
+Audience: the implementer who will change the method and its callers, and the
+reviewer who will check the change against the compatibility policy.
+
+Companion documents: `01-terms-of-reference.md` (v0.1 draft, 2026-11-19) and
+`03-execplan.md` (draft, 2026-11-19), both in this working directory.
+
+## Conformance basis
+
+- Terms of reference: `01-terms-of-reference.md`, draft 1, 2026-11-19.
+  Uncommitted; this dated draft identifier stands in for a commit.
+- Technical design: this file, draft 1, 2026-11-19.
+- ExecPlans: the installed `execplans` skill at
+  `/home/leynos/.claude/skills/execplans/SKILL.md` and its template at
+  `references/execplan-template.md`, both read during authoring. The skill file
+  declares no version; no repository revision was inspected.
+- ADRs, roadmap, `docs/context.md`, and existing designs: not inspected, so
+  none is cited. Their absence is a missing input, not a finding that they do
+  not exist.
+- Application baseline: not inspected. `<base-revision>` is unrecorded.
+- Compatibility policy: `tech-design-doc/references/architecture-contract.md`
+  ("Compatibility and coherent transition states"), corroborated by the terms
+  of reference and `execplans` skills.
+
+Upstream identifiers carried forward: `TOR-GOAL-001` to `TOR-GOAL-004`,
+`TOR-NONGOAL-001`, `TOR-CONSTRAINT-001` to `TOR-CONSTRAINT-004`,
+`TOR-ASSUMPTION-001` to `TOR-ASSUMPTION-005`, `TOR-SUCCESS-001` to
+`TOR-SUCCESS-005`, `TOR-OPEN-003` to `TOR-OPEN-007`.
+
+## 1. Problem and context
+
+The application is at released version 2. One method is declared `public` but
+is consumed only by three modules in the same application. The sponsor wants
+its signature replaced and the three modules updated.
+
+The design question is narrow: how to change an internal interface without
+creating a compatibility obligation the application never had, and how to show
+that the change is complete. The broader system, its deployment, and its
+product purpose are out of scope. The research phase is omitted because no
+ecosystem, standard, or technology choice is being made; there is no finding
+that could change the design, and no web research was performed.
+
+## 2. Baseline, target, and gaps
+
+Baseline, `[ASSUMED]` from the brief and to be confirmed by `EP-M0`:
+
+- One method, symbol `<method-name>` in `<definition-path>`, with signature
+  `<current-signature>`.
+- Three calling modules, `<caller-1-path>`, `<caller-2-path>`, and
+  `<caller-3-path>`, each invoking the method with the current argument list.
+- The application is released at version 2 and builds from `<base-revision>`.
+
+Target:
+
+| Element | Disposition |
+| --- | --- |
+| Method definition | Changed to `<new-signature>` |
+| Three callers | Changed to supply the new arguments and consume the new return |
+| Old signature | Removed; no overload, alias, wrapper, or default kept for it |
+| Method responsibility | Retained |
+| Observable behaviour | Retained, unless `TOR-OPEN-001` establishes otherwise |
+| External interfaces | Unchanged |
+| Persisted and wire formats | Unchanged, subject to `GAP-SERIALISATION` |
+| Dependencies | None added |
+
+Gap register:
+
+| ID | Gap | Disposition | Resolution owner | Unblock condition | Verification |
+| --- | --- | --- | --- | --- | --- |
+| `GAP-RECON` | Exact symbol, paths, base revision, and toolchain are unverified | Proposed reconnaissance in `EP-M0` | Implementer | Plan placeholders filled and recorded | Baseline record in `EP-M0` |
+| `GAP-DYNAMIC` | The method might be reached reflectively or by name through a dynamic surface | Proposed search and review in `EP-M0` | Implementer | No dynamic path found, or one is added to the call-site inventory | `INV-CALLSITES-001` |
+| `GAP-BEHAVIOUR` | Behaviour preservation under the new signature is unproven | Proposed tests in `EP-M1` | Implementer | Named tests pass before and after, or an approved behavioural change is recorded | `INV-BEHAVIOUR-001` |
+| `GAP-SERIALISATION` | The parameters or return value might cross a persisted or wire boundary | Proposed assessment in `EP-M0` | Implementer and release owner | Boundary shown absent, or a separate migration is scoped | `GAP-SERIALISATION` review |
+
+No gap is silently deferred. `GAP-RECON` and `GAP-DYNAMIC` block approval
+because the plan cannot be executed safely while they are open.
+
+## 3. Surface classification and compatibility assessment
+
+### 3.1 What kind of surface this is
+
+A `public` keyword sets source visibility; it does not set contract scope.
+Contract scope follows the consumers and the commitments made to them. The
+method's consumers are three modules in the same application. The method is
+therefore an application-internal interface declared `public`, which the df12
+policy classifies as a private API for compatibility purposes.
+
+The application's release at version 2 does not convert this method into an
+external contract. Release lineage matters for a released 1.0-or-later
+external surface: there, an existing published contract survives a new edit,
+and compatibility is assessed against real external consumers. Here no
+external consumer is identified, and the surface is in the prohibited
+category regardless. Even for a released external API, the policy says that no
+known consumer normally means no compatibility machinery, subject to explicit
+project policy.
+
+### 3.2 Decision
+
+The change is atomic: the definition gets the new signature and all three
+callers are updated in the same coherent state. No compatibility machinery is
+added. `TOR-CONSTRAINT-001` is a prohibition, not a preference, so an
+inherited request for a shim would be recorded as a conflict for explicit
+resolution rather than implemented.
+
+Rejected alternatives:
+
+| Alternative | Why rejected |
+| --- | --- |
+| Keep the old method and add an overload with the new signature | Compatible with whom? The three callers are updated anyway; the only effect is a permanent dual interface |
+| Deprecate the old method and migrate callers over releases | Creates a compatibility window the application never promised; an internal caller would still hold a stale path |
+| Add an adapter or facade over the new signature | Preserves an obsolete source interface with no external consumer; compatibility theatre |
+| Add a new differently named method and leave the old one | Duplicates responsibility and invites callers to keep using the old shape |
+| Add a defaulted parameter so the old call shape compiles | Retains the old call contract under a new spelling; it is compatibility machinery by another name |
+
+Every alternative fails the policy's test: name the external consumer, the
+deployed state, or the commitment that requires compatibility. None exists.
+
+### 3.3 Separate obligations
+
+Source-API compatibility and data compatibility are independent. If `EP-M0`
+finds that the parameters or return value are persisted, logged in a format
+that is later parsed, or sent to a deployed peer, the design reopens
+`GAP-SERIALISATION` and scopes a migration separately. It does not justify a
+source shim either way. The brief gives no evidence of such coupling, so it
+stays an assumption with a recorded failure consequence
+(`TOR-ASSUMPTION-005`).
+
+### 3.4 Conflict handling
+
+If a governing document, review comment, or inherited requirement demands a
+deprecated entrypoint or wrapper for this method, the implementer records the
+affected identifiers in the ExecPlan's `Decision log`, sets the plan to
+`BLOCKED`, and obtains explicit upstream resolution. The design does not
+relax the prohibition to satisfy an unsourced compatibility demand.
+
+## 4. Interface contract
+
+The exact parameter types and return type come from the approved change
+request and `EP-M0` reconnaissance. The design fixes the contract shape:
+
+```plaintext
+Before: <method-name>(<current-parameters>) -> <current-return>
+After:  <method-name>(<new-parameters>) -> <new-return>
+        All three callers updated in the same change.
+        No caller retains the current-parameters shape.
+```
+
+The method keeps its responsibility. Only its call contract changes. If the
+new signature implies a semantic change, that is a separate requirement:
+`TOR-OPEN-001` must be resolved and the acceptance boundary widened before
+implementation. Treating a behavioural change as a mechanical edit would be an
+unrecorded scope change.
+
+Error contracts are unchanged unless the change request says otherwise. The
+three callers keep their existing error handling; a new argument that can be
+invalid gains input validation only if the approved signature requires it.
+
+## 5. Verification obligations
+
+### 5.1 Abstract model
+
+Model the change over the method's referrers. Let `R` be the set of source
+locations that refer to the method: the definition `d`, the three callers
+`m1`, `m2`, `m3`, and any tests. A referrer is conforming when it names the
+method with the new signature and, for callers, supplies arguments of the new
+types in the new order and consumes the new return. The target state is a
+program in which every referrer in `R` is conforming and the old signature no
+longer exists. Malformed states are those in which some referrer still uses the
+old argument list, or in which an invocation the static search cannot see
+persists at runtime.
+
+### 5.2 Invariants and lemmas
+
+- `INV-CALLSITES-001` No live source location refers to the old signature
+  after the change. Tests that assert the old shape are removed or updated;
+  historical records are excluded by path.
+- `INV-COVERAGE-001` The referrer inventory is complete: every statically
+  visible reference is found by search, and no dynamic path invokes the
+  method.
+- `INV-BEHAVIOUR-001` For each named caller-visible outcome, the post-change
+  observable result equals the pre-change result for the same inputs, unless
+  an approved behavioural change says otherwise.
+- `L-COMPILE-001` If every referrer is statically resolved, the old signature
+  is removed, and the build succeeds, then every referrer uses the new
+  signature. This depends on `AXIOM-COMPILER`.
+- `L-COVERAGE-001` If the search finds all syntactic occurrences and no
+  dynamic invocation exists, then `R` is complete. This depends on
+  `AXIOM-SEARCH` and on the `GAP-DYNAMIC` check.
+
+### 5.3 Axioms (trusted, not verified here)
+
+- `AXIOM-COMPILER` The language's compiler or type checker rejects a call with
+  the wrong argument count, order, or type. Source: the language
+  specification. Boundary: the affected modules. This axiom fails if the
+  language is dynamically typed or the call is dispatched dynamically.
+- `AXIOM-SEARCH` The chosen search tool reports every syntactic occurrence of
+  the identifier, including comments and strings that the implementer must
+  inspect. Boundary: the repository working tree.
+- `AXIOM-TESTS` The project's test runner executes the named tests and fails
+  on assertion error. Boundary: the configured test framework; host-only
+  tooling is not assumed.
+
+### 5.4 Methods per obligation
+
+- Obligation: `INV-CALLSITES-001`.
+  Method: exhaustive search plus compiler enforcement.
+  Rationale: the property is whole-program source consistency, which a search
+  and the compiler both observe directly.
+  Domain: all files in the working tree, excluding vendored dependencies and
+  historical records by recorded path.
+  Artefact: search command recorded in `EP-M2`; the build gate.
+  Evidence: after the change, the search returns no live old-shape reference
+  and the build passes.
+  Non-vacuity: the same search must find the definition and all three callers
+  before the change. That positive control proves the pattern is not
+  accidentally empty.
+
+- Obligation: `INV-COVERAGE-001`.
+  Method: search for identifier strings, reflective and dynamic invocation
+  idioms, and serializer or FFI registration points; review each match.
+  Rationale: no general method exists for enumerating runtime dispatch; a
+  targeted inventory is the proportionate check.
+  Domain: `<language-specific dynamic idioms>` as recorded in `EP-M0`.
+  Artefact: baseline record in `EP-M0`.
+  Evidence: an enumerated inventory with no unexplained match.
+  Non-vacuity: the inventory must contain the three known callers; if it does
+  not, the search strategy is wrong.
+
+- Obligation: `INV-BEHAVIOUR-001`.
+  Method: parameterized tests over each caller's input classes, plus the
+  project's existing tests for the affected paths. In a statically typed
+  language the compile check covers shape; the tests cover outcome.
+  Rationale: behaviour preservation is a finite set of caller-visible
+  outcomes, not a generated input space, so parameterized tests are adequate.
+  Domain: the inputs named in the existing caller tests; boundary values for
+  any new parameter.
+  Artefact: the test files for each caller.
+  Evidence: the focused tests pass before the change (on the old signature)
+  and after it (on the new signature), with the expected case count.
+  Non-vacuity: at least one case must fail if a caller passes the arguments in
+  the wrong order or drops a transformed value.
+
+- Obligation: `L-COMPILE-001`, `L-COVERAGE-001`.
+  Method: argument, not separate experiment. The lemmas connect the build and
+  search evidence to completeness.
+  Rationale: they are derived claims; testing them separately would restate
+  their premises.
+  Evidence: discharge them in `EP-M2` by recording the build result and the
+  search result, together with `AXIOM-COMPILER` and the `GAP-DYNAMIC` result.
+  Non-vacuity: if the language is dynamic, `AXIOM-COMPILER` is false and
+  `L-COMPILE-001` does not apply; the plan must then rely on the search and
+  runtime tests, and say so.
+
+### 5.5 Formal verification decision
+
+No model checking or formal proof is planned. The essential property is
+whole-program source consistency, which the compiler and an exhaustive
+identifier search establish directly for the affected scope. A model checker
+would restate the compiler's arity and type rules without covering dynamic
+dispatch, and a proof would add no guarantee beyond the static check. If
+`GAP-DYNAMIC` finds runtime dispatch, the stronger method is targeted runtime
+coverage, not a model of the call graph. This decision is recorded as `D5` in
+the ExecPlan.
+
+### 5.6 Suggested BDD feature
+
+Proposed, not adopted. The repository's BDD availability is unknown.
+
+```gherkin
+Feature: Internal method signature replacement
+  Scenario: Every internal caller uses the new signature
+    Given the method has the approved new signature
+    And the three calling modules have been updated
+    When the application is built and the affected tests run
+    Then no source location refers to the old signature
+    And each caller produces its previous observable outcome
+```
+
+If the project has no BDD runner, `EP-M1` and `EP-M2` exercise the same
+scenarios through the focused tests and search evidence. Adding a framework
+would require separate authorisation.
+
+## 6. Handoff to the ExecPlan
+
+Selected requirements: `REQ-ATOMIC-001` (definition and all callers change
+together), `REQ-NOCOMPAT-001` (no compatibility machinery), `REQ-CALLERS-001`
+(all three callers conform), `REQ-BEHAVIOUR-001` (observable behaviour
+preserved), `REQ-NOSERIAL-001` (no persisted or wire change in this work).
+
+Trace links:
+
+```plaintext
+TOR-GOAL-001 -> REQ-ATOMIC-001 -> EP-M1 -> search-and-build evidence
+TOR-NONGOAL-001 -> REQ-NOCOMPAT-001 -> EP-M2 -> diff review
+TOR-GOAL-002 -> REQ-CALLERS-001 -> EP-M1 -> focused caller tests
+TOR-GOAL-003 -> REQ-BEHAVIOUR-001 -> EP-M2 -> affected test suite
+TOR-NONGOAL-004 -> REQ-NOSERIAL-001 -> EP-M0 -> serialisation review
+```
+
+Compatibility classification handed over: **none**. The surface is an
+application-internal public method; no external consumer, deployed source
+consumer, or commitment requires compatibility. A milestone that leaves both
+signatures available is not permitted.
+
+Readiness: ready for an implementation plan, conditional on `EP-M0`
+reconnaissance. Design acceptance is not implementation approval, and the
+ExecPlan's approval gate still applies. Unresolved decisions handed over:
+`TOR-OPEN-001` (new signature and behavioural scope), `TOR-OPEN-002`
+(approver), and `TOR-OPEN-004` to `TOR-OPEN-007`.
+
+No diagram is included: the change is three call edges from one definition,
+which the tables and prose state completely. A diagram would be decoration,
+and nixie therefore has nothing to validate.

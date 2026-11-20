@@ -1,0 +1,620 @@
+# Reshape the private record API and keep deployed records readable
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (design drafted; no approval; no implementation)
+
+Branch: none yet. Work starts on a feature branch cut from the baseline pinned
+in `EP-M0`.
+
+Roadmap item: none.
+
+## Purpose / big picture
+
+The application stores records through a private API and writes them in a
+representation that a shipped binary already used. We are changing both the
+private API and the representation. The private API has no callers outside the
+application, so it changes all at once. The bytes on disk cannot be recompiled,
+so the new code must still read them.
+
+Before the change, a record read from an existing store passes through the old
+record type, and new records are written in the old representation. After the
+change:
+
+- reading a record the deployed binary wrote yields the new in-memory record
+  model, with every old field accounted for;
+- reading a record the new binary wrote yields the same model;
+- writing always produces a self-describing version 2 record;
+- a record the code cannot interpret stops the read with an error naming the
+  problem, instead of silently dropping fields.
+
+Terms used below:
+
+- **Private API**: application-internal source interface. No consumer outside
+  the application calls it.
+- **Version 1 (v1) record**: bytes written by the already-deployed binary.
+- **Version 2 (v2) record**: the target representation defined by
+  `storage-record-v2.schema.json`.
+- **Decoder**: a private function turning stored bytes into the record model.
+  It is not a compatibility interface.
+- **Upgrade-on-write**: a record changes representation only when the
+  application rewrites it.
+
+There is no source-API compatibility goal. The only compatibility obligation is
+that existing records remain readable. This plan closes that obligation with a
+decoder, not with a shim.
+
+## Constraints
+
+Hard invariants. Violation requires escalation, not a workaround.
+
+- The private API changes atomically. The old record type, its functions, and
+  its module path are deleted, and every caller is updated in the same
+  milestone. No `Deprecated` marker, alias, facade, wrapper, adapter, dual
+  implementation, or feature-flag branch may preserve the old interface.
+- Exactly one in-memory record model exists. No v1-shaped type may be exported
+  from the library or leak out of the codec.
+- The v1 decoder lives in the codec, is not public API, and produces the new
+  model. It may be removed once no v1 records remain.
+- Reading a record never writes. No eager rewrite, compaction, or repair runs
+  as part of a read.
+- New writes are always v2 and always carry `schema_version: 2`.
+- An unsupported version is an error. It never falls back to v1 decoding.
+- Public, wire, network, CLI, and configuration surfaces do not change in this
+  slice. No new runtime dependency and no new public interface are authorized.
+- `storage-record-v2.schema.json` is normative for v2 definitions. Changing it
+  changes this plan and the design.
+- Do not weaken, skip, or delete an existing test to make the change pass.
+- Existing historical planning and design documents stay untouched.
+- No implementation, including the read-only reconnaissance milestone, begins
+  until the user approves this plan.
+
+## Tolerances (exception triggers)
+
+No repository survey was possible when this draft was written: the authoring
+run could not inspect the application source, callers, tests, or history. No
+comparable past ExecPlan for this application was available. The budgets below
+are therefore provisional proposals, not estimates derived from evidence. They
+must be re-derived and explicitly re-approved after `EP-M0` produces the caller
+inventory, v1 layout, and fixture count. Until then, treat a breach as an
+escalation signal, not as permission to raise the number.
+
+Counting method: net lines (additions minus deletions) per category, computed
+from the change against the `EP-M0` baseline. Classify each changed hunk by
+purpose; configuration and documentation are not free, and spare capacity in
+one category never offsets another category. Exclude this ExecPlan file from
+every count, including file count.
+
+- Files: more than 12 non-ExecPlan files changed in one milestone, stop.
+- Code: more than 600 net lines of production source and tests, stop.
+- Configuration: more than 40 net lines, stop.
+- Documentation: more than 150 net lines, excluding ExecPlan files, stop.
+- Interface: any need to keep an old private-API symbol, or to add any public
+  symbol not named in `Interfaces and dependencies`, stop.
+- Dependencies: any new runtime or development dependency, stop.
+- Architecture: any change to classification, migration policy, or rollback
+  behaviour in the design §6, stop.
+- Iterations: a focused test still failing after three attempts, stop.
+- Time: a milestone exceeding four hours of implementation, stop.
+- Ambiguity: a conflicting interpretation that changes the compatibility
+  classification or the data obligation, stop and present options.
+
+Record the exact comparison base, category paths, and counting command here
+after `EP-M0`, and re-approve these numbers before `EP-M1`.
+
+## Risks
+
+- Risk: the v1 field layout has a field named `schema_version`, breaking the
+  classification rule. Severity: medium. Likelihood: low. Mitigation:
+  `TDD-GAP-002` confirms the layout before coding; the rule is revised in the
+  design if a collision exists.
+- Risk: real v1 fixtures cannot be obtained, leaving the strongest obligation
+  unverified. Severity: high. Likelihood: medium. Mitigation: capture samples
+  from a non-production copy early; if impossible, keep `TDD-VER-002` planned
+  and do not claim deployed readability.
+- Risk: the rollback requirement emerges after version 2 writes begin.
+  Severity: high. Likelihood: medium. Mitigation: resolve `TDD-OPEN-001` before
+  `EP-M2`; if rollback is required, stop and redesign the migration policy.
+- Risk: an old binary still writes v1 records concurrently with the new one.
+  Severity: high. Likelihood: unknown. Mitigation: resolve `TDD-GAP-004` before
+  `EP-M2`; mixed-version writers are outside the verified boundary.
+- Risk: the append primitive is not atomic, so a crash leaves a partial record.
+  Severity: medium. Likelihood: unknown. Mitigation: confirm the primitive in
+  `EP-M0`; expand `TDD-VER-006` to a real durability test if it is absent.
+
+## Progress
+
+- [x] (2026-11-19 00:15Z) Planning reconnaissance: design drafted from the
+      brief; ExecPlan drafted. No repository inspection was possible.
+- [ ] Plan approved by the user.
+- [ ] `EP-M0` Baseline pinned, v1 layout and fixtures captured, tolerances
+      re-approved.
+- [ ] `EP-M1` Private API reshaped atomically; v1 decode and v2 encode in
+      place.
+- [ ] `EP-M2` Store writes upgraded records; failure and truncation semantics
+      established.
+- [ ] `EP-M3` Documentation, release limitation, and gates closed.
+
+## Surprises & discoveries
+
+- Observation: the brief names a deployed binary but supplies no repository
+  revision, record sample, or release tag.
+  Evidence: the brief is one sentence; the authoring run had no repository
+  access.
+  Impact: the design's baseline is thin; `EP-M0` must pin it before any code
+  milestone is approved.
+- Observation: the requirement "records must remain readable" is a
+  persisted-data obligation, not a source-API obligation.
+  Evidence: no external caller of the private API is named, and data cannot be
+  recompiled.
+  Impact: the plan uses a decoder, not a shim (D1).
+
+## Decision log
+
+- D1. Decision: no source-API compatibility for the private API.
+  Rationale: the API has no external consumer and every caller changes in the
+  same milestone. An alias or wrapper would answer no "compatible with whom or
+  what?" and would keep the old abstraction alive.
+  Date/Author: 2026-11-19, authoring agent.
+- D2. Decision: classify by the presence of `schema_version`, and treat any
+  value other than 2 as unsupported.
+  Rationale: the discriminator travels with the record, so no side metadata is
+  needed; refusing fallback prevents a future version from being read as v1.
+  Rejected: a separate sidecar index, which can desynchronise from the records.
+  Date/Author: 2026-11-19, authoring agent.
+- D3. Decision: upgrade-on-write.
+  Rationale: smallest obligation that satisfies the goal; no bulk mutation and
+  no downtime. Rejected: eager rewrite, which turns reads into writes and
+  needs backup and interruption handling. Rejected: keep writing v1, which
+  leaves the representation unreshaped.
+  Date/Author: 2026-11-19, authoring agent.
+- D4. Decision: fail closed on a truncated tail; repair only by a documented
+  operator procedure after a backup.
+  Rationale: automatic repair risks deleting a record that a complete rewrite
+  could have recovered; an offset-bearing error is actionable.
+  Date/Author: 2026-11-19, authoring agent.
+- D5. Decision: provisional tolerances pending `EP-M0`.
+  Rationale: no baseline survey was possible; presenting invented precision as
+  a measured estimate would be false. The numbers are marked provisional and
+  require re-approval.
+  Date/Author: 2026-11-19, authoring agent.
+
+## Outcomes & retrospective
+
+Not complete. At this revision the outcome is a draft design, a DRAFT plan,
+and a validated schema. Nothing is implemented, verified, released, or
+deployed. The main lesson so far: a one-line brief about a deployed binary
+supplies the data obligation but not the baseline; reconnaissance is a
+prerequisite to any credible budget or code milestone.
+
+## Context and orientation
+
+Current control flow, as far as the brief establishes it: an application caller
+uses private API A1; the store hands records to A1's code; the deployed binary
+wrote representation R1. The new code inserts classification and a v1 decoder
+between the store and the model, and encodes v2 on write.
+
+This section will name the owning modules, entrypoints, helpers, callers, and
+tests with full repository-relative paths after `EP-M0`. It does not invent
+them now. The inspected base revision is not yet pinned; line numbers will be
+qualified by that revision when they are recorded.
+
+Known tooling: none confirmed. The repository's language, test runner, build
+target, and gate commands are `TDD-GAP-007` and are recorded at `EP-M0`. The
+only tool used during planning was a JSON Schema validator
+(`jsonschema` 4.19.1) against `storage-record-v2.schema.json`, and nixie against
+the design's Mermaid diagram; both passed on the draft, and neither is evidence
+about the application.
+
+Budget-setting survey: none possible. There is no comparable historical
+ExecPlan for this application in the authoring context and no code inventory.
+That absence is why `Tolerances` is provisional and why D5 exists.
+
+## Conformance basis
+
+Upstream artefacts:
+
+- Technical design: `tech-design.md` v0.1, 2026-11-19 (this directory).
+- Terms of reference: none exists. Recorded as missing, not invented.
+- ADRs: none inspected.
+- `execplans` skill and template: inspected, hashes recorded in the design §2.
+- Normative schema: `storage-record-v2.schema.json`.
+
+Named requirements, derived from the design:
+
+- `TDD-REQ-001` One record model; private API reshaped atomically; no source
+  compatibility surface.
+- `TDD-REQ-002` Every v1 record decodes to the model with every field
+  accounted for.
+- `TDD-REQ-003` Every new record is self-describing.
+- `TDD-REQ-004` Unsupported or malformed records fail with a typed error.
+- `TDD-REQ-005` Reading never writes.
+
+Observed gaps: `TDD-GAP-001` (baseline), `-002` (v1 layout), `-003` (fixtures),
+`-004` (rollback and mixed writers), `-005` (decoder retention), `-006`
+(volumes), `-007` (tooling).
+
+Trace links:
+
+```plaintext
+TDD-REQ-001 -> TDD-COMP-codec -> EP-M1 -> tests::api::old_symbol_absent
+TDD-REQ-002 -> TDD-COMP-codec -> EP-M1 -> tests::codec::decodes_captured_v1_fixture
+TDD-REQ-002 -> TDD-COMP-codec -> EP-M1 -> tests::codec::every_v1_field_is_mapped
+TDD-REQ-003 -> TDD-COMP-store  -> EP-M2 -> tests::codec::writes_are_self_describing
+TDD-REQ-004 -> TDD-COMP-codec -> EP-M2 -> tests::codec::rejects_unknown_version
+TDD-REQ-005 -> TDD-COMP-store -> EP-M2 -> tests::store::read_does_not_write
+TDD-VER-006 -> EP-M2 -> tests::store::truncated_tail_fails_closed
+```
+
+Test identifiers are proposed names, not evidence that the tests exist. They
+are renamed only with a corresponding update here and in the design's
+`TDD-VER-*` links.
+
+## Verification plan
+
+### Abstract model
+
+A stored record is a byte string. Classification maps each string to exactly
+one of: `V1`, `V2`, `Malformed`, or `Unsupported(n)`. Decoding maps `V1` and
+`V2` to `Record` or a typed error. Encoding maps `Record` to a `V2` byte
+string. The model domain is the set of v1 values observable in captured
+fixtures plus generated v2 model values.
+
+Preconditions: a record is a single stored unit; the store hands the codec the
+complete bytes of one record, or the remaining bytes when the record is
+truncated. Violations are handled by the failure table in the design §7, not by
+undefined behaviour.
+
+### Invariants and lemmas
+
+- `INV-classify` (`TDD-VER-001`): classification is total and single-valued.
+- `INV-v1-decode` (`TDD-VER-002`): every captured v1 record decodes to the
+  model without error.
+- `INV-field-coverage` (`TDD-VER-003`): every field of every captured v1
+  record has exactly one mapping class.
+- `INV-roundtrip` (`TDD-VER-004`): `decode_v2(encode_v2(r))` equals `r` for
+  every model value `r`.
+- `INV-atomic-api` (`TDD-VER-005`): no old-API symbol remains and the build
+  succeeds.
+- `INV-fail-closed` (`TDD-VER-006`): a truncated tail is reported, never
+  decoded, and complete records before it still decode.
+- `L-fresh-writes` (`TDD-REQ-003`): `INV-roundtrip` plus the encoder's fixed
+  `schema_version` implies every fresh write is classified `V2` without side
+  metadata.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-json`: the JSON parser implements RFC 8259 for the used subset.
+- `AXIOM-append`: the store's append primitive is atomic per record. Confirm at
+  `EP-M0`; if false, it becomes a repository obligation and this plan changes.
+- `AXIOM-fixtures`: captured fixtures represent the deployed binary's output.
+  Evidence is the capture procedure and provenance; if unavailable,
+  `TDD-VER-002` remains planned.
+
+### Methods per obligation
+
+- Obligation: `INV-classify`.
+  Method: parameterized tests over the four classes plus a property test over
+  generated objects with and without `schema_version`.
+  Rationale: the input space is a small tagged partition; enumeration covers
+  it directly.
+  Domain: absent version; version 1; version 2; version 3; non-object JSON;
+  invalid JSON; empty bytes.
+  Artefact: `tests/codec/classification` in the repository's test layout.
+  Evidence: red before the classifier exists (`missing function` or a failing
+  assertion); green with one case per class.
+  Non-vacuity: each class has a named witness; the negative control makes the
+  classifier treat every object as V2 and must fail on the v1 witness.
+- Obligation: `INV-v1-decode` and `INV-field-coverage`.
+  Method: golden-fixture tests over captured records, with a test-data mapping
+  table.
+  Rationale: fixtures are the only evidence about what the shipped binary
+  actually wrote; a hand-written example proves only what the author believed.
+  Domain: every captured fixture, plus absent optionals, empty payload,
+  non-ASCII text, and boundary integers.
+  Artefact: `tests/fixtures/records-v1/` plus `tests/codec/v1_mapping`.
+  Evidence: red on the first fixture before the decoder exists; green with a
+  recorded fixture count and per-field assertions.
+  Non-vacuity: the mapping coverage test fails when a fixture field has no
+  mapping row (seeded by adding an unmapped field); a fixture set of one
+  trivial record is rejected as insufficient.
+- Obligation: `INV-roundtrip` and `L-fresh-writes`.
+  Method: property test with an independent schema-validation oracle.
+  Rationale: the invariant spans generated values and optional fields.
+  Domain: generated model values covering every optional field and boundary
+  numbers.
+  Artefact: `tests/codec/roundtrip`.
+  Evidence: red with an encoder stub; green with classification evidence
+  showing every optional field was generated.
+  Non-vacuity: comparing two outputs of the same encoder is not an oracle; the
+  test validates the encoded bytes against the schema and compares decoded
+  model values.
+- Obligation: `INV-atomic-api`.
+  Method: compile plus a symbol search that must match at least once on the
+  pre-change baseline.
+  Rationale: a compile alone proves only that the new code compiles; the
+  absence check proves the old surface is gone.
+  Domain: the old type and function names recorded in `EP-M0`.
+  Artefact: `tests/api/old_symbol_absent` or the repository's equivalent static
+  check.
+  Evidence: pre-change match count recorded; post-change count zero; build
+  passes.
+  Non-vacuity: the search pattern is run against the pre-change revision and
+  recorded as matching, so the zero result is meaningful.
+- Obligation: `INV-fail-closed`.
+  Method: fixture with the final bytes removed, plus a failure-injection test
+  for a failed append.
+  Rationale: the only realistic corruption is an interrupted final write.
+  Domain: zero bytes removed, one byte, half the record, whole record.
+  Artefact: `tests/store/truncated_tail`.
+  Evidence: red before truncation handling; green with a typed error and the
+  preceding complete records readable.
+  Non-vacuity: the fixture actually lacks bytes; a test that writes only
+  complete records exercises nothing relevant.
+
+No proof or model check is planned. Each obligation is a total function over a
+small tagged space or an idempotence property; parameterized tests, fixtures,
+and property tests are proportionate. Stronger methods would still leave the
+filesystem axiom unproved.
+
+### Formal verification decision
+
+Formal verification is not used. Recorded in D2/D3 terms: the risk is data
+interpretation, not concurrency or arithmetic; fixtures and generated values
+address it directly. Tool availability is not the reason.
+
+### Suggested BDD features
+
+Proposed file: `features/record-format.feature` (proposed; no BDD runner is
+confirmed for this repository). If no runner exists, these scenarios are
+exercised by the focused tests named above.
+
+```gherkin
+Feature: Reading and writing stored records
+  Scenario: Reading a record written by the deployed binary
+    Given a store containing a record captured from the deployed binary
+    When the application reads that record
+    Then the record is returned in the new record model
+    And every field of the stored record is accounted for
+
+  Scenario: Writing a record after the upgrade
+    Given the application creates a record after the upgrade
+    When the store appends it
+    Then the stored bytes carry schema_version 2
+    And reading the stored bytes returns the same record model
+
+  Scenario: Reading a record from a newer format
+    Given a record whose schema_version is 3
+    When the application reads that record
+    Then the read fails with an unsupported-version error
+    And the record is not decoded as version 1
+```
+
+## Plan of work
+
+### `EP-M0` reconnaissance and prerequisites
+
+Questions: what is the pinned base revision; what is the v1 field layout; what
+callers use A1; what fixtures can be captured; must rollback work; is the
+append primitive atomic; what are the gate commands.
+
+This milestone is read-only. It records the base revision, the caller
+inventory with symbol search counts, the v1 field table, fixture provenance,
+and the answers to `TDD-OPEN-001` and `TDD-GAP-004`. It then re-derives the
+tolerances and asks for approval of the revised numbers and the fixture set.
+
+Acceptance evidence: a recorded base revision; a non-empty fixture directory
+with provenance; a mapping table whose union equals the fixture fields; a
+recorded pre-change symbol match count. If fixtures cannot be captured, the
+milestone records that and `TDD-VER-002` stays planned.
+
+### `EP-M1` atomic reshape with v1 decode and v2 encode
+
+Requirements: `TDD-REQ-001`, `TDD-REQ-002`, `TDD-REQ-003`; gaps `-001`,
+`-002`, `-003`; decisions D1, D2.
+
+Red: add `tests::codec::decodes_captured_v1_fixture` and
+`tests::codec::every_v1_field_is_mapped` against the new model and codec
+signatures, with the narrowest stubs needed to compile. The first fails on the
+decoded value; the second fails on the coverage assertion. Run them and record
+both failures.
+
+Green: implement `classify`, `decode_v1`, `decode_v2`, and `encode_v2`; delete
+the old model type and update every caller in the same change; add the
+round-trip property test. Focused tests pass.
+
+Refactor: remove any temporary stub, run the focused tests again, then the
+wider gates.
+
+### `EP-M2` store integration and failure semantics
+
+Requirements: `TDD-REQ-004`, `TDD-REQ-005`; gaps `-004`; decisions D3, D4.
+
+Red: `tests::codec::rejects_unknown_version`,
+`tests::store::read_does_not_write`, and
+`tests::store::truncated_tail_fails_closed`.
+
+Green: wire classification into the store, append only v2, surface the typed
+errors, and implement the documented operator repair path without automatic
+truncation. Confirm rollback and mixed-writer answers before this milestone; if
+either requirement changed, stop and escalate rather than proceeding.
+
+### `EP-M3` documentation and delivery closure
+
+Update the release notes with the rollback limitation, the operator repair
+procedure, and the decoder-retention decision. Record the final fixture count
+and the obligations that remain unverified. Run every gate. Reconcile the
+design: update `TDD-GAP-*` and `TDD-OPEN-*` states and the trace links. Do not
+mark the plan `COMPLETE` while an upstream deviation is unrecorded.
+
+## Milestones and plateaus
+
+### `EP-M0` Reconnaissance plateau
+
+- Requirements and gaps: `TDD-GAP-001` to `-007`.
+- Acceptance evidence: pinned revision; fixture provenance; v1 mapping table;
+  caller and symbol counts; re-approved tolerances.
+- Conformance check:
+  - No production code changed.
+  - Design assumptions still valid: classification rule confirmed against the
+    real v1 layout.
+  - No public interface, dependency, or persisted format changed.
+  - Trace links current.
+- Recovery: discard the reconnaissance branch; no state changed.
+- Remaining gaps: `TDD-OPEN-001` if unanswered.
+- Compatibility decision: none; no code changed.
+
+### `EP-M1` Atomic reshape plateau
+
+- Requirements and gaps: `TDD-REQ-001`, `-002`, `-003`; `TDD-GAP-001` to `-003`.
+- Acceptance evidence: fixture decode passes; field coverage passes; round-trip
+  passes; old symbol search returns zero against a pattern that previously
+  matched.
+- Conformance check:
+  - Requirements assigned to this milestone are satisfied.
+  - Design still followed: one model, private decoder, no old type.
+  - Upstream assumptions still valid: no `schema_version` collision found.
+  - No unapproved public interface or dependency change.
+  - No unapproved trust-boundary or persisted-format change beyond the v2
+    writer this design specifies.
+  - Trace links current.
+- Recovery: revert the branch to the `EP-M0` baseline. No store writes occur
+  in this milestone.
+- Remaining gaps: store integration and failure paths (`EP-M2`).
+- Compatibility decision: none for source; deployed v1 records are read by a
+  private converter.
+
+### `EP-M2` Store and failure plateau
+
+- Requirements and gaps: `TDD-REQ-004`, `-005`; `TDD-GAP-004`.
+- Acceptance evidence: unknown version rejected; read does not write;
+  truncated tail fails closed; repair procedure documented and exercised on a
+  copy.
+- Conformance check:
+  - Requirements satisfied.
+  - Design still followed: upgrade-on-write, no dual write.
+  - Upstream assumptions still valid: append atomicity confirmed or the
+    obligation expanded.
+  - No unapproved interface or dependency change.
+  - Persisted-format change is the approved v2 write.
+  - Trace links current.
+- Recovery: revert to the `EP-M1` plateau. Any store written by a build from
+  this milestone may contain v2 records; restoring v1-only behaviour requires
+  restoring the pre-change backup, not downgrading the binary.
+- Remaining gaps: documentation and release limitation.
+- Compatibility decision: deployed v1 records remain readable; old binaries
+  reading v2 records are explicitly unsupported (`TDD-OPEN-001`).
+
+### `EP-M3` Delivery plateau
+
+- Requirements and gaps: all; `TDD-GAP-005` updated.
+- Acceptance evidence: full gate run passes; release notes state the rollback
+  limitation; unverified obligations listed.
+- Conformance check: all items, plus every upstream gap either closed or
+  explicitly deferred with acceptance.
+- Recovery: revert the release commit; the code change and the data change are
+  separable only by the backup taken before any v2 write.
+- Remaining gaps: decoder removal, tracked by `TDD-OPEN-002`.
+- Compatibility decision: as `EP-M2`.
+
+## Concrete steps
+
+Exact commands depend on the repository, which was not inspected. Fill these
+slots at `EP-M0` and keep them current. Run gates sequentially, prefer Makefile
+targets, and enable `pipefail` before piping through `tee` so a failure cannot
+appear as success.
+
+```plaintext
+Working directory: <repository root, recorded at EP-M0>
+Red:   <focused test command> <tests::codec::decodes_captured_v1_fixture>
+       -> expected: assertion failure showing the mismatched field
+Red:   <focused test command> <tests::codec::every_v1_field_is_mapped>
+       -> expected: unmapped field named in the failure
+Green: <same focused commands> -> all cases pass; fixture count printed
+Gates: make check-fmt; make lint; make typecheck; make test
+       (or the repository's recorded equivalent, in this order)
+```
+
+Log paths: `/tmp/execplan-<branch>-<gate>.out`, one per gate. Record any
+pre-existing failure separately with evidence; do not waive a gate quietly.
+
+## Validation and acceptance
+
+Observable acceptance, once commands are known:
+
+- Running the decoder fixture test reports every captured v1 record decoded,
+  and the same test file fails on the pre-change revision for the intended
+  reason.
+- The field-coverage test fails when a fixture field is added without a mapping
+  row.
+- The round-trip property test passes with classification output showing every
+  optional field generated.
+- The old symbol search returns no matches, against a pattern that matched on
+  the baseline.
+- A store copy with a truncated final record fails with a typed error, and the
+  complete records before it still decode.
+- A read-only test asserts the store bytes are unchanged after reading.
+
+Quality criteria: all focused tests pass; `TDD-VER-001` to `TDD-VER-006` are
+discharged or explicitly recorded as planned; formatting, lint, typecheck, and
+tests pass; no new dependency; no old-API symbol.
+
+Quality method: the gate sequence above, plus manual inspection of one store
+copy before and after a read. Manual inspection is necessary because the
+byte-for-byte read purity check is only as good as the fixture.
+
+## Idempotence and recovery
+
+Re-running the decoder and encoder tests is safe; they use fixtures and
+generated values, not live stores. Running the application against a real store
+is not part of any test in this plan; if a manual check is needed, copy the
+store first. A failed append leaves at most a trailing partial record; recovery
+is the documented truncation of that final record after a backup, never an
+automatic repair. A partial implementation can be reverted to the prior
+milestone; after `EP-M2` writes begin, restoring v1-only behaviour requires the
+pre-change backup.
+
+## Artefacts and notes
+
+Planning-time evidence, not implementation evidence:
+
+- JSON Schema `storage-record-v2.schema.json` passed the draft 2020-12
+  meta-schema check, accepts a sample v2 record, and rejects `schema_version`
+  1. Recorded 2026-11-19.
+- The design's Mermaid diagram passed nixie on 2026-11-19.
+
+No repository test, build, lint, typecheck, or gate was run, and none is
+available to run from the authoring context. Nothing in this section should be
+read as implementation evidence.
+
+## Interfaces and dependencies
+
+Language-neutral port contract. Specialise the syntax to the repository's
+language at `EP-M0` without changing the semantics.
+
+```plaintext
+classify(bytes) -> V1 | V2 | Malformed | UnsupportedVersion(n)
+decode_v1(V1) -> Record or DecodeError
+decode_v2(V2) -> Record or DecodeError
+encode_v2(Record) -> bytes        # always schema_version 2
+```
+
+Ownership: the codec owns classification and both decoders; the store owns
+record boundaries and append; callers own no knowledge of stored formats. The
+record model is defined once and imported by both decoders.
+
+Error contract: every failure is a typed value naming the class and the record
+offset; errors never carry a partially decoded record. Do not add a public
+`V1Record` type or a public decode entrypoint.
+
+Dependencies: none. Do not add a JSON library, migration framework, or schema
+tool unless `Constraints` is amended and approved.
+
+## Revision note
+
+- 2026-11-19: Initial draft. Created from a one-sentence brief. Design and plan
+  marked DRAFT; no approval, implementation, or verification is claimed.
+  Remaining work starts at plan approval and `EP-M0`.

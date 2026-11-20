@@ -1,0 +1,52 @@
+# Technical design and execution – intake note
+
+Status: no technical design drafted and no ExecPlan authored. This note records
+the Phase 0 result for `tech-design-doc` and explains why the downstream skills
+do not proceed yet.
+
+## Phase 0 result for `tech-design-doc`
+
+- Problem statement: not established. The brief's text was unavailable, so the
+  authoritative problem statement cannot be extracted or confirmed.
+- Audience: unknown.
+- Scope boundaries: unknown beyond the supplied characterizations; no goals or
+  non-goals beyond the multi-actor exclusion are settled.
+- Decision authority: unknown. This note neither accepts nor approves a design.
+- Prior art: not inspected because of the session's isolation constraint.
+  Absence of evidence here is not evidence of absence.
+- Verification scope: cannot be set before a design exists. No invariants,
+  lemmas, combinatorial surfaces, or correctness properties are known.
+- Technology: no imposed choice. Selection is a design decision, but it cannot
+  be made responsibly without requirements.
+
+## Greenfield baseline
+
+`architecture-contract.md` directs that, for greenfield work, the design states
+that no implementation baseline exists and identifies only real environmental,
+user-workflow, or integration constraints. Applying that rule:
+
+- No legacy architecture, migration programme, or old-and-new plateau is
+  manufactured.
+- No compatibility assessment applies: no released 1.0+ API, no named external
+  consumer, and no persisted data or wire format is known.
+- No gap register is fabricated. Gaps cannot be classified against an absent
+  baseline and an unstated target.
+
+## Why execution is not planned
+
+`execplans` requires an approved design slice, a `Conformance basis`, and an
+explicit approval gate before implementation. None exists: the terms of
+reference is v0.1 with `TOR-OPEN-001` and `TOR-OPEN-002` gating design. Writing
+an ExecPlan now would invent requirements, milestones, acceptance evidence, and
+an approval that have not occurred.
+
+## Readiness classification
+
+Bounded discovery only. The next actions, in order, are:
+
+1. Obtain and read the brief text (tests `TOR-ASSUMPTION-001`).
+2. Resolve `TOR-OPEN-002` (primary user), then `TOR-OPEN-001` (problem and
+   outcome), then goals, non-goals, and success signals.
+3. Return to `tech-design-doc` Phase 0 once the terms of reference is accepted.
+
+Not ready for design; not ready for an implementation plan; not approved.

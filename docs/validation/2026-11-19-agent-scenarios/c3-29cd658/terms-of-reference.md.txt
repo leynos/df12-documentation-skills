@@ -1,0 +1,292 @@
+# LIB public rename – terms of reference
+
+**Status:** Draft v0.1, reconstructed from a brief; not accepted.
+**Audience:** `LIB` maintainers, the `CONSUMER` maintainers, the `RFC-A` owner,
+and the release authority.
+**Companion documents:** Technical design (draft):
+`/tmp/val-c3/tech-design.md`. ExecPlan revision record:
+`/tmp/val-c3/execplan-record.md`. Historical RFC: `RFC-A` (not inspected).
+**Date and version:** 19 November 2026, v0.1.
+**Authority and evidence basis:** This draft rests on the scenario C3 brief
+supplied with the task, on the df12 terms-of-reference and technical-design
+contracts, and on the installed ExecPlan skill inspected on 19 November 2026. No
+repository file, release tag, RFC text, or downstream project was inspected:
+the task forbids it. Approvers and decision owners are unknown and are not
+invented. Acceptance state: none. Delivery state: design drafted,
+implementation paused (see the ExecPlan record).
+
+Every repository fact below is provisional unless the brief states it.
+Provisional identifiers: `LIB` is the published 0.8 package; `OLD` is the
+current public name; `NEW` is the replacement name; `RFC-A` is the older RFC
+that demands an alias; `CONSUMER` is the single downstream project.
+
+## 1. Background and motivation
+
+`LIB` is published at version 0.8 and has exactly one downstream consumer,
+`CONSUMER` (`[KNOWN]` at the scope of the brief). The maintainers are renaming
+the public name `OLD` to `NEW` (`[KNOWN]`). The rename is the current milestone
+of an ExecPlan that is already executing (`[KNOWN]`).
+
+An older RFC, `RFC-A`, governs the interface that carries `OLD`. It requires an
+alias that keeps `OLD` callable while `NEW` is introduced (`[KNOWN]` as a
+demand; the alias form is `[ASSUMED]`, see TOR-ASSUMPTION-003). The governing
+df12 policy prohibits source-API compatibility machinery for pre-1.0 APIs, and
+states that a named consumer does not create an exception
+(TOR-CONSTRAINT-001).
+
+The work exists now because the executing milestone forces the conflict into
+the open. The plan cannot ship a coherent change while the status of `RFC-A` is
+undecided. What changed in the world is not a market event; it is a naming
+defect meeting an inherited commitment.
+
+What is not known: why the rename is wanted, whether `NEW` is final, and who
+owns `RFC-A` (TOR-OPEN-001, TOR-OPEN-002). These are recorded as open rather
+than assumed.
+
+If the change did not happen, `CONSUMER` would keep using `OLD`, and the
+published 0.8 versions would remain available.
+
+## 2. Domain
+
+The domain is published library evolution: a pre-1.0 package exposes a
+source-API surface that one external project imports. Pre-1.0 is the period in
+which an interface can still change, and the governing policy treats
+compatibility machinery for such an interface as out of bounds (`[KNOWN]`;
+sources listed in §8.1).
+
+Prior art is `RFC-A`, which recorded a requirement for the interface at an
+earlier date. It is prior governance, not prior design. Its alias demand is the
+conflicting commitment that this document records for explicit resolution.
+
+Publishing a 0.8 artefact does not move the surface into the policy's
+released 1.0-or-later category. The category is decided by the release lineage,
+not by whether a version is downloadable.
+
+## 3. Market context
+
+Not applicable. The rename changes no product position, no competitor set, and
+no user segment. Naming a market landscape here would invent content that no
+decision uses.
+
+## 4. Users and stakeholders
+
+| Stakeholder | Relation to the work | Material concern | Question the design must answer | Required evidence | Decision right |
+| --- | --- | --- | --- | --- | --- |
+| `LIB` maintainers | Implement and publish | One current public name; no obsolete surface | Which names does the released artefact export? | API inventory before and after | Technical approval of the design |
+| `CONSUMER` maintainers | Sole external consumer | Exact break and replacement, with notice | What changes, and to which version? | Consumer build against the candidate | None over `LIB`; chooses when to upgrade |
+| `RFC-A` owner | Author of the inherited demand | Whether the alias requirement still binds | Has it been superseded, and by whom? | Dated resolution naming the superseded clause | May withdraw `RFC-A`; authority to override the policy is `[OPEN]` |
+| Release authority | Publishes versions | The break is deliberate and documented | Which version number carries the rename? | Changelog entry | Release approval; identity `[OPEN]` |
+
+The brief names no people. This document leaves owners unknown rather than
+inventing them.
+
+## 5. Job to be done
+
+Maintainer:
+
+> When a public name is wrong and the package is still pre-1.0, a maintainer
+> wants to replace `OLD` with `NEW` in a single release, so the package ships
+> one current name and carries no obsolete surface to maintain.
+
+Consumer:
+
+> When a pre-1.0 dependency renames a symbol, `CONSUMER` wants a dated, exact
+> statement of the break and its replacement, so they can update their call
+> site in one edit without guessing whether `OLD` still works.
+
+No multi-actor scenario probe is included. The flow has one producer and one
+consumer, no lifecycle states, and no exceptional paths beyond the consumer
+upgrading later. A scenario would restate these two job statements without
+changing a decision.
+
+## 6. Scope
+
+### 6.1 Goals
+
+- **TOR-GOAL-001.** After the release, the package's public surface exports
+  `NEW` and does not export `OLD`. Observable through an exported-name
+  inventory.
+- **TOR-GOAL-002.** Every in-repository caller, test, example, and
+  documentation reference uses `NEW`, and the repository gates pass.
+- **TOR-GOAL-003.** `CONSUMER` receives, no later than the release, the exact
+  replacement and a version to move to.
+- **TOR-GOAL-004.** The `RFC-A` conflict is disposed of by an explicit,
+  recorded resolution.
+
+### 6.2 Non-goals
+
+- **TOR-NONGOAL-001.** No alias, deprecated re-export, facade, wrapper, or shim
+  preserves `OLD`. This exclusion is plausible because `RFC-A` demands exactly
+  that, so a reasonable reader might expect it in scope. A consumer that needs
+  `OLD` remains on a previously published 0.8 version.
+- **TOR-NONGOAL-002.** No behaviour change under `NEW`. The rename changes the
+  name, not what the symbol does.
+- **TOR-NONGOAL-003.** No wider API redesign beyond the named symbol or
+  symbols.
+- **TOR-NONGOAL-004.** No rewrite of `RFC-A`. Readers seeking the old reasoning
+  read `RFC-A` together with the separate resolution record.
+- **TOR-NONGOAL-005.** No persisted-data or wire-format migration in this scope
+  unless TOR-OPEN-003 finds such an obligation. A data or wire obligation, if
+  found, is assessed separately and is not satisfied by a source-API shim.
+
+## 7. Success criteria
+
+- **TOR-SUCCESS-001.** The exported API inventory of the release candidate
+  contains `NEW` and zero entries for `OLD`. Baseline: `OLD` is exported at 0.8
+  (provisional, unverified). Measurement: inventory diff at the release
+  candidate. Owner: `LIB` maintainers.
+- **TOR-SUCCESS-002.** The repository gates pass in their documented order,
+  provisionally `make check-fmt`, `make lint`, `make typecheck`, and
+  `make test`. The exact commands must be confirmed from the repository's own
+  instructions, which this task did not permit inspecting. None was run for
+  this draft.
+- **TOR-SUCCESS-003.** `CONSUMER` builds against the release candidate with no
+  reference to `OLD` in its source. Evidence source: `CONSUMER`'s build; not
+  available in this task, so open.
+- **TOR-SUCCESS-004.** The changelog records the rename, its version, and the
+  replacement, and the `RFC-A` resolution is recorded beside it.
+
+Implementation acceptance is separate from outcome validation. A merged change
+establishes TOR-GOAL-001 and TOR-GOAL-002 only. TOR-SUCCESS-003 needs consumer
+evidence. None of these establishes adoption.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+- **TOR-CONSTRAINT-001.** The df12 policy prohibits source-API compatibility
+  machinery for pre-1.0 APIs. A named consumer does not create an exception.
+  Sources: `skills/terms-of-reference-doc/SKILL.md` (contract with downstream
+  skills); `skills/terms-of-reference-doc/references/problem-contract.md`;
+  `skills/tech-design-doc/references/architecture-contract.md`; the installed
+  `execplans` skill. Evidence status `[KNOWN]`.
+- **TOR-CONSTRAINT-002.** The interface and all affected callers change
+  together, in one coherent change.
+- **TOR-CONSTRAINT-003.** An inherited conflicting commitment is recorded for
+  explicit resolution. It is neither obeyed silently nor overridden silently.
+- **TOR-CONSTRAINT-004.** No shim is added and no history is rewritten.
+- **TOR-CONSTRAINT-005.** The executing ExecPlan may not work around an
+  unaccepted deviation; it records the deviation and enters `BLOCKED` until
+  acceptance.
+- **TOR-CONSTRAINT-006.** This document neither creates the compatibility
+  requirement `RFC-A` asks for nor authorizes implementation.
+
+### 8.2 Assumptions
+
+Each assumption records its failure consequence and expiry.
+
+- **TOR-ASSUMPTION-001.** The affected surface has no released 1.0-or-later
+  contract; the affected name has never shipped under a 1.0 tag. `[KNOWN]` that
+  the published version is 0.8; `[ASSUMED]` for the lineage of this specific
+  symbol. Failure consequence: a released 1.0 contract would require a
+  separate, sourced assessment, and this prohibition analysis reopens. Expiry:
+  inspection of the release tags.
+- **TOR-ASSUMPTION-002.** `CONSUMER` is the only downstream consumer. `[KNOWN]`
+  at the scope of the brief; completeness is `[ASSUMED]`. Failure consequence:
+  more parties need notice; the alias decision does not change. Expiry: a
+  search of the package's dependents, or the maintainers' statement.
+- **TOR-ASSUMPTION-003.** The `RFC-A` alias is a callable source-API alias,
+  such as a deprecated re-export or a second name for the same item.
+  `[ASSUMED]`. Failure consequence: if the RFC asks only for a documentation
+  mapping from `OLD` to `NEW`, no compatibility machinery is at issue and the
+  design may include that mapping. Expiry: reading `RFC-A`.
+- **TOR-ASSUMPTION-004.** `OLD` does not appear in a persisted format, wire
+  format, or configuration key that deployed data depends on. `[ASSUMED]`.
+  Failure consequence: a separate persisted-data assessment is required; it
+  still does not justify a source alias. Expiry: TOR-OPEN-003.
+- **TOR-ASSUMPTION-005.** `CONSUMER` can update its call site on its own
+  schedule, and previously published 0.8 versions remain installable.
+  `[ASSUMED]`. Failure consequence: the release is sequenced with `CONSUMER`'s
+  own release; the alias decision still does not change. Expiry: release
+  planning.
+
+### 8.3 Dependencies
+
+- **`CONSUMER` upgrade.** Capability: replace `OLD` with `NEW` and depend on
+  the new version. Provider: `CONSUMER` maintainers. Consumer: `LIB`
+  maintainers needing outcome evidence. Unblock condition: `CONSUMER` builds
+  with `OLD` absent. Scope: gates TOR-SUCCESS-003, not the implementation
+  milestone.
+- **`RFC-A` resolution.** Capability: an explicit decision that the alias
+  requirement is superseded, or an explicit, recorded change to the governing
+  policy. Provider: the decision authority named in TOR-OPEN-001. Unblock
+  condition: a dated written record naming `RFC-A` and the superseded clause.
+  Scope: gates release and the ExecPlan's return from `BLOCKED`.
+- **Release authority.** Capability: publication of the breaking version.
+  Provider: the publisher. Unblock condition: release approval. Scope: gates
+  release.
+
+## 9. Open questions
+
+| ID | Question | What it gates | Resolution criteria | Owner | Path |
+| --- | --- | --- | --- | --- | --- |
+| TOR-OPEN-001 | Who may resolve the `RFC-A` conflict, and is the alias requirement withdrawn, or is the governing policy changed instead? | The ExecPlan's `BLOCKED` state and the release | A dated written decision naming `RFC-A` and the superseded clause, or a recorded policy change | Unknown | Elicitation with the RFC owner, then a decision record |
+| TOR-OPEN-002 | What defect motivates the rename, and is `NEW` final? | Changelog wording; risk of a second rename | Maintainer statement naming the defect | `LIB` maintainers | Elicitation |
+| TOR-OPEN-003 | Does `OLD` appear in persisted data, wire formats, configuration keys, documentation URLs, or package metadata? | Whether a separate migration obligation exists | Repository-wide search plus `CONSUMER` confirmation | Maintainers | Search and consumer confirmation |
+| TOR-OPEN-004 | Which version number carries the breaking change? | The release note and `CONSUMER` pinning | Decision by the release authority under applicable release policy | Release authority | Release planning |
+| TOR-OPEN-005 | Does `CONSUMER` upgrade in lockstep or after the release? | When TOR-SUCCESS-003 can be observed | Agreed schedule with `CONSUMER` | Both maintainer groups | Coordination |
+
+A terms of reference with no open questions would be insufficiently
+interrogated here: the decision authority is genuinely unknown to this draft.
+
+## 10. Handoff and feedback
+
+**Revision and acceptance.** v0.1, reconstructed from a brief, not accepted. No
+approval evidence exists.
+
+**Readiness.** Ready for technical design. The design decision is constrained
+rather than open: the policy forecloses the alias. The executing ExecPlan is
+not free to proceed, however, and must record the deviation and enter
+`BLOCKED` until TOR-OPEN-001 closes.
+
+**Stable IDs for downstream use.** TOR-GOAL-001 to TOR-GOAL-004;
+TOR-CONSTRAINT-001 to TOR-CONSTRAINT-006; TOR-SUCCESS-001 to TOR-SUCCESS-004;
+TOR-ASSUMPTION-001 to TOR-ASSUMPTION-005; TOR-OPEN-001 to TOR-OPEN-005.
+
+**ADR candidate.** The supersession of `RFC-A` on this point is durable and hard
+to reverse. Record it as an ADR candidate; this document does not write the
+ADR.
+
+**Context vocabulary.** No `docs/context.md` was available. Terms introduced
+here (`alias`, `compatibility machinery`, `pre-1.0`, `plateau`) are candidates
+for promotion.
+
+**Feedback route.** If the design or implementation falsifies TOR-ASSUMPTION-001
+to TOR-ASSUMPTION-005, record the evidence here, assess the effect on the
+technical design and the ExecPlan, and revise all affected links before the plan
+reaches `COMPLETE`. This document invents no downstream milestone IDs.
+
+## Appendix A – Glossary
+
+- **Alias.** A second callable name for an existing item, left in place to
+  preserve the old name. In this document it is the form of compatibility
+  machinery that `RFC-A` demands.
+- **Compatibility machinery.** Any construction whose purpose is to keep an
+  obsolete source interface usable: aliases, deprecated re-exports, facades,
+  adapters, dual implementations, or temporary wrappers.
+- **Pre-1.0.** A release lineage below version 1.0. The governing policy
+  prohibits source-API compatibility machinery for such APIs regardless of
+  known consumers.
+- **Plateau.** A coherent, validated repository state that is safe to continue
+  from if later work is postponed. It does not require old and new interfaces to
+  coexist.
+
+## Appendix B – References
+
+- Scenario C3 brief, supplied 19 November 2026 (task input; not a repository
+  file).
+- `skills/terms-of-reference-doc/SKILL.md`,
+  `skills/terms-of-reference-doc/references/problem-contract.md`, and
+  `skills/terms-of-reference-doc/references/elicitation-protocol.md`,
+  inspected 19 November 2026.
+- `skills/tech-design-doc/SKILL.md`,
+  `skills/tech-design-doc/references/architecture-contract.md`,
+  `skills/tech-design-doc/references/document-anatomy.md`,
+  `skills/tech-design-doc/references/editing-checklist.md`,
+  `skills/tech-design-doc/references/field-evidence.md`, and
+  `skills/tech-design-doc/references/research-protocol.md`, inspected
+  19 November 2026.
+- Installed `execplans` skill and template,
+  `/home/leynos/.claude/skills/execplans/SKILL.md` and
+  `/home/leynos/.claude/skills/execplans/references/execplan-template.md`,
+  inspected 19 November 2026.

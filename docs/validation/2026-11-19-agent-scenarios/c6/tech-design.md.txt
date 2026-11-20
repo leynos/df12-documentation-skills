@@ -1,0 +1,414 @@
+# Record store reshape – technical design
+
+Status: DRAFT (proposed; not accepted, not implemented, not verified)
+
+Audience: the maintainer who will implement the change; the reviewer who must
+decide whether the compatibility treatment is correct.
+
+Companion documents:
+
+- `storage-record-v2.schema.json` – normative schema for the version 2 record.
+- `execplan.md` – DRAFT execution contract for the bounded slice.
+- `outline.md` – the section-level outline this draft follows.
+
+Date and version: 2026-11-19, v0.1.
+
+## 1. Problem and scope
+
+The authoritative brief is one sentence:
+
+> Reshape a private API and storage representation; a deployed binary has
+> already written records that must remain readable.
+
+Two obligations hide in that sentence and they are not the same obligation. The
+private API is source code that the application calls. It has no consumer
+outside the application, so its reshape is an ordinary atomic refactor. The
+storage representation is data at rest written by a binary that has already
+shipped. Data cannot be recompiled, so the new code must read what the old code
+wrote.
+
+This design separates the two, refuses to solve the second with machinery aimed
+at the first, and states what evidence would show that each is satisfied.
+
+Goals and requirements:
+
+| ID | Statement | Source |
+| --- | --- | --- |
+| `TDD-REQ-001` | The private API is replaced by one record model, and every caller changes in the same change; no source compatibility surface remains | Brief, clause 1 |
+| `TDD-REQ-002` | Every record written by the deployed version 1 binary decodes to the new model with every field accounted for | Brief, clause 2 |
+| `TDD-REQ-003` | Every new write is self-describing, so a reader classifies it without external metadata | Design |
+| `TDD-REQ-004` | Unsupported or malformed records fail closed with a typed error | Design |
+| `TDD-REQ-005` | Reading a record never writes | Design |
+
+Non-goals:
+
+- Source-API compatibility for the private API. No alias, deprecated
+  entrypoint, facade type, dual type, feature flag, or old-interface adapter is
+  designed, and none is permitted. A reviewer who wants one must resolve the
+  contradiction with the governing skill contract first (see §4).
+- Making version 1 binaries read version 2 records. The brief does not ask for
+  it. Whether rollback is required is `TDD-OPEN-001`; the answer can change the
+  migration policy before implementation.
+- Changing any public, wire, network, or CLI surface. None is in scope.
+- A batch rewrite tool for existing stores. Upgrade-on-write (§6.4) makes one
+  unnecessary for the stated goal; adding one later is a separate change.
+
+Design intent: reshape once, at the boundary, and keep exactly one in-memory
+record model. Old bytes are input to a converter, not an old interface kept
+alive.
+
+## 2. Upstream state and conformance basis
+
+| Artefact | Revision inspected | State |
+| --- | --- | --- |
+| Task brief (§1, verbatim) | 2026-11-19 | Authoritative scope for this exercise; not an approved terms of reference |
+| Terms of reference | None available | Missing. No problem-space intent exists beyond the brief |
+| Repository baseline (source, ADRs, release tags) | None inspected | `TDD-GAP-001`; the authoring run could not inspect the application repository |
+| Deployed record samples | None available | `TDD-GAP-003`; no fixture was captured |
+| `execplans` skill | `SKILL.md`, SHA-256 `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15` | Inspected |
+| ExecPlan template | `references/execplan-template.md`, SHA-256 `71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a` | Inspected |
+| `storage-record-v2.schema.json` | SHA-256 `384c99488bb3d1db5ae1129800cf6b7206dde9c94548dfc6d4d130f6e839a000` | Normative for version 2 definitions |
+
+Approval, implementation, and verification are separate states. This document
+is a proposal. It carries no approval, no implementation evidence, and no
+verification result. The brief establishes what was requested; it does not
+establish the field layout, record volumes, or release lineage of the system
+under change. Those remain gaps.
+
+## 3. Baseline, target, and gaps
+
+### 3.1 Baseline
+
+The baseline is known only at the level the brief supports: a shipped binary
+writes records in representation R1, and the application reaches those records
+through a private interface A1. The field layout of R1, the number of A1
+callers, the release tag, and the record volumes are not known to this draft.
+
+That is a thin baseline. It is still enough to make the two design decisions
+that matter: A1 changes atomically, and R1 is decoded rather than preserved as
+an interface.
+
+### 3.2 Target classification
+
+| Element | Baseline | Target | Class |
+| --- | --- | --- | --- |
+| In-memory record type | A1 model, shape unknown | One new model type | Changed; old type removed |
+| A1 callers | Count unknown | All updated in the same change | Changed |
+| Read path | R1 only | R1 decode plus R2 decode | Added |
+| Write path | R1 | R2 | Changed |
+| Source compatibility surfaces | None | None | Retained as a prohibition |
+| Wire/network format | None in scope | None | Out of scope |
+| Record migration tooling | None | None in this slice | Deliberately absent |
+
+### 3.3 Gap register
+
+| ID | Requirement | Baseline evidence | Target state | Disposition | Unblock condition |
+| --- | --- | --- | --- | --- | --- |
+| `TDD-GAP-001` | All | No repository revision inspected | Symbols, paths, and caller inventory pinned | Proposed work | Reconnaissance milestone records the base revision and symbol search |
+| `TDD-GAP-002` | `TDD-REQ-002` | R1 field layout unknown | Complete v1 field inventory with dispositions | Blocked | Read the released v1 source at the pinned baseline |
+| `TDD-GAP-003` | `TDD-REQ-002` | No v1 record fixtures | Fixtures captured from a real deployed store | Blocked | Owner supplies samples or a store copy; obligation stays planned until then |
+| `TDD-GAP-004` | `TDD-REQ-002` | Rollback never stated | Explicit answer on rollback and concurrent v1 writers | Blocked | Decision owner answers `TDD-OPEN-001` |
+| `TDD-GAP-005` | `TDD-REQ-002` | Record retention policy unknown | Removal criterion for the v1 decoder | Open | `TDD-OPEN-002` resolved by the data owner |
+| `TDD-GAP-006` | `TDD-REQ-002` | Record volumes unknown | Representative store size and record count recorded | Proposed work | Reconnaissance measures a store copy |
+| `TDD-GAP-007` | All | Toolchain and gate commands unknown | Exact focused and gate commands recorded | Proposed work | Reconnaissance records them |
+
+A gap is not automatically a milestone. `TDD-GAP-002` and `TDD-GAP-003` are
+prerequisites for the first code milestone, not separate deliverables.
+
+## 4. Compatibility assessment
+
+### 4.1 Surfaces
+
+| Surface | Classification | External consumers | Decision |
+| --- | --- | --- | --- |
+| A1 private record API | Application-internal; no release-tag commitment stated | None outside the application | Replace atomically; update every caller in the same change; remove the old type |
+| R1 records at rest | Deployed data written by a shipped binary | Records on disk | Decode with a private converter; no v1-shaped type survives |
+| R2 records | New format | Future binaries | Self-describing; version is part of the record |
+| Public/wire/CLI API | Unchanged | None identified | Out of scope |
+
+### 4.2 Decision: no source-API shim
+
+The brief's requirement is that records remain readable. That is an obligation
+on bytes, not on callers. No consumer outside the application uses A1, and the
+only consumers inside it are updated in the same change. Compatibility would
+therefore have no answer to "compatible with whom or what?".
+
+The design forbids, explicitly:
+
+- a `Deprecated` attribute, deprecation notice, or alias on the old type or
+  functions;
+- a type alias, facade, wrapper, or trait/object adapter that preserves the old
+  calling shape;
+- keeping old and new implementations selectable by a flag, environment
+  variable, or version check;
+- dual-writing R1 and R2 records to keep an old caller or binary satisfied;
+- exporting a v1-shaped record type from the library so the decoder's
+  intermediate value leaks into the API.
+
+All of these would create a second source surface with no external consumer and
+would let the old abstraction outlive the change. The prohibition is
+independent of any decision made later about rollback; a source shim does not
+make old binaries read new records, and a persistence decision does not justify
+preserving a source interface.
+
+If an inherited document later demands source compatibility for A1, that is a
+conflict to resolve with its owner, not permission to add a layer. The conflict
+should be recorded against the requirement it contradicts.
+
+### 4.3 Why the version 1 decoder is not a compatibility shim
+
+The decoder accepts R1 bytes and produces the new model. It:
+
+- has no v1-shaped public type;
+- is private to the codec component;
+- exists only while R1 bytes may exist on disk, and is removed by the criterion
+  in `TDD-OPEN-002`;
+- preserves no calling convention, no function name, and no module path.
+
+It is a data converter with a finite purpose. Removing it would not break the
+application's callers; it would only make old records unreadable. That is the
+distinction between a migration path and compatibility theatre.
+
+## 5. Architecture and components
+
+Three components change; one is added inside the read path.
+
+```mermaid
+graph LR
+    Store[Record store] -->|raw bytes| Classify{classify format}
+    Classify -->|no schema_version| DecodeV1[decode version 1]
+    Classify -->|schema_version 2| DecodeV2[decode version 2]
+    Classify -->|unknown or malformed| Reject[Typed error]
+    DecodeV1 --> Model[Record model]
+    DecodeV2 --> Model
+    Model --> Caller[Application callers]
+    Caller --> Model
+    Model -->|encode version 2| Store
+```
+
+Figure 1: reads classify before decoding; writes always encode the new format.
+The version 1 path terminates at the same model as the version 2 path, which is
+what keeps the old representation out of the rest of the application.
+
+### 5.1 `TDD-COMP-record-model`
+
+One type holds a record in memory for the whole application. It has no variant
+for "old record" and no optional fields that exist only to accommodate R1. The
+model is the target shape; the codec is responsible for producing it.
+
+### 5.2 `TDD-COMP-codec`
+
+Responsibilities: classify bytes, decode R1 to the model, decode R2 to the
+model, encode the model as R2. The classification rule is in §6.2. The codec is
+a total function over its input domain: every byte string returns a decoded
+value, or a typed error naming the failure class and the byte offset where the
+record begins.
+
+Failure modes: malformed JSON; unsupported version; a version 2 record missing
+a required field; a version 1 field with no mapping entry (a programming error
+caught by the field-coverage test, not a runtime path for known records).
+
+### 5.3 `TDD-COMP-store`
+
+Responsibilities: enumerate records, hand raw bytes to the codec, append
+encoded version 2 records. The store does not rewrite records on read. It
+distinguishes a complete record from a trailing partial record (§7).
+
+## 6. Storage representation and migration
+
+### 6.1 Target record
+
+The normative definition is `storage-record-v2.schema.json`. In words, R2 is a
+JSON object with a required `schema_version` equal to 2, a preserved `id`, an
+RFC 3339 `created_at`, an optional string list `tags`, and an application
+`payload` object. `additionalProperties` is false, so a later field addition
+requires a version change rather than an unannounced extension.
+
+Version 1 is, illustratively, a flat object with an integer timestamp, a body
+object, and at most one tag:
+
+```json
+{"id": "r-1", "ts": 1731974400, "body": {"a": 1}, "tag": "blue"}
+```
+
+The mapping classes are fixed even though the field names are not yet known:
+
+| Class | Meaning | Required evidence |
+| --- | --- | --- |
+| Preserved | The value carries the same meaning | A mapping test asserts equality |
+| Renamed or reshaped | The value moves or changes representation | A mapping test asserts the conversion |
+| Derived | The value is computed from one or more v1 fields | A mapping test asserts the derivation |
+| Dropped | The value has no target and is deliberately discarded | A written justification and the target field's absence |
+
+Every v1 field takes exactly one class. "Dropped" without a written reason is a
+defect, not a decision. This table is filled from `TDD-GAP-002`; the expected
+shape above is not evidence of it.
+
+### 6.2 Classification rule
+
+1. Parse the record as JSON. A parse failure is `Malformed`.
+2. If the top-level value is not an object, it is `Malformed`.
+3. If the object has a `schema_version` member:
+   - value 2: decode as R2;
+   - any other value: `UnsupportedVersion(n)`. Do not fall back to R1.
+4. If the object has no `schema_version` member: decode as R1.
+
+Step 4 is why the rule is safe only while R1 has no field named
+`schema_version`. `TDD-GAP-002` must confirm that; if a collision exists, that
+field is renamed before classification and the rule is revised in this
+document. Silent fallback is the failure this rule exists to prevent: a
+version 3 record must never be read as version 1 merely because it lacks
+version 2.
+
+### 6.3 Reading is pure
+
+Reading a record never writes. A store that is only read stays exactly as it
+was, so a read failure cannot corrupt data and a concurrent reader cannot
+observe a half-migrated record.
+
+### 6.4 Upgrade-on-write
+
+The store appends R2 for new records and leaves existing records untouched.
+Each record is upgraded, if at all, only when the application rewrites it for
+its own reasons. Consequences, stated rather than discovered:
+
+- a store that is never written again remains entirely R1, so the v1 decoder
+  cannot be removed on a schedule; it is removed when no R1 records remain
+  (`TDD-OPEN-002`);
+- no batch window, no downtime, and no half-migrated file state;
+- re-encoding an R2 record is idempotent, which is testable.
+
+Rejected alternative: eager rewrite of every record on first open. It makes
+the decode path temporary and the removal criterion simple, but it turns a
+read into a bulk mutation, needs backup and interruption handling, and is not
+required by the goal. Upgrade-on-write is the smaller obligation.
+
+Rejected alternative: keep writing R1 forever. That would leave the storage
+representation unchanged, contradicting the brief.
+
+### 6.5 Rollback
+
+A version 1 binary cannot read R2 records. The brief does not say that
+rollback must work, so this draft does not design for it. If the decision owner
+requires rollback (`TDD-OPEN-001`), upgrade-on-write is unsafe after the first
+version 2 write, and the design must switch to either a freeze-writes upgrade
+with an explicit migration, or dual-format writes with a stated retirement
+point. Do not silently assume rollback is safe.
+
+## 7. Failure modes
+
+| Condition | Behaviour |
+| --- | --- |
+| Unknown `schema_version` | Typed `UnsupportedVersion` error; no write |
+| Malformed JSON or non-object | Typed `Malformed` error; no write |
+| R2 record missing a required field | Typed decode error naming the field |
+| R1 field not in the mapping table | Cannot occur for a released fixture if the coverage test passes; otherwise a decode error, never a silent drop |
+| Crash during append | The record is either absent or complete; a trailing partial record is detected as truncated |
+| Truncated final record | Fail closed with the offset. A documented repair truncates only the final partial record, after a backup; no automatic repair |
+| Disk full during append | Existing records intact; the partial tail is handled as above |
+| Rollback to a version 1 binary | Those binaries cannot read R2 records; documented as a release limitation |
+
+Fail-closed is deliberate. A decoder that skips an unreadable record loses
+data quietly; an error that names the offset lets an operator act.
+
+## 8. Verification obligations
+
+Unit and behavioural tests are planned in `execplan.md`. This section records
+the design-level properties, because passing a test suite is not the same as
+establishing that every record class is handled.
+
+| ID | Property | Method | Discharge condition | Evidence state |
+| --- | --- | --- | --- | --- |
+| `TDD-VER-001` | Classification partitions every input into exactly one of R1, R2, malformed, or unsupported | Parameterized test over explicit classes plus property test over generated byte prefixes | Every class exercised; no input yields two outcomes | Planned |
+| `TDD-VER-002` | Every captured R1 record decodes to a value satisfying the new model | Golden-fixture test over records captured from a deployed store | Fixture count and per-field equality recorded | Planned; blocked on `TDD-GAP-003` |
+| `TDD-VER-003` | Every R1 field has exactly one mapping class, and none is dropped without a reason | Test data table compared against the union of fields in all fixtures | Coverage assertion fails on an unmapped field | Planned; blocked on `TDD-GAP-002` |
+| `TDD-VER-004` | Encoding is round-trip stable for every model value | Property test | Generate-decode-encode-decode equals the original model value | Planned |
+| `TDD-VER-005` | No caller and no symbol of the old API survives | Compile plus a symbol search that matched at least once before the change | Build passes; search returns zero | Planned |
+| `TDD-VER-006` | A failed or interrupted append never yields a readable partial record | Fixture with a truncated tail plus a failure-injection test | Typed truncation error; complete records before the tail still readable | Planned |
+
+Non-vacuity, per obligation:
+
+- `TDD-VER-001`: witnesses for each of the four classes are fixed test inputs.
+  The negative control changes classification to treat every object as R2 and
+  must fail on an R1 fixture. A generator that produces only R2 objects is a
+  verification failure, not a pass.
+- `TDD-VER-002`: fixtures must include absent optionals, an empty payload, a
+  non-ASCII string, and a maximum-width integer. A fixture set of one trivial
+  record does not discharge the obligation.
+- `TDD-VER-003`: the negative control adds a field to a fixture without adding
+  a mapping row; the coverage assertion must fail for that reason.
+- `TDD-VER-004`: classification evidence must show the generator reaches every
+  optional field, empty collections, and boundary numbers. Comparing two
+  outputs of the same encoder would be vacuous; the oracle decodes with the
+  schema validator and compares model values.
+- `TDD-VER-005`: record the pre-change match count during reconnaissance. A
+  zero-result search with a pattern that never matched is not evidence.
+- `TDD-VER-006`: the truncated-tail fixture is generated by removing the final
+  bytes of a valid record. A test that only writes complete records exercises
+  nothing relevant.
+
+Formal-verification decision: no model checker or theorem prover. Each
+obligation is a total function over a small tagged input space, or an
+idempotence property; parameterized tests, fixtures, and property tests cover
+that shape at proportionate cost. A prover would add nothing over the generated
+input domain and would still leave the filesystem behaviour unproved.
+
+Axioms and residual gaps:
+
+- `AXIOM-json`: the JSON parser follows RFC 8259 for the subset used. The
+  design does not verify parser internals.
+- `AXIOM-append`: the store's existing append primitive is atomic per record
+  for concurrent writers. `TDD-GAP-004` must confirm this; if it is absent,
+  durability becomes a repository obligation and `TDD-VER-006` expands.
+- `AXIOM-fixtures`: captured fixtures faithfully represent the deployed
+  binary's output. If no real store is available, `TDD-VER-002` stays planned,
+  not passed.
+- Unchecked by this design: behaviour of version 1 binaries after any version 2
+  write; concurrent writers of mixed versions; record volumes large enough to
+  make a scan impractical. These are named rather than assumed away.
+
+## 9. Handoff and readiness
+
+Readiness: ready for an implementation plan, not for implementation. The
+receiving ExecPlan (`execplan.md`, status DRAFT) inherits:
+
+- requirements `TDD-REQ-001` to `TDD-REQ-005`;
+- gaps `TDD-GAP-001` to `TDD-GAP-007`, with `TDD-GAP-002`, `003`, and `004` as
+  prerequisites to the first code milestone;
+- invariants and obligations `TDD-VER-001` to `TDD-VER-006`;
+- the compatibility assessment: no source-API layer, a private v1 decoder, no
+  dual write;
+- acceptance boundaries: fixtures captured, field coverage, atomic API
+  removal, failure semantics;
+- unresolved decisions `TDD-OPEN-001` (rollback) and `TDD-OPEN-002` (decoder
+  retention).
+
+Design acceptance does not approve the plan. The plan's approval gate is
+separate and, as of this revision, unmet.
+
+### Open decisions
+
+- `TDD-OPEN-001` Rollback: must a version 1 binary read records written after
+  the upgrade? Owner unknown. Gates the migration policy in §6.4/§6.5.
+- `TDD-OPEN-002` Decoder retention: for how long may R1 records remain on
+  disk? Owner unknown. Gates when the v1 decoder can be removed.
+
+## 10. Glossary
+
+- **Private API**: application-internal source interface with no consumer
+  outside the application.
+- **R1 / version 1 record**: bytes written by the deployed binary.
+- **R2 / version 2 record**: the target self-describing representation.
+- **Decoder**: a private function that converts stored bytes into the record
+  model. It is not a source interface.
+- **Upgrade-on-write**: a record changes representation only when the
+  application rewrites it for another reason.
+- **Classification**: choosing the decoder from the bytes alone.
+
+## References
+
+- Task brief, quoted in §1 (2026-11-19).
+- `execplans` skill and template, paths and hashes in §2.
+- `storage-record-v2.schema.json`, this directory.
+- RFC 8259, The JavaScript Object Notation (JSON) Data Interchange Format.
+- `outline.md`, this directory.

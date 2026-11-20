@@ -1,0 +1,51 @@
+# Intake and tailoring notes
+
+Working note for the terms of reference. This is not a deliverable and is not
+part of the handoff.
+
+## Prior art available to this session
+
+- The supplied statement: a small new library has a clear brief, no legacy
+  implementation, and no multi-actor workflow or imposed technology choice.
+- No brief text, repository documentation, ADR, roadmap, ExecPlan, release tag,
+  or issue evidence was available. Isolation restricted reading to the three
+  skill directories, so the Phase 0 repository checks (README, `docs/` and
+  related artefacts) were not performed. Absence from this note means "not
+  inspected", not "does not exist".
+
+## What the input settles
+
+| Characterization | Effect on the document |
+|---|---|
+| Small new library | Greenfield; no implementation baseline exists. |
+| Clear brief | A brief is said to exist, but its content was not supplied. |
+| No legacy implementation | No migration programme, baseline comparison, or legacy compatibility. |
+| No multi-actor workflow | Omit the optional multi-actor scenario probe. |
+| No imposed technology choice | Technology selection is a design decision, not a terms-of-reference constraint. |
+
+## Tailoring decisions
+
+- Keep the terms of reference short: a small number of identifiers, no
+  stakeholder zoo, no manufactured non-goals, and no ceremonial enterprise
+  domains. This follows the risk-based tailoring in
+  `problem-contract.md` ("a small library may need only a few IDs").
+- Do not draft a technical design or an ExecPlan. The terms of reference is
+  v0.1 with its substantive content unelicited. `tech-design-doc` requires an
+  agreed upstream basis, and `execplans` requires an approved design slice and
+  an explicit approval gate. Neither exists.
+- Do not record compatibility machinery. The library is greenfield, pre-1.0 by
+  construction, has no released 1.0+ contract, and names no external consumer.
+  Nothing warrants an alias, shim, facade, or migration wrapper.
+- Do not invent competitors, users, goals, success measures, owners, decision
+  rights, or approvals. Each unknown is recorded as an open question or left
+  explicitly unresolved.
+
+## Conspicuous absences (elicitation targets)
+
+- Problem statement, domain, and field of practice.
+- Primary and non-users, and any stakeholder beyond the work's originator.
+- Job to be done, goals, non-goals, and success signals.
+- The meaning of "small" in scope terms.
+- Any constraint beyond the two recorded: licence, supported platforms,
+  budget, deadline, and operational expectations.
+- Identity and decision rights of the brief's author or approver.

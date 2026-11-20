@@ -1,0 +1,160 @@
+# Unnamed new library – terms of reference
+
+Status: Draft v0.1 (not accepted; no approver recorded).
+
+Audience: the author or sponsor of the brief, implementing engineers, and
+reviewers.
+
+Companion documents: none were available to this session. No document was
+inspected beyond the supplied statement; this is not a claim that none exists.
+
+Date and version: 2026-11-19, v0.1.
+
+Authority and evidence basis: the only input is the supplied characterization:
+"a small new library has a clear brief, no legacy implementation, and no
+multi-actor workflow or imposed technology choice." The brief text, its author,
+any decision owner, and any approval evidence were unavailable. This document
+records what that statement supports and no more. Acceptance is not claimed.
+
+## 1. Background and motivation
+
+[OPEN] The supplied statement does not say why this work exists now. Whether
+the motivation is technical, commercial, organisational, or simply a founder's
+intent is not recorded. See `TOR-OPEN-001`.
+
+## 2. Domain
+
+[OPEN] The field of practice, established conventions, prior art, and any
+regulatory or contractual bedrock are not stated in the supplied statement.
+The term "library" is itself a domain hint, but not a definition of the
+problem domain. See `TOR-OPEN-001`.
+
+## 3. Market context
+
+[OPEN] No competitors, adjacent products, or current default (including
+"do nothing") are named. This section is left unresolved rather than asserting
+that no alternative exists; something always occupies the space. See
+`TOR-OPEN-001`.
+
+## 4. Users and stakeholders
+
+[OPEN] The primary user, secondary users, stakeholders, and explicit non-users
+are not stated. The input tells us only that the work has no multi-actor
+workflow; that characterizes the work, not the people it serves. See
+`TOR-OPEN-002`.
+
+No stakeholder mapping table is offered, because populating one would require
+inventing roles, concerns, evidence needs, and decision rights.
+
+## 5. Job to be done
+
+[OPEN] No situation, motivation, or outcome is supplied, so no canonical job
+statement can be written. The optional multi-actor scenario probe is
+deliberately omitted: the input states there is no multi-actor workflow, so the
+probe would add no decision-relevant information. See `TOR-OPEN-002`.
+
+## 6. Scope
+
+### 6.1 Goals
+
+[OPEN] No verifiable outcome is stated. Goals will be derived from the
+resolved job-to-be-done, not invented here. See `TOR-OPEN-001`.
+
+### 6.2 Non-goals
+
+- Multi-actor workflow support is not part of this work. [KNOWN] Source: the
+  supplied statement. If a future requirement introduces interacting actors,
+  this boundary must be revisited rather than assumed permanent.
+- No other non-goal is recorded. Naming further exclusions now would be
+  invention, not scope insurance.
+
+## 7. Success criteria
+
+[OPEN] No user-facing, operational, or strategic success signal is stated.
+Baselines, targets, measurement conditions, evidence sources, and owners are
+unknown. See `TOR-OPEN-004`.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` – Greenfield delivery. There is no legacy
+  implementation to migrate, reverse-engineer, or remain compatible with.
+  [KNOWN] within the scope of the supplied statement; the repository was not
+  independently inspected.
+- `TOR-CONSTRAINT-002` – No imposed technology choice. The input fixes no
+  language, framework, runtime, or platform. Technology selection therefore
+  belongs to `tech-design-doc`, not to this document, and is not recorded as a
+  constraint. [KNOWN] Source: the supplied statement.
+
+No source-API compatibility obligation is recorded. The library is new and
+pre-1.0 by construction, no released 1.0+ contract is stated, and no external
+consumer is named. Under the compatibility exclusions, no alias, shim, facade,
+or migration wrapper is required. No persisted data or wire format is known.
+
+### 8.2 Assumptions
+
+- `TOR-ASSUMPTION-001` – The existing brief contains enough decision-relevant
+  content to resolve `TOR-OPEN-001` to `TOR-OPEN-004` without further
+  interviews. Status: [ASSUMED]; the input asserts the brief is clear, but its
+  text was unavailable, and a brief establishes what the sponsor requests, not
+  the truth of an empirical claim inside it. Failure consequence: if the brief
+  is insufficient, discovery and elicitation are required before design and
+  the start of design slips. Verification route: obtain and read the brief.
+  Expiry trigger: the brief is supplied or its sufficiency is tested.
+
+### 8.3 Dependencies
+
+None is identified in the supplied statement. This does not assert that none
+exists in the repository or ecosystem, which were not inspected.
+
+## 9. Open questions
+
+- `TOR-OPEN-001` – What problem does the library solve, stated as the
+  situation and outcome for its user? Gates §1–§3, §5, and §6. Resolution
+  evidence: the brief text or an elicitation answer. Owner: unknown.
+- `TOR-OPEN-002` – Who is the primary user, and who is explicitly not a user?
+  Gates the job statement, goals, and success criteria. Resolution evidence:
+  an elicitation answer. Owner: unknown.
+- `TOR-OPEN-003` – What does "small" mean in scope terms: expected public API
+  surface, dependency budget, and scope ceiling? Gates non-goals and design
+  sizing. Resolution evidence: an agreed sizing statement. Owner: unknown.
+- `TOR-OPEN-004` – Which user-facing, operational, and strategic signals
+  indicate success? Gates acceptance. Resolution evidence: an agreed measure
+  set. Owner: unknown.
+- `TOR-OPEN-005` – Which constraints beyond `TOR-CONSTRAINT-001` and
+  `TOR-CONSTRAINT-002` apply, such as licence, supported platforms, budget, or
+  deadline? Gates design constraints. Resolution evidence: an elicitation
+  answer. Owner: unknown.
+
+The next elicitation question, in dependency order, is `TOR-OPEN-002`: the
+primary user gates the job statement and everything below it.
+
+## 10. Handoff
+
+- Revision and approval: v0.1, draft. Not accepted, not approved, and not
+  ready for implementation.
+- Material identifiers: `TOR-CONSTRAINT-001`, `TOR-CONSTRAINT-002`,
+  `TOR-ASSUMPTION-001`, and `TOR-OPEN-001` to `TOR-OPEN-005`.
+- Downstream readiness: bounded discovery only. This document is not ready to
+  begin `tech-design-doc`. `TOR-OPEN-001` and `TOR-OPEN-002` gate design, and
+  `TOR-ASSUMPTION-001` must be tested by obtaining the brief. No ExecPlan is
+  authorized.
+- `docs/context.md` additions: none proposed. No domain term has been
+  supplied, so there is nothing to promote yet.
+- ADR candidates: none identified. Technology selection may later warrant one,
+  but no choice has been made.
+- Feedback route: revisit `TOR-CONSTRAINT-001`, `TOR-CONSTRAINT-002`, and
+  `TOR-ASSUMPTION-001` if the brief contradicts them. Proposed changes are not
+  presented as accepted.
+
+## Appendices
+
+### References
+
+- Supplied scenario statement, 2026-11-19. The only source for this revision.
+
+### Glossary
+
+None yet. No domain vocabulary was supplied, so no inline mini-glossary can be
+written without invention.

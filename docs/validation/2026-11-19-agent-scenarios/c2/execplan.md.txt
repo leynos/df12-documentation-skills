@@ -1,0 +1,667 @@
+# Reshape the test-only helper and migrate its test callers
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (symbol inventory and classification gate pending; awaiting user
+approval).
+
+Branch: not recorded. The planning agent had no repository checkout under the
+authoring isolation rule. The executing agent records the branch name here
+before the first commit.
+
+Roadmap item: none identified.
+
+## Purpose / big picture
+
+The repository exposes a helper that only its tests call. The helper's shape is
+being changed. The brief suggests keeping the old tests compiling through a
+compatibility shim.
+
+After this change, one helper interface exists, every test calls it, and the old
+interface is gone – not deprecated, not aliased, not forwarded. The tests still
+assert what they asserted before, or a recorded disposition explains why a
+particular assertion no longer applies. A reader can confirm the outcome by
+building the tree, running the suite, and searching for the old name and finding
+nothing.
+
+Terms used here:
+
+- *Helper*: the callable under change. Its real name, path, and signature are
+  written into `EP-M0` below; this plan uses `<helper>` until then.
+- *Call site*: any expression that invokes the helper or names it. Before the
+  change these are tests; `EP-M0` proves that.
+- *Test-only surface*: a callable exposed for the test suite, with no consumer
+  outside the repository. This classification is what prohibits a shim.
+- *Disposition*: the recorded fate of one pre-change test – migrated, rewritten,
+  or retired with a reason.
+- *Shim*: any alias, forwarding function, `deprecated` entrypoint, facade, dual
+  implementation, or temporary wrapper that lets old call text keep working.
+
+The user-visible outcome is small: the suite runs unchanged in meaning and the
+codebase no longer carries an interface kept alive for tests alone. The
+deliberate change is that old test call text stops compiling; that is the point,
+not a regression.
+
+## Constraints
+
+These are hard invariants. A conflict is an escalation, not a workaround.
+
+1. No compatibility machinery of any kind for the old helper: no alias, no
+   `deprecated` forwarding entrypoint, no facade type, no dual implementation,
+   no `cfg`-selected old path, no migration wrapper. The prohibition comes from
+   the test-only classification in `TOR-CONSTRAINT-001`, not from a preference.
+2. Every call site is migrated in the same change. No committed state contains
+   both the old and the new interface. Do not commit between adding the new
+   surface and deleting the old one.
+3. No change to observable helper behaviour, no new public API, no new
+   dependency. Any feature flag may be added only if an existing test location
+   cannot compile without one, and that triggers escalation first.
+4. No test is deleted or weakened without a disposition recorded in this plan.
+   "It would not compile" is not a disposition.
+5. Visibility is not widened beyond what the current test locations require.
+   Narrowing is permitted and preferred.
+6. Do not modify unrelated modules, fixtures, or tests.
+7. `EP-M0` is read-only reconnaissance. No production edit begins until its
+   inventory is recorded and its classification gate passes.
+8. Implementation begins only after the user approves this plan. Silence is not
+   approval.
+
+## Tolerances (exception triggers)
+
+These bound autonomous action. They are provisional: the planning agent could
+not survey the tree, so the budgets are estimates, not measurements. No
+comparable historical ExecPlan was inspected (the isolation rule excluded
+`docs/execplans/`). If `EP-M0` shows a budget is too small, stop and escalate
+for an approved revision; do not raise it in place.
+
+Accounting rules: count non-ExecPlan files only. Measure net lines (additions
+minus deletions). Classify production source, tests, and executable build logic
+as code; declarative settings, manifests, and CI configuration as configuration;
+prose and comments outside the ExecPlan as documentation. This ExecPlan is
+excluded from every count, including its own updates. Categories are enforced
+independently; spare capacity elsewhere does not offset an overspend.
+
+- Files: more than 10 non-ExecPlan files changed – stop and escalate.
+- Code: more than 300 net lines – stop and escalate.
+- Configuration: any net configuration change (budget 0) – stop and escalate.
+- Documentation: more than 80 net lines excluding ExecPlan files – stop and
+  escalate.
+- Interface: any widening of the helper's visibility, or any new public item –
+  stop and escalate.
+- Dependencies: any new dependency (budget 0) – stop and escalate.
+- Architecture: any change to production behaviour inside the helper – stop and
+  escalate.
+- Iterations: focused tests still failing after 3 attempts – stop and escalate.
+- Ambiguity: two or more valid interpretations that change the test
+  dispositions – stop and present the options.
+
+Counting commands, with `<base>` being the revision recorded in `Context and
+orientation`, and `docs/execplans/` standing for the directory that will hold
+this plan – substitute the actual path if the repository keeps plans elsewhere:
+
+```plaintext
+git diff --stat <base> -- . ':(exclude)docs/execplans/'
+git diff --numstat <base> -- . ':(exclude)docs/execplans/'
+```
+
+## Risks
+
+1. Risk: silent coverage loss while migrating tests.
+   Severity: high. Likelihood: medium. Mitigation: the disposition record makes
+   every test account for itself, and the seeded-fault control proves the
+   migrated suite can still fail.
+2. Risk: a test depends on incidental detail of the old shape rather than on
+   behaviour, so mechanical migration is impossible.
+   Severity: medium. Likelihood: high. Mitigation: rewrite such a test to assert
+   the behaviour it stood in for, and record the original assertion.
+3. Risk: a non-test caller exists despite the brief.
+   Severity: high. Likelihood: low. Mitigation: `EP-M0` searches the whole tree;
+   a hit stops the plan rather than adding a compatibility path.
+4. Risk: the helper is reachable from a released artefact by a consumer outside
+   the repository.
+   Severity: high. Likelihood: low. Mitigation: manifest and release-tag audit
+   in `EP-M0`; a positive result sets the plan to `BLOCKED` for reassessment.
+5. Risk: the plan's placeholders mislead an implementer who skips `EP-M0`.
+   Severity: high. Likelihood: medium. Mitigation: `EP-M0` is a gate, and every
+   later step names the fact it needs from it.
+6. Risk: the repository's gates are slower than expected under shared compile
+   admission. Severity: low. Likelihood: medium. Mitigation: run gates
+   sequentially, allow a longer timeout, and read captured logs rather than
+   re-running blindly.
+7. Risk: the exact symbols or toolchain differ from the placeholder shapes in
+   `Concrete steps`. Severity: low. Likelihood: high. Mitigation: `EP-M0`
+   replaces every command shape with the repository's documented one.
+
+## Progress
+
+- [x] (2026-11-19 00:18Z) Skills read; problem statement, design, and this plan
+  drafted from the brief.
+- [ ] Plan approved by the user.
+- [ ] `EP-M0` inventory and classification gate; placeholders replaced with
+  repository facts.
+- [ ] `EP-M1` reshape and atomic test migration; old surface deleted.
+- [ ] `EP-M2` coverage reconciliation and seeded-fault control.
+- [ ] `EP-M3` gates, prose cleanup, and closure.
+- [ ] Partially completed: drafting done; all repository facts, commands, and
+  budgets remain provisional pending `EP-M0`.
+
+## Surprises & discoveries
+
+None yet. This section records findings that were not anticipated as risks. The
+first expected entry is the outcome of `GAP-behaviour-contract`: whether the
+suite's assertions are a usable behaviour contract or mostly shape assertions.
+If the latter, record the impact on `INV-coverage` before editing code.
+
+## Decision log
+
+- D1. Decision: reject the suggested compatibility shim.
+  Rationale: the surface is test-only, so compatibility machinery is prohibited;
+  no external consumer exists to serve; and the only thing preserved would be
+  the old call text of tests. The alternative – keeping a forwarding function –
+  was rejected as overhead with no beneficiary. The rejection is recorded in the
+  terms of reference as `CR-1`.
+  Date/Author: 2026-11-19, authoring agent (proposal, not approval).
+
+- D2. Decision: preserve test intent, not test text.
+  Rationale: migrating a call keeps its assertion fixed, which is the strongest
+  available evidence that behaviour is unchanged. Rewriting is reserved for
+  tests that assert shape. Retaining the old shape so the text survives inverts
+  the dependency between tests and production code.
+  Date/Author: 2026-11-19, authoring agent.
+
+- D3. Decision: one coherent change, no intermediate dual interface.
+  Rationale: compatibility would not be required if this landed atomically, so
+  none is introduced to create a plateau. The alternative – add, migrate, then
+  delete across commits – was rejected because it leaves a committed state with
+  two interfaces.
+  Date/Author: 2026-11-19, authoring agent.
+
+- D4. Decision: no model checking or formal proof.
+  Rationale: the change introduces no algorithm, protocol, state machine, or
+  concurrency. The live risk is a missing assertion, which a disposition record
+  plus a seeded fault addresses. A prover would not find an assertion nobody
+  wrote.
+  Date/Author: 2026-11-19, authoring agent.
+
+- D5. Decision: provisional tolerances pending `EP-M0`.
+  Rationale: no survey of the tree was possible under the authoring isolation
+  rule, and no historical plan could be read. The budgets are sized for a
+  helper plus its call sites and must be confirmed at the gate. An undersized
+  budget is an escalation, not a re-baseline.
+  Date/Author: 2026-11-19, authoring agent.
+
+## Outcomes & retrospective
+
+Not started. At completion this section compares the result with `Purpose /
+big picture`: the suite passes with the old surface deleted, every pre-change
+test has a disposition, the absence search is empty, and the seeded fault was
+rejected for the intended reason. It records any deviation, any retirement that
+was harder to justify than expected, and whether the provisional budgets were
+realistic. Before the status becomes `COMPLETE`, reconcile any discovery that
+falsifies a term in `Conformance basis`; an unrecorded deviation is not
+completion.
+
+## Context and orientation
+
+The repository's control flow is unknown to the planning agent. This section
+must be rewritten by `EP-M0` with: the helper's repository-relative path and
+module; its exact symbol and signature; its visibility; the test files and call
+sites; the test framework and its version; the gate commands; and the base
+revision. Until then the following placeholders are used:
+
+- `<repo-root>`: the working directory containing the manifest.
+- `<helper>`: the helper's symbol.
+- `<old-symbol>`: the same symbol where the point is its removal.
+- `<helper-file>`: the file that defines it.
+- `<test-files>`: every test file that names the helper.
+- `<suite-command>`: the repository's full test target.
+- `<focused-command>`: the narrowest command that runs one migrated test or one
+  test module.
+- `<gate-sequence>`: the repository's documented format, lint, typecheck, and
+  test targets, run in that order, preferring Makefile targets.
+
+`EP-M0` is a search-and-read milestone, not an edit. Its transcript is the
+evidence that the premise "only tests call this helper" is true. If the
+repository has no practical test command for the affected behaviour, record why
+in `Decision log` and use the nearest observable substitute – a compile check
+plus a manual invocation – before proceeding.
+
+Budget survey note: the initial estimates in `Tolerances` were set without
+measuring the helper or its tests, because the tree was outside the authoring
+isolation boundary. `EP-M0` records the actual size of the helper, the number of
+test files, and the number of tests, and confirms or escalates the budgets
+before `EP-M1` edits anything.
+
+## Conformance basis
+
+| Input | Revision | State |
+| --- | --- | --- |
+| `terms-of-reference.md` (this directory) | v0.1 draft, 2026-11-19, uncommitted | Draft; not accepted |
+| `tech-design.md` (this directory) | Draft, 2026-11-19, uncommitted | Draft for review |
+| `intake-note.md` (this directory) | 2026-11-19, uncommitted | Working note |
+| `~/.claude/skills/execplans/SKILL.md` and `references/execplan-template.md` | Inspected 2026-11-19 | No repository revision available |
+| Repository tree, release tags, ADRs, roadmap | Not inspected | Unavailable under the isolation rule |
+
+No repository revision is pinned. `EP-M0` records the actual base revision and
+adds it above.
+
+Trace chain, with the final evidence identifiers filled at `EP-M0`/`EP-M2`:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-001 -> TDD-COMP-helper -> EP-M1 -> build with old surface deleted
+TOR-NONGOAL-001 -> TDD-REQ-004 -> TDD-COMP-helper -> EP-M1 -> absence search (INV-absence)
+TOR-GOAL-002 -> TDD-REQ-003 -> TDD-COMP-tests -> EP-M2 -> disposition record (INV-coverage)
+TOR-CONSTRAINT-002 -> TDD-REQ-002 -> TDD-COMP-tests -> EP-M1 -> single-interface commit
+TOR-ASSUMPTION-001 -> GAP-reachability -> EP-M0 -> reachability audit (INV-visibility)
+TOR-OPEN-002 -> GAP-dispositions -> EP-M2 -> disposition record
+```
+
+## Verification plan
+
+### Abstract model
+
+The model is two finite lists and a correspondence between them. List `B` is
+the set of assertions in the pre-change suite, each tagged with the test that
+makes it and the behaviour class it exercises. List `A` is the post-change
+suite. A mapping `f` assigns each element of `B` either a test in `A`, a named
+covering test, or a retirement with a reason. The change is correct when `f` is
+total, the tree compiles without the old symbol, and a seeded behavioural fault
+is rejected.
+
+Preconditions: the helper is called only from tests; the suite runs green
+before the change. If either is false, stop and escalate. Malformed input is not
+a concern; the model reasons about source text and test outcomes, not runtime
+data.
+
+### Invariants and lemmas
+
+- `INV-absence` – After the change, no reference to `<old-symbol>` resolves in
+  the tree, and no alias or forwarding entrypoint carries its role. Linked to
+  `TDD-REQ-001`, `TDD-REQ-002`, `TDD-REQ-004`.
+- `INV-coverage` – The mapping `f` is total over `B`: every pre-change test has
+  exactly one disposition, and each retirement names a covering test or shows
+  the obligation obsolete. Linked to `TDD-REQ-003`.
+- `INV-visibility` – The helper is reachable from no context that could not
+  reach it before. Linked to `TDD-REQ-005`.
+- `L-behaviour` – If the helper's observable result changes for an input the
+  suite exercises, at least one migrated test fails. This lemma is what turns
+  `INV-coverage` from a claim about intent into a claim about detection.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-build` – The compiler resolves every reference in the compiled set and
+  fails on an unresolved symbol. Source: the language's documented semantics.
+  Boundary: the repository's build configuration must actually compile the test
+  target; `EP-M0` confirms the command does.
+- `AXIOM-runner` – The test runner reports failure for a failed assertion and
+  counts only executed tests. Boundary: confirm that `EP-M0`'s focused command
+  runs the named test rather than selecting zero tests.
+- `AXIOM-search` – The search tool matches identifier occurrences in tracked
+  source under the stated globs. Boundary: corroboration only; the build is the
+  primary check.
+
+No third-party internals are assumed. The repository's own build and test
+configuration is exercised directly rather than mocked.
+
+### Methods per obligation
+
+`INV-absence`
+
+- Obligation: no residual reference to or role for the old symbol.
+- Method: delete the surface and build; corroborate with an identifier search.
+- Rationale: the compiler is an exhaustive checker over the compiled set, which
+  is stronger than a search over source text.
+- Domain: the whole test target and the production target.
+- Artefact: the tree itself.
+- Evidence: the build succeeds only with the old surface removed; `EP-M0`'s
+  search returns no matches afterwards.
+- Non-vacuity: in a scratch change, re-add one reference to the deleted symbol
+  and confirm the build fails and the search hits it. Revert. Without this,
+  "no matches" could mean the search's globs were wrong.
+
+`INV-coverage`
+
+- Obligation: the mapping `f` is total and no assertion is dropped silently.
+- Method: structural review of a disposition table against `EP-M0`'s complete
+  test list.
+- Rationale: the property is about the correspondence between two lists, which
+  a human reviewer can check exhaustively for a suite of this size; no generator
+  would produce a better oracle.
+- Domain: every test in `EP-M0`'s list.
+- Artefact: the disposition table in this plan.
+- Evidence: no blank rows; each retirement names a covering test; the reviewer
+  signs off in `Artefacts and notes`.
+- Non-vacuity: the table must contain at least one migrated test for each
+  behaviour class the suite exercises, and at least one boundary or failure case
+  if one exists. A table of happy-path migrations only is a coverage failure,
+  not a pass.
+
+`L-behaviour`
+
+- Obligation: a behavioural change in the helper is detected by the suite.
+- Method: seeded fault plus focused test run.
+- Rationale: it directly tests sensitivity, which is the property the migration
+  claims; reading the tests cannot establish it.
+- Domain: one exercised input per behaviour class, or one representative input
+  if the classes share a code path.
+- Artefact: a temporary patch to `<helper-file>`, reverted after the run.
+- Evidence: at least one migrated test fails, and the failure names the affected
+  assertion.
+- Non-vacuity: the fault must touch logic a migrated test claims to observe. If
+  no test fails, record the class as insensitive and return to `INV-coverage`
+  rather than accepting the migration.
+
+`INV-visibility`
+
+- Obligation: no new reachability.
+- Method: comparison of the module and manifest structure before and after, plus
+  a compile witness for any retained export.
+- Rationale: visibility is a build-level property; the compiler demonstrates
+  whether a test can reach the symbol.
+- Domain: the helper's module, the crate or package manifest, and the test
+  locations.
+- Artefact: the `EP-M0` inventory and the post-change manifest diff.
+- Evidence: any retained export has a test that fails to compile without it.
+- Non-vacuity: if no test needs the export, narrowing must be performed; a
+  retained export with no witness is a failure of this obligation.
+
+### Formal verification decision
+
+No formal method is used. See `D4`. The strongest risk is an assertion nobody
+wrote, which no prover addresses. The selected methods are proportionate to a
+refactor of one internal callable.
+
+### Suggested BDD features
+
+Proposed only; adding a BDD framework requires separate authorisation. If the
+repository has no runner, the dispositions and the seeded fault exercise these
+scenarios instead.
+
+```gherkin
+Feature: Test-only helper reshape
+  Scenario: The old surface is gone and the suite still exercises the helper
+    Given the helper is called only from tests before the change
+    When the helper is reshaped and every test call site is migrated
+    Then the tree builds with the old surface deleted
+    And no tracked source file references the old symbol
+    And every migrated test asserts the behaviour its predecessor asserted
+
+  Scenario: A behavioural regression is detected
+    Given the migrated suite passes
+    When a seeded fault changes the helper's result for an exercised input
+    Then at least one migrated test fails
+```
+
+## Plan of work
+
+### `EP-M0` inventory and classification gate
+
+Assigned gaps: `GAP-inventory`, `GAP-reachability`. Resolves `TOR-OPEN-001`.
+
+Read, do not edit. Produce a record containing:
+
+1. The base revision (`git rev-parse HEAD`) and branch name.
+2. `<helper>`'s path, symbol, signature, and visibility.
+3. Every call site, split into test and non-test. The non-test list must be
+   empty for the plan to continue.
+4. The helper's file, the test files, and the total test count.
+5. The repository's test framework and its focused and full commands; the gate
+   sequence as documented, preferring Makefile targets.
+6. Whether any released tag, manifest export, or public module path makes the
+   helper reachable outside the repository.
+
+Gate: if any non-test caller exists, or any released artefact exposes the
+helper, stop. Record the finding in `Surprises & discoveries`, set the status to
+`BLOCKED`, and escalate. Do not add a compatibility path.
+
+Also record the budget survey: helper size, number of test files, number of
+tests, and whether the provisional tolerances still hold.
+
+### `EP-M1` reshape and atomic migration
+
+Assigned requirements: `TDD-REQ-001`, `TDD-REQ-002`, `TDD-REQ-004`.
+
+Red. Take one representative test. Rewrite its call to the target interface
+without changing its assertion. Run `<focused-command>`. It must fail for the
+intended reason: the target symbol or signature does not exist. Capture the
+diagnostic.
+
+Green. Move the helper's body behind the target signature, set the visibility
+per the design, and migrate every remaining call site. Delete the old surface
+entirely. Run the focused command, then the suite. Expected: the focused test
+passes; the suite passes with the same count as `EP-M0`, adjusted only by
+recorded dispositions.
+
+Refactor. Remove fixtures and imports that existed only for the old shape. Add a
+doc comment stating that the surface exists for tests. Do not add
+`allow(dead_code)` or a deprecated marker.
+
+Do not commit between adding the new surface and deleting the old one. The
+committed state has one interface.
+
+### `EP-M2` coverage reconciliation and sensitivity control
+
+Assigned requirements: `TDD-REQ-003`, `TDD-REQ-005`. Resolves `TOR-OPEN-002`.
+
+Build the disposition table in this plan. For each test from `EP-M0`, record one
+of: migrated (call text changed, assertion unchanged), rewritten (names the
+original assertion and the behaviour it now asserts), or retired (names the
+covering test or the obsolete obligation). Reconcile the suite count against
+`EP-M0` and explain every difference.
+
+Apply a seeded fault to `<helper-file>`: change a branch or a returned value for
+an input the tests exercise. Run the focused command. At least one migrated test
+must fail for the intended reason. Record the failure. Revert the fault, confirm
+the file is clean with `git diff -- <helper-file>`, and re-run the focused
+command to confirm green.
+
+If nothing fails, do not accept the milestone. Record which behaviour class is
+insensitive and return to `INV-coverage`.
+
+### `EP-M3` gates and closure
+
+Assigned requirements: all. Assigned gaps: closure of `GAP-dispositions` and
+`GAP-behaviour-contract` as far as the suite supports.
+
+Run `<gate-sequence>` sequentially, capturing each gate's output to a log under
+`/tmp` and enabling `pipefail` where the output is piped. Search the tree for
+`<old-symbol>` across source and prose, excluding historical completed plans.
+Update any doc comment, guide, or changelog entry the repository's conventions
+require for an internal refactor; if no convention applies, record that
+explicitly rather than inventing one.
+
+Reconcile the design: if the implementation required a decision the design did
+not cover, record it in `Decision log` and state its effect on `tech-design.md`.
+Architectural departures set the status to `BLOCKED` until accepted; purely
+mechanical differences are recorded here. Update `Progress`, `Outcomes &
+retrospective`, and `Conformance basis` before setting `COMPLETE`.
+
+## Milestones and plateaus
+
+`EP-M0` – inventory and gate. Requirements: none edited. Acceptance evidence:
+the inventory record below, with an empty non-test caller list and a recorded
+base revision. Conformance check: premise valid; no interface change yet; no
+dependency change; no design deviation. Recovery: read-only; delete the record
+and re-run if it is incomplete. Remaining gaps: all of them. Compatibility
+decision: none.
+
+`EP-M1` – one interface, all callers migrated. Requirements: `TDD-REQ-001`,
+`TDD-REQ-002`, `TDD-REQ-004`. Acceptance evidence: build succeeds with the old
+surface deleted; focused test passes; suite passes. Conformance check:
+requirements satisfied; design still followed; `TOR-ASSUMPTION-001` still
+valid; no new public surface beyond the justified visibility; no persisted
+format change; trace links current. Recovery: revert the single commit; the tree
+returns to the baseline interface. Remaining gaps: dispositions and sensitivity.
+Compatibility decision: none; the only callers are in the same change.
+
+`EP-M2` – coverage reconciled and sensitivity demonstrated. Requirements:
+`TDD-REQ-003`, `TDD-REQ-005`. Acceptance evidence: total disposition table; a
+seeded fault rejected for the intended reason; the fault reverted; suite green.
+Conformance check: requirements satisfied; design followed; assumptions still
+valid; no unapproved interface or dependency change; trace links current.
+Recovery: revert the fault; if the table is incomplete, continue reading tests
+rather than accepting a partial table. Remaining gaps: none for this change.
+Compatibility decision: none.
+
+`EP-M3` – gates and closure. Requirements: all, verified. Acceptance evidence:
+gate logs; absence search; updated plan sections. Conformance check: all
+requirements satisfied; design followed or deviations accepted; no unapproved
+change; trace links current. Recovery: a failed gate is fixed and re-run; a
+gate infrastructure failure is reported, not waived. Remaining gaps: recorded
+residual uncertainty from `INV-coverage`. Compatibility decision: none.
+
+## Concrete steps
+
+Working directory: `<repo-root>`. Replace every placeholder with `EP-M0`'s
+recorded value before running anything. The command shapes below are
+illustrative of the repository's toolchain, not a claim about it.
+
+```plaintext
+EP-M0 inventory
+  rg -n '\b<helper>\b' --glob '!target' --glob '!vendor' --glob '!node_modules'
+  git rev-parse HEAD
+  git tag --sort=-v:refname | head -n 5
+  <focused-command>            -> 1 passed (or the named test's count)
+Expected: every hit is under a test path; the tag list is recorded; the focused
+command runs the intended test rather than zero tests.
+
+EP-M0 visibility audit
+  rg -n 'pub fn <helper>|pub\(crate\) fn <helper>|export function <helper>'
+  rg -n '<helper>' <manifest path>
+Expected: the visibility form and any manifest export are recorded. A public
+export with no test-only justification stops the plan.
+
+EP-M1 red
+  <focused-command>            -> compile error or unresolved symbol for the
+                                  target interface, naming the migrated test
+Expected: failure for the intended reason, not an assertion mismatch.
+
+EP-M1 green
+  <focused-command>            -> 1 passed
+  <suite-command>              -> <N> passed, 0 failed (N recorded in EP-M0)
+Expected: the suite count matches the baseline, adjusted only by dispositions.
+
+EP-M1 absence
+  rg -n '\b<old-symbol>\b' --glob '!docs/execplans/**'
+  <suite-command>
+Expected: no matches, and the build and suite succeed with the old surface gone.
+
+EP-M2 sensitivity
+  (apply the seeded fault to <helper-file>)
+  <focused-command>            -> at least one failure naming a migrated assertion
+  git checkout -- <helper-file>
+  <focused-command>            -> 1 passed
+Expected: the failure is caused by the fault, and the revert restores green.
+
+EP-M3 gates
+  make check-fmt
+  make lint
+  make typecheck
+  make test
+Expected: all pass in that order. If a gate target does not exist, record the
+repository's documented equivalent in Context and orientation and use it; do
+not invent a target.
+```
+
+Log each gate under `/tmp` with `set -o pipefail` when piping through `tee`, for
+example `<gate> 2>&1 | tee /tmp/<gate>-<branch>.out`. Read a failure's log
+rather than re-running the gate blindly.
+
+## Validation and acceptance
+
+The change is accepted when all of the following hold, each observed rather than
+asserted:
+
+1. `<suite-command>` passes with a count equal to `EP-M0`'s baseline, adjusted
+   only by recorded dispositions, and the adjustment is visible in the table.
+2. The tree builds with the old surface deleted. Reintroducing a reference to
+   the deleted symbol in a scratch change fails the build; the scratch change is
+   reverted.
+3. `INV-absence` holds: the identifier search returns no matches outside this
+   plan and historical documents.
+4. `INV-coverage` holds: every `EP-M0` test appears once in the disposition
+   table, and every retirement names a covering test or an obsolete obligation.
+5. `L-behaviour` holds: the seeded fault produced at least one failure for the
+   intended reason, and the reverted tree is green.
+6. `INV-visibility` holds: any retained export has a test that fails to compile
+   without it; no export was widened.
+7. The gate sequence passes sequentially, with logs recorded.
+8. No compatibility artefact exists: no alias, forwarding function, deprecated
+   marker, facade, dual implementation, or wrapper.
+
+Quality criteria: tests and gates as above; no formal property to discharge;
+no performance or security threshold applies to this change. Quality method:
+the command transcript in `Artefacts and notes`, reviewed by the user.
+
+## Idempotence and recovery
+
+`EP-M0` is read-only and safe to repeat. `EP-M1` is a single commit that can be
+reverted as a unit; reverting restores the baseline interface and suite. The
+seeded fault in `EP-M2` must be reverted with `git checkout -- <helper-file>`
+and confirmed with `git diff --stat`; a fault left in the tree is the most
+likely way to corrupt a later result. Gates are re-runnable; the working tree is
+clean between runs. No data migration or deployment is involved, so no rollback
+beyond a code revert is required. Leave no scratch branches, temporary patches,
+or generated files behind.
+
+## Artefacts and notes
+
+Filled during execution. Each entry names the milestone, command, and revision.
+
+- `EP-M0` inventory (revision `<base>`): symbol, path, visibility, call sites,
+  test count, toolchain, gate commands, release-tag audit.
+- `EP-M0` visibility audit: the manifest and export findings.
+- `EP-M1` red transcript: the intended compile failure.
+- `EP-M1` green transcript: focused pass and suite count.
+- `EP-M1` absence search: empty output.
+- `EP-M2` disposition table: one row per pre-change test.
+- `EP-M2` seeded-fault transcript: the failure, the revert, and the re-run.
+- `EP-M3` gate logs: paths under `/tmp`.
+
+Known limitation of this draft: no transcript exists yet, and every expected
+result above is a prediction, not an observation. The plan must not be described
+as validated until these entries are real.
+
+## Interfaces and dependencies
+
+At the end of `EP-M1` there is exactly one callable surface for the helper. Its
+signature is fixed by `EP-M0`'s reading of the callers; the design requires it
+to accept the information every current call provides and to return what every
+current assertion inspects. The executing agent chooses the concrete parameter
+and return types and records them in `Context and orientation`. Shape, in
+generic form:
+
+```plaintext
+<minimum visibility> fn <helper>(<parameters>) -> <result>
+```
+
+Rules for that surface:
+
+1. One entry point. No overload, trait method, or constructor accepting the old
+   argument shape.
+2. The body is moved from the old helper, not reimplemented, unless a
+   reimplementation is provably identical for every exercised input; in that
+   case record the reasoning.
+3. A doc comment says the surface exists for tests.
+4. No `allow(dead_code)` or equivalent suppression.
+
+Ownership: the helper's module owns the implementation; tests own the call
+sites. Reuse policy: do not add a parallel utility in another module, and do not
+reparse or re-derive inside tests what the helper already provides.
+
+Dependencies: none authorised. The change uses the language's standard library
+and the repository's existing test framework only. A new test dependency, BDD
+runner, or feature flag requires escalation before use.
+
+## Revision note
+
+- 2026-11-19: Initial draft. Derived from the task brief and the installed
+  `terms-of-reference-doc`, `tech-design-doc`, and `execplans` skills. No
+  repository tree was inspected, so all symbols, commands, budgets, and
+  expected results are provisional and gated on `EP-M0`. The brief's suggested
+  compatibility shim is rejected; test callers are migrated in the same change
+  and their intent preserved through a disposition record. Status is `DRAFT`
+  pending user approval.
