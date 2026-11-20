@@ -623,9 +623,14 @@ _NEGATED_MODALITY = re.compile(
 # released external contract with an explicit commitment is assessed instead of
 # denied. A sentence that only names the latter is guidance, not a permission to
 # report; one that names a prohibited surface is reported even when it also
-# mentions a release.
+# mentions a release. "Unreleased" is matched by its negated forms too, so "API
+# changes that have not yet been released" cannot borrow the word "released".
 _PROHIBITED_SURFACE = re.compile(
-    r"\b(?:private|internal|test-only|unreleased|pre-1\.0|0\.\d+)\b", re.IGNORECASE
+    r"\b(?:private|internal|test-only|unreleased|pre-1\.0|0\.\d+)\b"
+    r"|\bnot\s+(?:yet\s+)?(?:been\s+)?released\b"
+    r"|\byet\s+to\s+be\s+released\b"
+    r"|\bpre-release\b",
+    re.IGNORECASE,
 )
 _JUSTIFIED_SURFACE = re.compile(
     r"\b(?:released|compatibility commitment|deployed external consumer)\b",
@@ -1035,6 +1040,10 @@ def test_a_prohibited_surface_permission_is_reported(tmp_path: Path) -> None:
         "Designs may add compatibility shims for test-only APIs.",
         "Designs may add a compatibility alias for an unreleased addition.",
         "Designs may add compatibility wrappers for released 0.8 APIs.",
+        (
+            "Designs may add compatibility shims for API changes that have not "
+            "yet been released."
+        ),
     )
     for sentence in sentences:
         _append_design_sentence(tmp_path, sentence)
