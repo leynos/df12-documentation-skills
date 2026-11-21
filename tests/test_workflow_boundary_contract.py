@@ -30,6 +30,8 @@ _UNACCEPTED_DEVIATION = re.compile(
     r"|not approved",
     re.IGNORECASE,
 )
+_FENCE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
+_DECISION_STATEMENT = re.compile(r"Decision:\s*(?!<)[^<\n]{20,}", re.IGNORECASE)
 _APPROVAL_STATE = re.compile(
     r"\b(?:not accepted|accepted revision|approv(?:al|ed))\b", re.IGNORECASE
 )
@@ -37,7 +39,12 @@ _READINESS = re.compile(
     r"ready for (?:technical )?design|bounded discovery|\bblocked\b", re.IGNORECASE
 )
 _STABLE_ID = re.compile(r"\bTOR-[A-Z]+-\d+\b")
-_FEEDBACK_ROUTE = re.compile(r"\bfeedback\b", re.IGNORECASE)
+_FEEDBACK_ROUTE = re.compile(
+    r"\bfeedback\b(?!\s*(?:route|path|channel)?\s*[:.-]?\s*"
+    r"(?:none|nil|n/?a|not\s+(?:applicable|stated|provided|specified|available)"
+    r"|absent|tbd|unknown)\b)",
+    re.IGNORECASE,
+)
 
 
 def _sections(text: str) -> list[tuple[str, str]]:
@@ -63,6 +70,23 @@ def _section_named(text: str, needle: str) -> str:
     return ""
 
 
+def _records_unaccepted_deviation(region: str) -> bool:
+    """Return whether the Decision log records an unaccepted deviation.
+
+    A fenced block is the plan format's template, so it counts as a recorded
+    entry only when it states a concrete decision. A placeholder-only template
+    is illustrative, and its "pending acceptance" marks the form, not an entry.
+    """
+    prose = _FENCE.sub("", region)
+    if _UNACCEPTED_DEVIATION.search(prose):
+        return True
+    return any(
+        _UNACCEPTED_DEVIATION.search(block)
+        and _DECISION_STATEMENT.search(block) is not None
+        for block in _FENCE.findall(region)
+    )
+
+
 def _status_problems(text: str) -> list[str]:
     """Return boundary violations in a plan or revision record."""
     match = _STATUS.search(text)
@@ -75,9 +99,11 @@ def _status_problems(text: str) -> list[str]:
     decision_log = _section_named(text, "Decision log")
     if not decision_log:
         problems.append("no Decision log")
-    elif status == "COMPLETE" and _UNACCEPTED_DEVIATION.search(decision_log):
-        problems.append("COMPLETE with an unaccepted deviation in the Decision log")
-    elif status == "BLOCKED" and not _UNACCEPTED_DEVIATION.search(decision_log):
+    elif status in {"ACTIVE", "COMPLETE"} and _records_unaccepted_deviation(
+        decision_log
+    ):
+        problems.append(f"{status} with an unaccepted deviation in the Decision log")
+    elif status == "BLOCKED" and not _records_unaccepted_deviation(decision_log):
         problems.append(
             "BLOCKED without a Decision log entry recording an unaccepted deviation"
         )
@@ -153,6 +179,45 @@ def test_a_blocked_plan_without_a_recorded_deviation_is_reported() -> None:
     assert _status_problems(text) == [
         "BLOCKED without a Decision log entry recording an unaccepted deviation"
     ]
+
+
+def test_an_active_plan_with_an_unaccepted_deviation_is_reported() -> None:
+    """An executing plan may not carry a deviation that is still unaccepted."""
+    text = (
+        "Status: ACTIVE\n\n## Decision log\n\n"
+        "- D1. Decision: renamed the module. Status: proposal pending acceptance.\n"
+    )
+
+    assert _status_problems(text) == [
+        "ACTIVE with an unaccepted deviation in the Decision log"
+    ]
+
+
+def test_a_template_only_deviation_is_reported() -> None:
+    """A fenced placeholder does not count as a recorded Decision log entry."""
+    text = (
+        "Status: BLOCKED\n\n## Decision log\n\n"
+        "Add one entry:\n\n"
+        "```plaintext\n"
+        "- D-<next free>. Decision: <what was decided>.\n"
+        "  Status: proposal pending acceptance.\n"
+        "```\n"
+    )
+
+    assert _status_problems(text) == [
+        "BLOCKED without a Decision log entry recording an unaccepted deviation"
+    ]
+
+
+def test_a_handoff_that_names_no_feedback_route_is_reported() -> None:
+    """A label naming an absent route does not state a route."""
+    text = (
+        "## Handoff\n\n"
+        "Accepted revision: none. Ready for design. TOR-GOAL-001 is inherited.\n"
+        "Feedback route: none.\n"
+    )
+
+    assert _handoff_problems(text) == ["handoff does not state its feedback route"]
 
 
 def test_an_unknown_status_is_reported() -> None:

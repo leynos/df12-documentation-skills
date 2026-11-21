@@ -626,7 +626,8 @@ _NEGATED_MODALITY = re.compile(
 # mentions a release. "Unreleased" is matched by its negated forms too, so "API
 # changes that have not yet been released" cannot borrow the word "released".
 _PROHIBITED_SURFACE = re.compile(
-    r"\b(?:private|internal|test-only|unreleased|pre-1\.0|0\.\d+)\b"
+    r"\b(?:private|internal|test-only|unreleased|pre-1\.0)\b"
+    r"|(?<![\d.])0\.\d+\b"
     r"|\bnot\s+(?:yet\s+)?(?:been\s+)?released\b"
     r"|\byet\s+to\s+be\s+released\b"
     r"|\bpre-release\b",
@@ -1026,6 +1027,11 @@ def test_a_released_contract_permission_is_not_reported(tmp_path: Path) -> None:
         tmp_path,
         "Designs may add compatibility wrappers for released 2.1 APIs with an "
         "explicit compatibility commitment and a deployed external consumer.",
+    )
+    _append_design_sentence(
+        tmp_path,
+        "Designs may add compatibility wrappers for the released 2.0.1 APIs with "
+        "an explicit compatibility commitment and a deployed external consumer.",
     )
 
     problems = _permissive_compatibility_claims(tmp_path)

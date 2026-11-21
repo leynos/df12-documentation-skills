@@ -172,9 +172,11 @@ what the reviewer judged, but rerunning a scenario still needs an agent: the
 verdicts are manual evidence, not CI results.
 `tests/test_workflow_boundary_contract.py` decides one boundary mechanically
 from those artefacts: a record that carries an unaccepted deviation must not
-claim `COMPLETE`, and a handoff must state its approval state, readiness,
-stable identifiers, and feedback route. That check decides the recorded output,
-not whether an agent obeys the skill.
+claim `COMPLETE` or `ACTIVE`, a `BLOCKED` record must log the deviation as a
+concrete entry rather than a placeholder template, and a handoff must state its
+approval state, readiness, stable identifiers, and a feedback route that is not
+declared absent. That check decides the recorded output, not whether an agent
+obeys the skill.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard
