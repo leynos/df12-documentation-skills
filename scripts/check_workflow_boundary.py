@@ -8,6 +8,13 @@ Decision log and enters ``BLOCKED``; it may not claim ``ACTIVE`` or
 state, its readiness classification, the stable identifiers downstream work
 inherits, and the route back when an assumption fails.
 
+A third boundary is a phrase check over the recorded proposals, not a
+semantic one: a record for a private, test-only, pre-1.0, or unreleased
+surface must not permit compatibility machinery, and the released-contract
+record must state that a layer or migration is admissible. Those checks find
+a permissive sentence in the recorded output; they do not prove that the plan
+implements nothing else.
+
 The governing sentences are read from the shipped skills rather than repeated
 here, so a skill whose rule has been removed or softened fails the check
 instead of quietly dropping the obligation.
@@ -16,6 +23,8 @@ Usage::
 
     python scripts/check_workflow_boundary.py status RECORD...
     python scripts/check_workflow_boundary.py handoff RECORD...
+    python scripts/check_workflow_boundary.py prohibitions RECORD...
+    python scripts/check_workflow_boundary.py permission RECORD...
 
 A diagnostic is printed as ``path: message``. The exit status is 1 when any
 diagnostic is reported, including one about the skills themselves.
@@ -57,6 +66,31 @@ _FEEDBACK_ROUTE = re.compile(
     r"|absent|tbd|unknown)\b)",
     re.IGNORECASE,
 )
+_COMPATIBILITY_MODALITY = (
+    r"(?:may|should|is permitted to|are permitted to|is allowed to|are allowed to)"
+)
+_COMPATIBILITY_TERMS = (
+    r"compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?"
+)
+# A permission is one clause: a clause boundary between the modality and the
+# surface means the sentence is not proposing that machinery, as in "the
+# authority may resolve the conflict, and is the alias owner".
+_COMPATIBILITY_CLAIM = re.compile(
+    rf"\b{_COMPATIBILITY_MODALITY}\b"
+    r"(?P<gap>(?:(?![.!?](?:\s|$))"
+    rf"(?!(?:\b{_COMPATIBILITY_MODALITY}\b))"
+    r"(?![;]|,\s*(?:and|but|or|then|so)\b).)*?)"
+    rf"\b(?:{_COMPATIBILITY_TERMS})\b",
+    re.IGNORECASE,
+)
+_NEGATED_MODALITY = re.compile(
+    r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
+)
+_RELEASED_PERMISSION = re.compile(
+    r"\b(?:layer|migration)\b[^.]{0,60}\bis admissible\b"
+    r"|\bcompatibility or a deliberate migration\b",
+    re.IGNORECASE,
+)
 
 #: Each rule the checks below depend on, with the sentence that states it.
 _RULES = (
@@ -89,6 +123,11 @@ _RULES = (
         Path("terms-of-reference-doc/SKILL.md"),
         "Feedback route.",
         "a handoff names its feedback route",
+    ),
+    (
+        Path("tech-design-doc/SKILL.md"),
+        "MUST NOT prescribe source-API compatibility machinery",
+        "a design must not prescribe source-API compatibility machinery",
     ),
 )
 
@@ -214,6 +253,54 @@ def handoff_problems(text: str) -> list[str]:
     ]
 
 
+def compatibility_problems(text: str) -> list[str]:
+    """Return one report per sentence that permits compatibility machinery.
+
+    Parameters
+    ----------
+    text : str
+        The record to check.
+
+    Returns
+    -------
+    list[str]
+        One message per permissive claim, empty when the text permits none.
+
+    """
+    problems: list[str] = []
+    for sentence in re.split(r"(?<=[.!?])\s+", _normalise(text)):
+        problems.extend(
+            f"permits compatibility machinery: {match.group(0)}"
+            for match in _COMPATIBILITY_CLAIM.finditer(sentence)
+            if _NEGATED_MODALITY.search(match.group("gap")) is None
+        )
+    return problems
+
+
+def permission_missing(texts: Sequence[str]) -> bool:
+    """Return whether no text states that a compatibility layer is admissible.
+
+    Parameters
+    ----------
+    texts : Sequence[str]
+        The records of one scenario.
+
+    Returns
+    -------
+    bool
+        Whether every text omits the released-contract permission.
+
+    """
+    return not any(_RELEASED_PERMISSION.search(_normalise(text)) for text in texts)
+
+
+_CHECKS = {
+    "status": status_problems,
+    "handoff": handoff_problems,
+    "prohibitions": compatibility_problems,
+}
+
+
 def skill_rule_problems(skills_root: Path) -> list[str]:
     """Return the documented rules the shipped skills no longer state.
 
@@ -254,6 +341,8 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     for kind, description in (
         ("status", "check plan and revision records"),
         ("handoff", "check handoff sections"),
+        ("prohibitions", "check that no record permits compatibility machinery"),
+        ("permission", "check that the records state the released permission"),
     ):
         subparser = subparsers.add_parser(kind, help=description)
         subparser.add_argument("files", nargs="+", type=Path, metavar="RECORD")
@@ -275,15 +364,22 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     """
     args = _parse_args(sys.argv[1:] if argv is None else argv)
-    check = status_problems if args.kind == "status" else handoff_problems
     problems = skill_rule_problems(args.skills_root)
+    records: list[tuple[Path, str]] = []
     for path in args.files:
         try:
-            text = path.read_text(encoding="utf-8")
+            records.append((path, path.read_text(encoding="utf-8")))
         except OSError as error:
             problems.append(f"{path}: cannot read the record: {error.strerror}")
-            continue
-        problems.extend(f"{path}: {message}" for message in check(text))
+    if args.kind == "permission":
+        if records and permission_missing([text for _, text in records]):
+            problems.append(
+                "no record states that a compatibility layer or migration is admissible"
+            )
+    else:
+        check = _CHECKS[args.kind]
+        for path, text in records:
+            problems.extend(f"{path}: {message}" for message in check(text))
     for problem in problems:
         print(problem)
     return 1 if problems else 0

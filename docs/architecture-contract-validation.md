@@ -183,12 +183,17 @@ The artefacts are published verbatim under
 with a digest for every file, so each run's output is inspectable.
 
 These verdicts are manual evidence, not CI results: `make test` does not run
-the scenarios, and none of this is an independent human review. One boundary
-that a record can decide is checked in CI by
-`tests/test_workflow_boundary_contract.py`, which reads the published C3
-artefacts and applies the `BLOCKED`/`COMPLETE` and handoff rules stated above.
-That check decides the recorded output; it does not show that an agent obeys
-the skill.
+the scenarios, and none of this is an independent human review. Two boundaries
+that a record can decide are checked in CI by
+`tests/test_workflow_boundary_contract.py`, which drives
+`scripts/check_workflow_boundary.py` over the published artefacts. It applies
+the `BLOCKED`/`COMPLETE` and handoff rules stated above to the C3 records, and
+it checks that no record for a private, test-only, pre-1.0, or unreleased
+surface permits compatibility machinery while the C5 records keep their
+statement that a layer or migration is admissible. Those checks decide the
+recorded output; they do not show that an agent obeys the skill, and the
+compatibility checks find a permissive sentence rather than proving that a plan
+implements nothing else.
 
 | Scenario | Result | Artefacts                    | Evidence recorded by the reviewer                                                                                                                      |
 | -------- | ------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |

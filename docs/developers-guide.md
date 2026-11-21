@@ -176,10 +176,14 @@ through its command line: a record that carries an unaccepted deviation must
 not claim `COMPLETE` or `ACTIVE`, a `BLOCKED` record must log the deviation as
 a concrete entry rather than a placeholder template, and a handoff must state
 its approval state, readiness, stable identifiers, and a feedback route that is
-not declared absent. The script reads the governing sentences from the shipped
-skills and reports one that is missing, so a rule cannot be deleted from a
-skill while the check keeps passing. That check decides the recorded output,
-not whether an agent obeys the skill.
+not declared absent. It also runs two phrase checks over the same output: a
+record for a private, test-only, pre-1.0, or unreleased surface may not permit
+compatibility machinery, and the C5 records must keep their statement that a
+layer or migration is admissible. The script reads the governing sentences from
+the shipped skills and reports one that is missing, so a rule cannot be deleted
+from a skill while the check keeps passing. These checks decide the recorded
+output, not whether an agent obeys the skill: the phrase checks find a
+permissive sentence, not a plan that implements compatibility without saying so.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard

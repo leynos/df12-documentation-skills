@@ -8,13 +8,22 @@ assumption fails. ``scripts/check_workflow_boundary.py`` decides those
 boundaries; this module drives it through its command line, so the test depends
 only on the interface a contributor uses.
 
+The same validator runs two phrase checks over the published output. No record
+for a private, test-only, pre-1.0, or unreleased surface may permit
+compatibility machinery, and the released-contract record must keep its
+positive control: a statement that a layer or migration is admissible. These
+are phrase checks. They show that the recorded proposals contain no permissive
+sentence for a prohibited surface; they do not show that a plan implements
+nothing else.
+
 The fixtures are derived from the forms the skills document. The record
 fixtures use the `Status` line and `Decision log` section the ExecPlan contract
 defines; the handoff fixtures use the revision, approval state, stable IDs,
 readiness classification, and feedback route that `terms-of-reference-doc`
 requires. One test copies the two skills, deletes a governing sentence from the
 copy, and asserts that the validator then fails, so the check cannot pass by
-forgetting the rule it is deciding.
+forgetting the rule it is deciding. The shim-injection controls copy a
+published artefact, append a permissive sentence, and require its diagnostic.
 
 They do not execute either skill. Whether an agent obeys the guidance remains
 the subject of the scenarios themselves, which are manual evidence; a passing
@@ -27,16 +36,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "scripts/check_workflow_boundary.py"
 SKILLS = ROOT / "skills"
 ARTEFACTS = ROOT / "docs/validation/2026-11-19-agent-scenarios"
+PROHIBITED_SETS = ("c1", "c2", "c3-271b0f8", "c3-29cd658", "c4", "c6")
 
 
 def _run(
-    check: str, record: Path, skills_root: Path = SKILLS
+    check: str, *records: Path, skills_root: Path = SKILLS
 ) -> subprocess.CompletedProcess[str]:
-    """Return the validator's result for one record."""
+    """Return the validator's result for the given records."""
     return subprocess.run(
         [
             sys.executable,
@@ -44,12 +56,17 @@ def _run(
             "--skills-root",
             str(skills_root),
             check,
-            str(record),
+            *(str(record) for record in records),
         ],
         capture_output=True,
         text=True,
         check=False,
     )
+
+
+def _artefacts(directory: str) -> list[Path]:
+    """Return the published artefacts of one scenario in name order."""
+    return sorted((ARTEFACTS / directory).iterdir())
 
 
 def _fixture(tmp_path: Path, text: str) -> Path:
@@ -231,7 +248,7 @@ def test_a_skill_that_drops_its_rule_fails_the_check(tmp_path: Path) -> None:
         ),
     )
 
-    intact = _run("handoff", record, skills_root)
+    intact = _run("handoff", record, skills_root=skills_root)
 
     assert intact.returncode == 0
     assert intact.stdout == ""
@@ -244,9 +261,57 @@ def test_a_skill_that_drops_its_rule_fails_the_check(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    rejected = _run("handoff", record, skills_root)
+    rejected = _run("handoff", record, skills_root=skills_root)
 
     assert rejected.returncode == 1
     assert "no longer states that an executing ExecPlan enters BLOCKED" in (
         rejected.stdout
+    )
+
+
+def test_the_published_proposals_permit_no_compatibility_machinery() -> None:
+    """No artefact for a prohibited surface proposes compatibility machinery."""
+    records = [path for name in PROHIBITED_SETS for path in _artefacts(name)]
+
+    result = _run("prohibitions", *records)
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+
+
+@pytest.mark.parametrize("directory", PROHIBITED_SETS)
+def test_injecting_a_shim_into_an_artefact_set_is_reported(
+    tmp_path: Path, directory: str
+) -> None:
+    """A permissive sentence appended to a published record is reported."""
+    source = _artefacts(directory)[0]
+    mutated = tmp_path / source.name
+    mutated.write_text(
+        source.read_text(encoding="utf-8")
+        + "\nThe design may add a compatibility shim for the old name.\n",
+        encoding="utf-8",
+    )
+
+    result = _run("prohibitions", mutated)
+
+    assert result.returncode == 1
+    assert "permits compatibility machinery" in result.stdout
+
+
+def test_the_released_contract_positive_control_is_kept() -> None:
+    """The C5 records still state that a layer or migration is admissible."""
+    result = _run("permission", *_artefacts("c5"))
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+
+
+def test_a_prohibited_category_states_no_released_permission() -> None:
+    """A private-surface record never states the released-contract permission."""
+    result = _run("permission", *_artefacts("c1"))
+
+    assert result.returncode == 1
+    assert (
+        "no record states that a compatibility layer or migration is admissible"
+        in result.stdout
     )
