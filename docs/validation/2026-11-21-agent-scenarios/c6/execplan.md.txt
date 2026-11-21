@@ -1,0 +1,863 @@
+# Reshape the private record API and persisted representation
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (provisional; awaiting user approval; `EP-M0` intake not started).
+
+Branch: `<not set; create at intake>`.
+
+Roadmap item: none known.
+
+## Purpose / big picture
+
+A deployed binary currently writes records through a private source API in a
+persisted format that is being reshaped. After this work, the application uses a
+single new source interface, writes only the new persisted format, and can
+still read every record the deployed binary wrote. The old source interface is
+gone: it is replaced and every caller changes with it, rather than kept alive
+behind an alias, facade, deprecated entrypoint or shim. The persisted records
+are handled separately, because deployed data is not the same obligation as a
+released source contract.
+
+A caller observes the change as follows. Before the change, a read looks like
+this:
+
+```plaintext
+caller -> A1 (old private API) -> legacy record type -> store
+```
+
+After the change, the same logical read looks like this:
+
+```plaintext
+caller -> A2 (new private API) -> new record type -> store
+store  -> codec -> v1 or v2 stored bytes
+```
+
+The important observable outcomes are:
+
+1. Reading a record written by the deployed binary returns the same logical
+   value as before, under the approved mapping.
+2. All writes produce the new format.
+3. Running the migration a second time changes no bytes and reports zero
+   changes.
+4. Restoring the pre-migration snapshot lets the deployed binary read its
+   records again.
+5. A search of the source tree finds no reference to the old private API and no
+   compatibility machinery for it.
+
+Terms used in this plan: a **private API** is an application-internal source
+interface, even if its declarations are marked `public`; a **deployed record**
+is persisted data written by a binary that has run outside development; the
+**legacy decode path** is the v1 decoder used only to read deployed records;
+the **migration window** is the period during which v1 and v2 records may both
+be read.
+
+Preserved behaviour: record identity, record logical values under the approved
+mapping, the storage backend, and the operator's ability to restore a snapshot.
+Deliberately changed behaviour: the source interface, the stored bytes, and the
+fail-closed error for an unknown or malformed record, which must never be
+reported as an absent record.
+
+This plan closes no roadmap decision. It advances `TOR-GOAL-001` to
+`TOR-GOAL-003` and resolves the gaps listed in `Conformance basis`.
+
+## Constraints
+
+Hard invariants that must hold throughout implementation. Violation requires
+escalation, not a workaround.
+
+- The private source API `A1` must not receive a compatibility layer. No alias,
+  facade, deprecated entrypoint, wrapper, adapter or dual interface may remain
+  after `EP-M1`. Every caller changes in that milestone.
+- The v1 decode path exists only for persisted data. It takes stored bytes,
+  returns the new logical record, is confined to the storage codec, and is not
+  reachable from domain code. It is not a source-API shim.
+- No record may be deleted, truncated or silently stripped of a field. Every
+  v1 field is mapped or listed as an approved drop.
+- Unknown versions, missing versions, truncated envelopes and checksum
+  mismatches fail closed with typed errors. They are never decoded with
+  defaults and never reported as absent records.
+- Migration must be preceded by a snapshot that has been restored successfully
+  in a scratch environment.
+- No writer may run during snapshot and migration. The stop must be verified,
+  not assumed.
+- No new runtime dependency, external interface or storage backend is
+  authorised by this plan.
+- Implementation begins only after the user explicitly approves this plan.
+  Silence is not approval.
+- This ExecPlan file is excluded from every size count below.
+- Completed historical ExecPlans must not be modified.
+
+## Tolerances (exception triggers)
+
+The budget-setting survey required by the ExecPlan contract could not be
+performed: no repository, code, tests or documentation were accessible when
+this draft was written, and no comparable historical plan was inspected. The
+values below are therefore deliberately unset. `EP-M0` must record the survey,
+set each budget and obtain approval before the status becomes `APPROVED` or any
+implementation begins. Inventing a budget now would create false precision.
+
+| Category | Limit | Comparison base and counting |
+| --- | --- | --- |
+| Files | Not set; requires `EP-M0` survey | Non-ExecPlan files changed; `git diff --name-only <base>...HEAD` excluding `docs/execplans/**` |
+| Code | Not set; requires `EP-M0` survey | Net lines (additions minus deletions) in production source, tests and executable build logic |
+| Configuration | Not set; requires `EP-M0` survey | Net lines in declarative settings, manifests, lockfiles, deployment descriptors and CI configuration |
+| Documentation | Not set; requires `EP-M0` survey | Net lines in prose, guides and reference material, excluding ExecPlan files |
+| Interface | Any new external interface or any source-API compatibility layer | Stop and escalate |
+| Dependencies | Any new runtime dependency or version change beyond the existing stack | Stop and escalate |
+| Architecture | A change to the storage backend, or replacement of atomic per-record replacement with a journal or two-phase scheme | Stop and escalate |
+| Iterations | More than 3 attempts at the same failing test | Stop and escalate |
+| Time | More than 4 hours on one milestone (provisional) | Stop and escalate |
+| Ambiguity | Any open question that changes the migration strategy, rollback scope or compatibility classification | Stop and escalate |
+
+Enforce each category independently. Spare capacity in one category must not
+offset another. The ExecPlan file itself never counts.
+
+## Risks
+
+- Risk: The API is not actually private and has an external consumer.
+  Severity: high. Likelihood: low. Mitigation: `EP-M0` records consumer and
+  release-lineage evidence; if one is found, stop and reconcile the terms of
+  reference before any code changes.
+- Risk: The v1 field mapping changes meaning or drops a field.
+  Severity: high. Likelihood: medium. Mitigation: a total mapping table
+  approved by the data owner, a corpus that exercises every field class, and a
+  seeded mapper fault that the tests reject.
+- Risk: The storage backend does not provide atomic replacement.
+  Severity: high. Likelihood: medium. Mitigation: cite the platform guarantee
+  and run a focused probe in `EP-M0`; if the guarantee is absent, redesign
+  before migration.
+- Risk: An interrupted migration corrupts or loses records.
+  Severity: high. Likelihood: medium. Mitigation: snapshot-first, temporary
+  writes, atomic replace, crash-injection tests at each named step, and a
+  restore rehearsal.
+- Risk: The deployed binary keeps writing after the snapshot.
+  Severity: medium. Likelihood: medium. Mitigation: verified quiesce and an
+  exclusive-writer precondition; abort on a failed lock.
+- Risk: The corpus is unrepresentative.
+  Severity: medium. Likelihood: high. Mitigation: a provenance manifest,
+  coverage classes, and an explicit statement that the corpus cannot prove
+  completeness.
+- Risk: Rollback takes longer than the window or loses post-snapshot writes.
+  Severity: medium. Likelihood: medium. Mitigation: a defined rollback point
+  before the first new write, a timed rehearsal, and incident handling after
+  that point.
+- Risk: The legacy decoder is removed before the retention window ends.
+  Severity: medium. Likelihood: medium. Mitigation: a dated retention decision
+  and a separate decommission change.
+
+## Progress
+
+- [x] (2026-11-21 08:12Z) Read the installed `terms-of-reference-doc`,
+  `tech-design-doc` and `execplans` skills and their required references.
+- [x] (2026-11-21 08:20Z) Drafted the terms of reference, technical design,
+  format contract and this plan.
+- [ ] Plan approved by the user.
+- [ ] `EP-M0` intake, baseline capture and budget setting.
+- [ ] `EP-M1` atomic source reshape.
+- [ ] `EP-M2` versioned record codec and v1 readability.
+- [ ] `EP-M3` offline idempotent migration.
+- [ ] `EP-M4` cutover readiness, rollback rehearsal and documentation closure.
+- [ ] Decommission the legacy decode path after the retention condition (a
+  separate change, deliberately outside this plan).
+
+## Surprises & discoveries
+
+- Observation: no repository baseline was accessible while this plan was
+  drafted, so every file path, symbol and gate command below is a placeholder
+  or an example.
+  Evidence: the authoring environment permitted reading only the installed
+  skills.
+  Impact: `EP-M0` is a hard gate; the plan is not executable until it records
+  the actual baseline and replaces the placeholders.
+- Observation: the brief's phrase "must remain readable" does not name the
+  reader.
+  Evidence: the brief is one sentence and passive.
+  Impact: rollback design and decoder retention depend on `TOR-OPEN-001`. The
+  plan assumes the new binary reads old records and that rollback is
+  restore-based; if the deployed binary must read new records, the design is
+  insufficient.
+- Observation: the persisted-data obligation and the source-API policy pull in
+  opposite directions but apply to different surfaces.
+  Evidence: the installed skills prohibit source-API compatibility for private
+  APIs while requiring separate treatment of persisted data.
+  Impact: the plan adds a v1 decode path but no source shim. Reviewers should
+  check that this distinction is maintained.
+
+## Decision log
+
+- D1. Decision: no source-API compatibility layer for `A1`.
+  Rationale: `A1` is private and has no evidenced external consumer. A facade
+  or alias would create a second source interface with no owner or removal
+  criterion. The strongest alternative, keeping `A1` as a deprecated wrapper,
+  was rejected because it would preserve exactly what the work exists to
+  remove. Date/Author: 2026-11-21, authoring agent (draft).
+- D2. Decision: handle deployed records with a versioned codec, a bounded v1
+  read window and an explicit migration.
+  Rationale: persisted data is a separate obligation from source
+  compatibility. A permanent dual reader was rejected because it leaves two
+  representations alive indefinitely. Date/Author: 2026-11-21, authoring agent
+  (draft).
+- D3. Decision: offline, stop-the-world, snapshot-first, one-way migration.
+  Rationale: it gives a verifiable before and after state and a restore-based
+  rollback. Lazy upgrade, dual write and big-bang rewrite were rejected for
+  the reasons in the design. Date/Author: 2026-11-21, authoring agent (draft).
+- D4. Decision: stateless full scan rather than a mutable progress cursor.
+  Rationale: a cursor can disagree with the store after a crash; a rescan
+  converges and the report is advisory. Date/Author: 2026-11-21, authoring
+  agent (draft).
+- D5. Decision: fail closed on unknown or malformed data.
+  Rationale: a default can silently change meaning and cannot be distinguished
+  from legitimate data. Date/Author: 2026-11-21, authoring agent (draft).
+- D6. Decision: no formal prover or model checker; property tests and crash
+  injection carry the obligations.
+  Rationale: the state space is small and the dominant risks are I/O atomicity,
+  mapping and corpus coverage, which an abstract proof would not settle.
+  Date/Author: 2026-11-21, authoring agent (draft).
+- D7. Decision: keep the plan at `DRAFT` and perform no implementation.
+  Rationale: the user has not approved it and `EP-M0` has not closed the
+  intake gaps. Date/Author: 2026-11-21, authoring agent (draft).
+- D8. Decision: no diagram and therefore no nixie validation for this plan's
+  design companion.
+  Rationale: the component topology is linear and the design prose and tables
+  already state every relationship. A diagram would restate them without
+  resolving a concern. Date/Author: 2026-11-21, authoring agent (draft).
+- D9. Decision: Red-Green-Refactor is not used for `EP-M0`, which is read-only
+  discovery, or for the documentation portion of `EP-M4`.
+  Rationale: neither produces production behaviour to drive with a failing
+  test. The substitutes are an evidence checklist for `EP-M0` and a rehearsal
+  transcript for `EP-M4`. Every code-bearing milestone uses
+  Red-Green-Refactor. Date/Author: 2026-11-21, authoring agent (draft).
+
+## Outcomes & retrospective
+
+Not started. No code was changed, no record was read, no migration was run and
+no gate was executed. The only outcomes are the draft documents.
+
+Before this plan can be marked `COMPLETE`, reconcile implementation
+discoveries with the upstream artefacts in `Conformance basis`. If a discovery
+falsifies a terms-of-reference assumption, update the terms of reference and
+impact-check the design. If it changes the architecture, update the design or
+an ADR and re-check every affected requirement and trace link. If it is
+mechanical, record the reason in this decision log. An upstream change or
+deviation must not remain unrecorded or unaccepted at completion.
+
+## Context and orientation
+
+No repository baseline was inspected. The current logical flow is asserted by
+the brief, not observed:
+
+```plaintext
+caller -> A1 (private API) -> legacy record type -> store -> F1 bytes
+```
+
+The target flow is:
+
+```plaintext
+caller -> A2 (private API) -> new record type -> store -> codec -> F1 or F2 bytes
+migrator -> store scan -> codec -> decode v1 -> map -> encode v2 -> atomic replace
+```
+
+`EP-M0` must locate and record, with repository-relative paths and exact
+symbols:
+
+1. The definition of `A1`, its visibility, its documentation and every caller.
+2. The legacy record type and any invariant it claims.
+3. The store implementation, the current codec, and the on-disk or database
+   layout for `F1`.
+4. Existing tests, fixtures, golden files and gate targets.
+5. The deployed binary's identity and version, and the provenance of records it
+   wrote.
+6. Release tags, published packages or ABI evidence relevant to the privacy
+   classification.
+7. Backup, retention and deletion policy, and the maintenance-window
+   procedure.
+8. The budget survey: affected callers, tests, configuration, documentation and
+   any comparable historical ExecPlans with their budget revisions.
+
+Useful search commands, to be run from the repository root and adjusted once
+the symbols are known:
+
+```bash
+rg -n "<A1 symbol>" --glob '!target' --glob '!node_modules' --glob '!vendor'
+rg -n "format_version|magic|MAGIC|VERSION" --glob '!target' --glob '!node_modules'
+find . -path ./target -prune -o -path ./node_modules -prune -o \
+  -type f \( -name '*fixture*' -o -name '*.golden' \) -print
+```
+
+The existing test frameworks, their versions and the repository's gate sequence
+are unknown. Record them at `EP-M0` from the repository's own documentation.
+The gate names used in `Concrete steps` are examples, not claims.
+
+## Conformance basis
+
+Upstream revisions and identifiers this plan inherits:
+
+| Artefact | Revision | State |
+| --- | --- | --- |
+| Terms of reference | `terms-of-reference.md`, v0.1, SHA-256 `f68e0d0319f9f400e1732c04ab6a7a871c4a3d8c329b615af14e31cda965155b` | Draft, unapproved |
+| Technical design | `tech-design.md`, v0.1, SHA-256 `efe62cf6e4e0efde0f6c30ebd43d0234fefee0b8c8ffa5103b89b80258409b9f` | Draft, unaccepted |
+| Format contract | `record-format-v2.md`, draft, SHA-256 `6e3f3bcf7995f215b28b104b14f0b48aabcec0ac8decc1fedde5396ec0ca1f0a` | Draft, unvalidated |
+| `execplans` skill | `/home/leynos/.claude/skills/execplans/SKILL.md`, SHA-256 `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15` | Inspected 2026-11-21 |
+| ExecPlan template | `/home/leynos/.claude/skills/execplans/references/execplan-template.md`, SHA-256 `71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a` | Inspected 2026-11-21 |
+| ADRs, roadmap, prior plans | None accessed | Missing input |
+| Repository baseline | None accessed | Missing input |
+
+Named requirements:
+
+- `REQ-ATOMIC-SOURCE` (`TDD-REQ-001`): `A2` replaces `A1` and every caller
+  changes in the same milestone; no compatibility layer remains.
+- `REQ-READ-V1` (`TDD-REQ-002`): the reader decodes every v1 record written by
+  the deployed binary in the support window.
+- `REQ-WRITE-V2` (`TDD-REQ-003`): every write produces v2; no code path creates
+  v1 bytes.
+- `REQ-MIGRATE` (`TDD-REQ-004`): migration is idempotent, resumable and
+  lossless.
+- `REQ-FAIL-CLOSED` (`TDD-REQ-005`): unknown or malformed records produce typed
+  errors and no default value.
+- `REQ-CODEC-BOUNDARY` (`TDD-REQ-006`): format handling is confined to the
+  codec; no legacy type reaches the domain.
+- `REQ-ROLLBACK` (`TDD-REQ-007`): a snapshot restore is rehearsed and
+  documented.
+- `REQ-CANONICAL` (`TDD-REQ-008`): v2 encoding is canonical within a codec
+  version.
+
+Named gaps (all blocked pending `EP-M0`): `GAP-BASELINE-API` (`TDD-GAP-001`),
+`GAP-FIELD-MAP` (`TDD-GAP-002`), `GAP-PRIVACY` (`TDD-GAP-003`),
+`GAP-STORAGE` (`TDD-GAP-004`), `GAP-CORPUS` (`TDD-GAP-005`),
+`GAP-RETENTION` (`TDD-GAP-006`), `GAP-ROLLBACK` (`TDD-GAP-007`) and
+`GAP-VOLUME` (`TDD-GAP-008`).
+
+Trace chains:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-001 -> TDD-COMP-domain-api -> EP-M1 -> source search + build
+TOR-GOAL-002 -> TDD-REQ-002 -> TDD-COMP-codec -> EP-M2 -> tests/codec/v1_corpus
+TOR-GOAL-002 -> TDD-REQ-004 -> TDD-COMP-migrator -> EP-M3 -> tests/migrate/preserves_value
+TOR-GOAL-003 -> TDD-REQ-003 -> TDD-COMP-codec -> EP-M4 -> store scan finds no v1 bytes
+TOR-SUCCESS-003 -> TDD-REQ-007 -> TDD-COMP-runbook -> EP-M4 -> rollback rehearsal log
+```
+
+## Verification plan
+
+### Abstract model
+
+A store `S` maps record IDs to stored bytes. A bytes value is either a v1 record
+or a v2 record. `decode_any(b)` returns a logical record or a typed error. `M`
+maps the v1 logical shape to the v2 logical shape. `encode_v2(r)` returns
+canonical v2 bytes. `migrate_all(S)` returns a new store and a report.
+`crash(S, p)` models process death at step `p`. `restore(snapshot)` returns the
+snapshotted store.
+
+Preconditions: the store is quiescent, every record is valid or the preflight
+abort policy stops the run, the mapping is total, and the snapshot is
+restorable. Malformed records violate the preflight precondition and are
+handled by the failure policy, not by the migration relation. The expected
+result is a store
+containing only canonical v2 bytes, with the same domain and the mapped logical
+values.
+
+### Invariants and lemmas
+
+- `INV-READ-CORPUS` (`TDD-INV-001`): for every fixture in the captured v1
+  corpus, `decode_any` returns the recorded expected value.
+- `INV-PRESERVE` (`TDD-INV-002`): for every record, after migration,
+  `decode_any(S'[id]) = M(decode_any(S[id]))`.
+- `INV-NO-LOSS` (`TDD-INV-003`): migration preserves the ID set and the
+  multiset of mapped logical values; it adds and deletes nothing.
+- `INV-IDEMPOTENT` (`TDD-INV-004`): a second migration is byte-identical and
+  reports zero changes.
+- `INV-RESUME` (`TDD-INV-005`): for every crash point, re-running converges to
+  the uninterrupted final state.
+- `INV-FAIL-CLOSED` (`TDD-INV-006`): unknown versions and malformed records
+  return typed errors, never values or defaults.
+- `INV-WRITE-V2` (`TDD-INV-007`): every successful write produces v2 bytes.
+- `INV-SOURCE` (`TDD-INV-008`): no `A1` reference and no compatibility
+  machinery remains.
+- `INV-ROLLBACK` (`TDD-INV-009`): a restored snapshot decodes under the
+  baseline binary for every sampled record.
+
+Lemmas:
+
+- `L-DECODERS` (`TDD-LEMMA-001`): the v1 and v2 decoders are independent;
+  neither delegates its own format to the other. This makes corpus
+  expectations an oracle rather than a self-comparison.
+- `L-COMPOSE` (`TDD-LEMMA-002`): if `decode_v1` is total on the corpus, `M` is
+  total and v2 round-trips, the migration composition preserves the value.
+- `L-ATOMIC` (`TDD-LEMMA-003`): under atomic replacement, a crash leaves each
+  record wholly v1 or wholly v2.
+- `L-SCAN` (`TDD-LEMMA-004`): a stateless scan visits every record and skips
+  only after successful v2 validation.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-STORAGE` (`TDD-AXIOM-001`): the storage platform replaces one record
+  atomically. Source: platform documentation captured at `EP-M0`.
+- `AXIOM-DURABILITY` (`TDD-AXIOM-002`): flush and durability calls behave as
+  documented. The repository-owned calls are checked against that contract.
+- `AXIOM-EXCLUSIVE-WRITER` (`TDD-AXIOM-003`): no writer runs during snapshot and
+  migration. Enforced and verified operationally.
+- `AXIOM-BASELINE` (`TDD-AXIOM-004`): the deployed binary or a pinned baseline
+  build is available and faithful for corpus capture and rollback rehearsal.
+- `AXIOM-CORPUS` (`TDD-AXIOM-005`): the corpus represents the deployed record
+  classes. This is claimed and documented, not proven.
+- `AXIOM-SERIALIZATION` (`TDD-AXIOM-006`): the chosen serialization implements
+  its documented canonical form. Third-party internals are not verified; the
+  repository's configuration of them is.
+
+### Methods per obligation
+
+- Obligation: `INV-READ-CORPUS`.
+  Method: table-driven golden corpus test plus a property test over v1 fixtures
+  produced by the frozen baseline.
+  Rationale: the corpus is direct evidence of deployed readability; generated
+  cases cover field classes.
+  Domain: every corpus record and every optional, absent, boundary and unicode
+  class.
+  Artefact: `tests/codec/v1_corpus.*` with an expected-value table.
+  Evidence: the focused command fails before the decoder exists and passes
+  after; the corpus manifest is retained.
+  Non-vacuity: at least one witness per class; a mutated byte must fail with a
+  typed error or a wrong-value assertion; an all-empty corpus is rejected.
+- Obligation: `INV-PRESERVE`.
+  Method: property test over generated stores and the corpus, with
+  `M(decode_v1(b))` as the oracle.
+  Rationale: preservation is a value relation independent of the v2 encoder.
+  Domain: stores of zero, one and many records; every mapping row.
+  Artefact: `tests/migrate/preserves_value.*`.
+  Evidence: red before the migrator, green after; saved regression seed.
+  Non-vacuity: every mapping row is exercised; a seeded mapper that swaps two
+  fields must be rejected.
+- Obligation: `INV-NO-LOSS`.
+  Method: before/after ID set and multiset digest.
+  Rationale: directly detects deletion, addition and value drift.
+  Domain: generated stores plus the corpus.
+  Artefact: `tests/migrate/no_loss.*` and the migration report.
+  Evidence: digest equality in the report.
+  Non-vacuity: include an empty-optional record that a collapse would change; a
+  migrator that drops one ID must fail.
+- Obligation: `INV-IDEMPOTENT`.
+  Method: property test over two consecutive runs, comparing bytes.
+  Rationale: canonical encoding makes byte idempotence observable.
+  Domain: generated stores and the corpus.
+  Artefact: `tests/migrate/idempotent.*`.
+  Evidence: second report records zero changes.
+  Non-vacuity: a non-canonical encoder or a migrator that rewrites different
+  bytes must fail; a zero-record store is not sufficient.
+- Obligation: `INV-RESUME`.
+  Method: crash-injection state-machine test at each named step.
+  Rationale: models the actual interruption points and is exhaustive within
+  those steps.
+  Domain: crash before write, after temp write, before flush, before replace,
+  after replace, before report.
+  Artefact: `tests/migrate/resume.*`.
+  Evidence: final state equals the uninterrupted run.
+  Non-vacuity: every crash point reachable; a truncated destination left by a
+  faulty migrator must fail.
+- Obligation: `INV-FAIL-CLOSED`.
+  Method: parameterized matrix of versions and malformations.
+  Rationale: finite partition; exhaustive enumeration is practical.
+  Domain: versions 0, 1, 2, 3, maximum integer; missing field; short header;
+  bad checksum; ambiguous prefix.
+  Artefact: `tests/codec/fail_closed.*`.
+  Evidence: every case returns the expected typed error.
+  Non-vacuity: every case has a witness; a decoder that defaults unknown
+  versions to v1 must fail.
+- Obligation: `INV-WRITE-V2`.
+  Method: codec property test and store inspection.
+  Rationale: the write path has one observable output.
+  Domain: every generated logical record.
+  Artefact: `tests/codec/writes_v2.*`.
+  Evidence: no v1 bytes after any write.
+  Non-vacuity: at least one write witness; any v1 output fails.
+- Obligation: `INV-SOURCE`.
+  Method: source search plus build, with a red stage before `EP-M1`.
+  Rationale: absence of a symbol is directly observable.
+  Domain: the source tree, excluding generated and vendor trees.
+  Artefact: the `rg` command and compiler output.
+  Evidence: before the change the search finds `A1`; afterwards it finds zero.
+  Non-vacuity: a scratch reintroduction of an alias must be caught.
+- Obligation: `INV-ROLLBACK`.
+  Method: rehearsal transcript.
+  Rationale: restore is an operational property, not an in-process one.
+  Domain: one scratch environment and a sample across field classes.
+  Artefact: the runbook rehearsal log.
+  Evidence: at least one rewritten record is restored and read by the baseline.
+  Non-vacuity: restoring only untouched records is not sufficient. A negative
+  control with a second binary is impractical here; the independent witness is
+  the baseline binary reading the restored record.
+
+### Formal verification decision
+
+No prover or model checker is adopted (`D6`). The per-record state space is
+small, and the dominant risks are platform atomicity, field mapping and corpus
+coverage. A bounded model check of the scan/resume state machine could add
+confidence in `INV-RESUME`, but would leave `AXIOM-STORAGE`, `AXIOM-CORPUS` and
+the mapping review untouched. Property tests with crash injection are
+proportionate. Revisit this if the migration becomes concurrent or the storage
+guarantee is weaker than assumed.
+
+### Suggested BDD features
+
+Proposed feature path: `tests/features/record_migration.feature`. These are
+proposed acceptance scenarios; if the repository has no BDD runner, exercise
+them through the tests named above and do not add a framework.
+
+```gherkin
+Feature: Read and migrate records written by the deployed binary
+  Scenario: A legacy record survives the upgrade
+    Given a store containing a record written by the deployed binary
+    When the new binary reads the record
+    Then the record is returned with its original logical value
+
+  Scenario: An interrupted migration resumes
+    Given a store containing legacy and migrated records
+    When the migration process stops after replacing one record
+    And the migration is run again
+    Then every record is stored in the current format
+    And no record value changed
+
+  Scenario: An unknown format version is rejected
+    Given a record with an unknown format version
+    When the new binary reads the record
+    Then a typed unsupported-version error is returned
+    And no default value is produced
+```
+
+## Plan of work
+
+### `EP-M0` intake, baseline capture and approval readiness
+
+This is discovery, not implementation. Assign `GAP-BASELINE-API`,
+`GAP-FIELD-MAP`, `GAP-PRIVACY`, `GAP-STORAGE`, `GAP-CORPUS`, `GAP-RETENTION`,
+`GAP-ROLLBACK` and `GAP-VOLUME`. End state: the plan contains the actual
+repository-relative paths, symbols, format description, storage guarantee,
+corpus manifest, retention decision, rollback scope, measured volume and gate
+commands; the budget survey is recorded and the tolerances are set; the plan is
+re-presented for approval.
+
+Acceptance evidence: a filled baseline table, a cited platform guarantee, a
+corpus manifest with provenance and coverage classes, a named rollback point
+and window, measured store size, and recorded gate commands. If
+`GAP-PRIVACY` finds an external consumer, stop and escalate before any code
+change. Recovery: none needed; the milestone is read-only.
+
+### `EP-M1` atomic source reshape
+
+Assign `REQ-ATOMIC-SOURCE`, `REQ-CODEC-BOUNDARY`, `GAP-BASELINE-API` and
+`INV-SOURCE`. Replace `A1` with `A2` and update every caller. Delete `A1`; do
+not leave a forwarding method, type alias, facade or deprecated attribute.
+
+Red: add a test that calls `A2` with a representative input and asserts the
+observable result. Run it before production changes; it must fail because the
+type or method is missing. If the language cannot express a failing call, use a
+compile-fail test or a repository-owned source check as the red stage, and
+record why.
+
+Green: add the new types and interface, update every caller, remove `A1`.
+Refactor: remove dead imports, run the formatter and the focused test, then the
+wider gates.
+
+Acceptance: the focused test passes; the source search for `A1` returns no
+matches; the build passes; review confirms no compatibility machinery.
+Compatibility decision: none. `A1` is private; all callers changed together.
+
+### `EP-M2` versioned record codec and v1 readability
+
+Assign `REQ-READ-V1`, `REQ-WRITE-V2`, `REQ-FAIL-CLOSED`, `REQ-CANONICAL`,
+`GAP-FIELD-MAP`, `GAP-STORAGE`, `GAP-CORPUS`, `INV-READ-CORPUS`,
+`INV-FAIL-CLOSED` and `INV-WRITE-V2`.
+
+Red: add the corpus fixtures and a test that reads each one through the new
+codec and asserts the expected logical value. It must fail because the codec or
+decoder is missing. Add a parameterized fail-closed test; it must fail for the
+same reason.
+
+Green: implement the v2 envelope, canonical encoder, v2 decoder, v1 decoder and
+version dispatch. Keep the v1 decoder behind the codec boundary. Do not add a
+v1 encoder; fixtures come from the deployed binary or the frozen baseline.
+Refactor: remove duplicated parsing, keep one decode entry point, run the
+focused tests and the wider gates.
+
+Acceptance: the corpus test passes; unknown versions and malformed records
+return the expected typed errors; a store inspection after a write shows only
+v2 bytes; no legacy type is exported to the domain.
+Compatibility decision: persisted data. The v1 records written by the deployed
+binary must remain readable. No source-API compatibility is provided or needed.
+
+### `EP-M3` offline idempotent migration
+
+Assign `REQ-MIGRATE`, `GAP-FIELD-MAP`, `GAP-CORPUS`, `GAP-VOLUME`,
+`INV-PRESERVE`, `INV-NO-LOSS`, `INV-IDEMPOTENT` and `INV-RESUME`.
+
+Red: add the preservation, no-loss, idempotence and resume tests over fixture
+stores. They must fail because the migrator does not exist or does not rewrite.
+
+Green: implement the migrator with preflight, stateless scan, temporary write,
+flush, atomic replace and per-record verification. Add the structured report.
+Refactor: share the codec with the application, remove duplicated mapping, run
+the focused tests and the wider gates.
+
+Acceptance: every fixture store migrates to v2 with unchanged logical values; a
+second run is byte-identical and reports zero changes; each seeded crash point
+resumes to the uninterrupted result; the report accounts for every record.
+Compatibility decision: persisted deployed records. The migration is the
+mechanism; it is not a source shim.
+
+### `EP-M4` cutover readiness, rollback rehearsal and documentation closure
+
+Assign `REQ-ROLLBACK`, `GAP-RETENTION`, `GAP-ROLLBACK`, `INV-ROLLBACK`,
+`TOR-SUCCESS-005` and the documentation updates.
+
+Red: write the rehearsal script and runbook steps; run them against the
+unmodified tooling and confirm the rehearsal fails or cannot run because the
+procedure is missing. Record the failure.
+
+Green: complete the runbook for quiesce, snapshot, restore verification,
+preflight, migration, post-check, start, rollback point, rollback and
+retention. Run the rehearsal in a scratch environment and capture the
+transcript.
+
+Refactor: reconcile the design and terms of reference with any discovery,
+update the live guide, and run the full gate sequence.
+
+Acceptance: the rehearsal restores the snapshot and the baseline binary reads a
+sample of rewritten records; the runbook states the rollback point and the
+post-snapshot data-loss consequence; documentation and ADR candidates are
+updated; no stale claim names the old API as available. The legacy decoder is
+not removed in this plan; removal is a separate change gated by the retention
+decision.
+Compatibility decision: persisted retention and rollback. No source
+compatibility.
+
+## Milestones and plateaus
+
+### `EP-M0` baseline captured
+
+- Requirements and gaps: `GAP-BASELINE-API` to `GAP-VOLUME`.
+- Acceptance evidence: baseline table, storage guarantee, corpus manifest,
+  retention decision, measured volume, gate commands, approved budgets.
+- Conformance check:
+  - Requirements satisfied: none implemented; discovery complete.
+  - Design still followed: any change to the design is recorded.
+  - Upstream assumptions still valid: `TOR-ASSUMPTION-001` to
+    `TOR-ASSUMPTION-006` rechecked.
+  - No unapproved public interface or dependency change: read-only milestone.
+  - No unapproved trust boundary or persisted-format change: no writes.
+  - Trace links current: gap dispositions updated.
+- Recovery: none needed.
+- Remaining gaps: all implementation.
+- Compatibility decision: none.
+
+### `EP-M1` one source interface
+
+- Requirements and gaps: `REQ-ATOMIC-SOURCE`, `REQ-CODEC-BOUNDARY`,
+  `INV-SOURCE`.
+- Acceptance evidence: source search and build output.
+- Conformance check:
+  - Requirements satisfied: `A2` in place, `A1` absent.
+  - Design still followed: no legacy type leaked.
+  - Upstream assumptions still valid: privacy evidence unchanged.
+  - No unapproved public interface or dependency change: confirmed.
+  - No unapproved persisted-format change: none.
+  - Trace links current.
+- Recovery: revert the milestone branch; no data was touched.
+- Remaining gaps: codec and migration.
+- Compatibility decision: none. The API is private and every caller changed
+  together.
+
+### `EP-M2` deployed records readable
+
+- Requirements and gaps: `REQ-READ-V1`, `REQ-WRITE-V2`, `REQ-FAIL-CLOSED`,
+  `REQ-CANONICAL`, `INV-READ-CORPUS`, `INV-FAIL-CLOSED`, `INV-WRITE-V2`.
+- Acceptance evidence: corpus test, fail-closed matrix, write inspection.
+- Conformance check:
+  - Requirements satisfied: v1 read, v2 write, typed errors.
+  - Design still followed: codec boundary intact.
+  - Upstream assumptions still valid: field mapping approved.
+  - No unapproved public interface or dependency change: confirmed.
+  - No unapproved persisted-format change: the new format is approved by the
+    design and plan.
+  - Trace links current.
+- Recovery: revert; the deployed records were not modified.
+- Remaining gaps: migration.
+- Compatibility decision: deployed v1 records must remain readable; no source
+  compatibility.
+
+### `EP-M3` store migrated
+
+- Requirements and gaps: `REQ-MIGRATE`, `INV-PRESERVE`, `INV-NO-LOSS`,
+  `INV-IDEMPOTENT`, `INV-RESUME`.
+- Acceptance evidence: fixture-store tests, crash injection, before/after
+  report.
+- Conformance check:
+  - Requirements satisfied: idempotent, resumable, lossless migration.
+  - Design still followed: stateless scan and atomic replace.
+  - Upstream assumptions still valid: storage axiom holds.
+  - No unapproved public interface or dependency change: confirmed.
+  - No unapproved persisted-format change: only v2 writes.
+  - Trace links current.
+- Recovery: restore the rehearsal snapshot; in production, restore the
+  pre-migration snapshot.
+- Remaining gaps: cutover and rollback rehearsal.
+- Compatibility decision: deployed records migrated; no source compatibility.
+
+### `EP-M4` cutover ready
+
+- Requirements and gaps: `REQ-ROLLBACK`, `INV-ROLLBACK`, `TOR-SUCCESS-005`.
+- Acceptance evidence: rehearsal transcript, runbook, documentation diff.
+- Conformance check:
+  - Requirements satisfied: rollback rehearsed, documentation current.
+  - Design still followed: rollback is restore-based, not dual-read.
+  - Upstream assumptions still valid: retention decision recorded.
+  - No unapproved public interface or dependency change: confirmed.
+  - No unapproved persisted-format change: none beyond approved v2.
+  - Trace links current.
+- Recovery: the snapshot remains until the retention condition.
+- Remaining gaps: legacy decode path removal, a separate change.
+- Compatibility decision: persisted retention and rollback; no source
+  compatibility.
+
+## Concrete steps
+
+All commands are placeholders until `EP-M0` records the actual repository paths,
+test runner and gate targets. Run them from the repository root. Do not treat
+any expected output below as observed evidence.
+
+Focused Red-Green-Refactor sequence:
+
+```plaintext
+Working directory: <repository root>
+
+EP-M1 Red:   <focused test command for tests/api/new_api_shape> -> missing type or method error
+EP-M1 Green: <same command> -> passes with the representative case
+EP-M1 Refactor: <focused test> and <format/lint commands> -> pass
+
+EP-M2 Red:   <focused test command for tests/codec/v1_corpus> -> missing codec symbol or failing decode
+EP-M2 Green: <same command> -> passes for every corpus case
+EP-M2 Refactor: <focused tests> and <format/lint commands> -> pass
+
+EP-M3 Red:   <focused test command for tests/migrate/*> -> migrator absent or fixture unchanged
+EP-M3 Green: <same command> -> preservation, no-loss, idempotence and resume pass
+EP-M3 Refactor: <focused tests> and <format/lint commands> -> pass
+
+EP-M4 Red:   <rehearsal command> -> procedure missing or restore not performed
+EP-M4 Green: <same command> -> restore and sample read succeed
+```
+
+Repository gate sequence, run sequentially and with `pipefail` so a failed gate
+cannot appear to pass. The target names are examples; replace them with the
+receiving repository's documented targets at `EP-M0`.
+
+```bash
+set -o pipefail
+make check-fmt 2>&1 | tee /tmp/check-fmt-<project>-<branch>.out
+make lint 2>&1 | tee /tmp/lint-<project>-<branch>.out
+make typecheck 2>&1 | tee /tmp/typecheck-<project>-<branch>.out
+make test 2>&1 | tee /tmp/test-<project>-<branch>.out
+```
+
+Inspect each log after the command. Do not report a gate as passing from the
+exit status alone if the pipe hid a failure; `pipefail` is mandatory. No
+baseline failures are known because no gate has been run.
+
+## Validation and acceptance
+
+Quality criteria for done:
+
+- Tests: the corpus, preservation, no-loss, idempotence, resume and
+  fail-closed suites pass; the new tests fail before their milestone's
+  implementation and pass after.
+- Verification: `INV-READ-CORPUS`, `INV-PRESERVE`, `INV-NO-LOSS`,
+  `INV-IDEMPOTENT`, `INV-RESUME`, `INV-FAIL-CLOSED`, `INV-WRITE-V2`,
+  `INV-SOURCE` and `INV-ROLLBACK` are discharged with the evidence named in
+  `Verification plan`.
+- Lint and typecheck: the repository's gates pass.
+- Performance: the rehearsal migration completes within the approved window;
+  the threshold is `[OPEN]` until `EP-M0`.
+- Security: the report logs record IDs and error classes, not payloads; the
+  snapshot inherits the store's access controls.
+
+Quality method: the exact commands are recorded at `EP-M0`; until then this
+section is a plan, not evidence. No check has been run.
+
+Red-Green-Refactor evidence to record when implementation begins:
+
+- Red command, expected failure and evidence that it failed for the intended
+  reason.
+- Green command and passing case count.
+- Refactor command sequence and passing results.
+- BDD runner command if the repository adopts the proposed feature; otherwise
+  identify the tests that exercise each scenario.
+
+## Idempotence and recovery
+
+The migrator is safe to re-run. A partial run leaves each record either fully
+v1 or fully v2; a rescan converges. Temporary files may remain after a crash
+and are removed or replaced on the next run. The snapshot is the recovery
+anchor: restore it, start the deployed binary and verify a sample. A migration
+must never begin without a snapshot that has been restored successfully in
+scratch. Clean up temporary files and scratch stores after the rehearsal; do
+not leave production credentials or payloads in the rehearsal environment.
+
+## Artefacts and notes
+
+No transcripts exist yet. Planned evidence paths, to be finalised at `EP-M0`:
+
+| Evidence | Path or location | State |
+| --- | --- | --- |
+| Corpus manifest | `tests/fixtures/records_v1/MANIFEST` | Planned |
+| Corpus test output | `/tmp/test-<project>-<branch>.out` | Not run |
+| Crash-injection results | `target/migration-reports/` or the repository's report path | Not run |
+| Migration report | Operator-supplied path | Not run |
+| Rollback rehearsal log | `/tmp/rollback-<project>-<branch>.out` | Not run |
+| Gate logs | `/tmp/{check-fmt,lint,typecheck,test}-<project>-<branch>.out` | Not run |
+
+## Interfaces and dependencies
+
+At the end of `EP-M1`, the source tree must define the new record type and the
+store interface, and must not define or re-export `A1`. The intended shape,
+independent of language, is:
+
+```plaintext
+RecordStore:
+  get(record_id) -> Result<Option<Record>, StoreError>
+  put(Record) -> Result<(), StoreError>
+  list_ids() -> Result<Vec<RecordId>, StoreError>
+
+Record:
+  record_id: RecordId
+  <reshaped fields>
+```
+
+At the end of `EP-M2`, the codec must expose one decode entry point and one
+encoder, internal to the store:
+
+```plaintext
+Codec:
+  decode_any(bytes) -> Result<Record, CodecError>
+  encode_v2(Record) -> Result<bytes, CodecError>
+```
+
+The codec owns version dispatch; the domain never sees bytes, format tags or
+legacy types. The migrator uses the codec and must not reimplement mapping.
+Exact names and paths are recorded at `EP-M0`.
+
+Authorised dependencies: none beyond the existing storage and serialization
+stack. A new runtime dependency, a new external interface, or a published
+package change requires escalation. The deployed binary and the corpus are
+internal dependencies: the operator provides the binary or a pinned baseline
+build, and the corpus is captured with recorded provenance.
+
+## Revision note
+
+- 2026-11-21: Initial draft. Created from the terms of reference v0.1
+  (`f68e0d0319f9f400e1732c04ab6a7a871c4a3d8c329b615af14e31cda965155b`) and
+  technical design v0.1
+  (`efe62cf6e4e0efde0f6c30ebd43d0234fefee0b8c8ffa5103b89b80258409b9f`). No
+  repository baseline was inspected, so all paths, symbols and gate commands
+  are placeholders to be resolved in `EP-M0`. The plan is `DRAFT`; it does not
+  authorise implementation.

@@ -1,0 +1,227 @@
+# Supervisor worker lifetime – technical design and ADR impact record
+
+Status: Proposed impact assessment; blocked pending an upstream decision
+
+Date: 2026-11-21 08:12Z
+
+Companion records:
+
+- `01-terms-of-reference-feedback.md`
+- `03-execplan-supervisor-worker-shutdown.md`
+
+## Purpose
+
+This record states the design-level consequences of `EVID-PROBE-001` from the
+ToR feedback record. It links the falsified promise to requirements, a gap,
+candidate design responses, and verification obligations. It does not choose a
+response and does not amend the ADR.
+
+Terms are defined only in `01-terms-of-reference-feedback.md`.
+
+## Claim and evidence status
+
+- `PROV-TOR-SUCCESS-001`: accepted upstream intent, approval not verified here.
+- `PROV-ADR-001`: the durable decision that cancelling a supervisor stops its
+  workers. The ADR identifier, path, revision, and approval record were not
+  available, so this handle is local to these records.
+- `EVID-PROBE-001`: observed fact, limited to the exercised path, cause
+  unknown.
+- Design response: no candidate selected.
+- ADR change: not proposed as accepted and not made.
+
+Do not rewrite the ADR to agree with the observed implementation.
+
+## Baseline, target, and gap
+
+Baseline: the observed implementation under the probe leaves workers alive
+after the supervisor exits. This is evidence for the exercised path only. The
+source revision, worker-spawn paths, cancellation implementation, and process
+lifetime mechanism were not inspected, so the mechanism of the mismatch is
+unknown.
+
+Target: after cancellation completes, no supervisor-started worker in the
+defined worker set is alive. Workers that were not cancelled continue running.
+
+Gap record `GAP-WORKER-REAP-001`:
+
+- Upstream requirement: `PROV-TOR-SUCCESS-001` via `PROV-ADR-001`.
+- Baseline evidence: `EVID-PROBE-001`.
+- Target state: zero surviving workers within deadline D.
+- Missing capability or mismatch: either the implementation omits a termination
+  step that the design requires, or the design's lifetime mechanism does not
+  cover the worker set. Undetermined until `EP-M0`.
+- Disposition: blocked, pending acceptance of decision D1 in the ExecPlan. It
+  is not "already satisfied", "out of scope", or a roadmap task by default.
+- Resolution owner: unknown.
+- Unblock condition: explicit acceptance of either a defect-fix disposition
+  with the existing architecture retained, or a design and ADR change naming
+  the mechanism and scope.
+- Verification obligation: the `VO-*` obligations below and the ExecPlan's
+  `Verification plan`.
+
+## Requirement and component links (provisional)
+
+- `PROV-TDD-REQ-001`: Cancellation of a supervisor terminates every worker in
+  the defined worker set within deadline D. The supervisor does not exit in a
+  way that leaves survivors behind.
+- `PROV-TDD-COMP-001`: The supervisor lifecycle component owns the worker set,
+  the cancellation sequence, and the wait or termination discipline. The actual
+  component name and path must be resolved during inspection.
+- `PROV-TDD-OBL-001`: Evidence of real process death at the integration
+  boundary. A mock that asserts the disputed guarantee is not evidence.
+
+Provisional trace chain:
+
+```plaintext
+PROV-TOR-SUCCESS-001 -> PROV-ADR-001 -> PROV-TDD-REQ-001
+  -> PROV-TDD-COMP-001 -> GAP-WORKER-REAP-001 -> EP-M1
+  -> planned cancellation integration test
+```
+
+The handles are local placeholders. Replace them with established upstream
+identifiers during reconciliation; do not treat them as accepted IDs.
+
+## Candidate design responses (proposed, none selected)
+
+### A. Explicit worker registry and ordered shutdown
+
+Mechanism: the supervisor records every worker it starts. On cancellation it
+signals the workers, waits for a grace period, forcibly terminates survivors at
+the deadline, and then exits.
+
+Strengths: portable, explicit, directly observable, and independent of implicit
+process ancestry.
+
+Limits: covers only registered processes and only while the supervisor runs. A
+supervisor crash or forced termination bypasses the mechanism unless the
+promise excludes that case. Every worker-spawn path must register.
+
+Verification: a coverage test for each spawn path, the integration liveness
+test, and a mutation that removes the wait or termination step must fail.
+
+ADR impact: compatible with the promise for cancellation if the ADR names the
+shutdown discipline and deadline. It may need no architectural change if the
+existing design already intends this discipline.
+
+### B. Process group or session signal
+
+Mechanism: workers remain in a supervisor-owned process group; cancellation
+signals the group.
+
+Strengths: covers descendants that remain in the group, with little code.
+
+Limits: workers that detach, for example by calling `setsid`, escape. A shared
+group can signal unrelated processes. Group membership must be guaranteed. A
+supervisor crash is not covered.
+
+Verification: assert group membership at spawn, test a detaching worker if it
+is in the worker set, and test preservation of unrelated processes.
+
+ADR impact: the ADR must record group ownership and the escape cases.
+
+### C. Operating-system-enforced lifetime
+
+Mechanism: for example Linux parent-death signal (`PR_SET_PDEATHSIG`), a cgroup
+kill, or a Windows job object with kill-on-close, chosen per supported platform.
+
+Strengths: the platform enforces worker death even when the supervisor is
+terminated abruptly, subject to the mechanism's documented semantics.
+
+Limits: platform-specific, may require worker cooperation or privileged
+configuration, and behaves differently under containers and service managers.
+It introduces platform code paths and a platform test matrix.
+
+Verification: per-platform integration tests, including forced supervisor
+termination if that case is in scope, with unsupported platforms recorded as
+residual gaps.
+
+ADR impact: substantial. The ADR decision changes from an implicit assumption
+to an explicit enforced mechanism.
+
+### D. Narrow the promise
+
+Mechanism: none. This is a requirement and ADR change, not a design response.
+
+Effect: the ToR and ADR state that cancellation does not guarantee worker
+termination, or guarantees it only under narrower conditions.
+
+Precondition: explicit acceptance by the decision authority. Never adopt it
+merely because the probe observed survivors.
+
+Verification: the revised promise still needs a measurable acceptance
+criterion.
+
+No option is selected. The choice depends on the documented cancellation model,
+the supported platforms, and whether the existing design's mechanism is sound
+but unimplemented. `EP-M0` must establish the cause before the owner chooses.
+
+## ADR reconciliation
+
+Affected decision: `PROV-ADR-001`, the ADR that promises cancellation stops
+workers. Its actual identifier and revision are unavailable.
+
+Required outcomes:
+
+1. If the ADR's mechanism and scope remain valid and the implementation is
+   non-conforming, no ADR change is needed. Record the defect and the accepted
+   corrective work.
+2. If the probe shows that the ADR's mechanism cannot deliver the promise,
+   propose a superseding or amended ADR naming the accepted mechanism, scope,
+   platforms, and verification evidence. Record acceptance and its date before
+   relying on it.
+3. If the promise itself changes, revise the ADR and the ToR together.
+
+Status: unresolved. This record does not edit the ADR, and the ADR must not be
+rewritten to match observed behaviour.
+
+## Verification obligations
+
+- `VO-TERMINATION`: A real-process integration test starts a supervisor with
+  workers, cancels it through the documented operation, and observes that all
+  worker processes are gone within D after supervisor exit. Method:
+  parameterized integration test. Rationale: the disputed property is real
+  operating-system process liveness, which a unit mock cannot establish.
+- `VO-PRESERVATION`: Workers remain alive before cancellation, so the test
+  cannot pass by killing workers unconditionally.
+- `VO-COVERAGE`: Every supervisor-owned spawn path registers or protects its
+  workers. A worker started through a bypass path is detected.
+- `VO-RACE`: Cancellation concurrent with worker start or exit neither leaves a
+  survivor nor hangs. Method: scripted interleavings, or a state-machine model
+  if the receiving repository supports one.
+- `VO-SCOPE`: If descendants or abrupt supervisor termination are in scope,
+  test those cases. Otherwise record them as residual gaps rather than silent
+  exclusions.
+
+Non-vacuity arguments and negative controls are specified in the ExecPlan's
+`Verification plan`. No verification has been performed; these are planned
+obligations, not passing results.
+
+## Axioms and dependencies
+
+- `AXIOM-OS-PARENT-EXIT`: An operating system does not terminate a parent's
+  children merely because the parent exits. Without an explicit mechanism,
+  children survive and are reparented. Source: platform process semantics; on
+  Linux the `prctl(2)` parent-death-signal documentation describes the relevant
+  mechanism. The supported platform set is open (`TOR-OPEN-PLATFORM-04`).
+- `AXIOM-LIVENESS-OBSERVATION`: The chosen liveness check reports process
+  existence reliably for the test's lifetime. PID reuse is controlled by
+  matching process identity, not by PID alone.
+- Dependency: none identified. The implementation must not add a dependency
+  without authorization.
+
+## Readiness
+
+Blocked. The design cannot be completed, and implementation cannot be planned in
+detail, until:
+
+- the ToR and ADR revisions are supplied and reconciled with the provisional
+  identifiers;
+- the probe is reproduced with a transcript;
+- the decision authority accepts a disposition and, if needed, a design or ADR
+  change.
+
+## Handoff
+
+The ExecPlan `03-execplan-supervisor-worker-shutdown.md` carries the proposed
+deviation, the affected identifiers, the options, and the blocked state. It
+must not be approved or executed before the unblock conditions above are met.

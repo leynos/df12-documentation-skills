@@ -1,0 +1,130 @@
+# Proposed record corrections
+
+Status: proposals only. Not applied. Not approved.
+
+Date: 2026-11-19.
+
+Companion documents: `phase0-intake-working-note.md` and
+`terms-of-reference-addendum-dependencies-and-evidence.md`. The claims these
+proposals cite are recorded there as `TOR-CLAIM-001` to `TOR-CLAIM-004` and
+`TOR-ASSUMPTION-001`.
+
+Application is outside this task's authorized write scope. Each correction
+requires the record owner to confirm the pinned facts and accept the change.
+The proposals below deliberately contain placeholders rather than invented
+values.
+
+## PC-1 – close the implementation blocker
+
+Record: the existing programme entry for `TOR-DEP-001`. Preserve its
+identifier; do not renumber or recycle it.
+
+Required before application:
+
+- the record's quoted unblock condition;
+- the merge pull request or commit SHA;
+- the merge date;
+- the accepting owner.
+
+Proposed closure note:
+
+> Blocker closed on `<date>` by `<owner>`. The stated unblock condition,
+> `<quoted condition>`, is satisfied: the gated implementation merged in
+> `<repository>#<pull request>`, commit `<SHA>`, on `<date>`, and was released
+> in `<tag>` if any. No item covered by this blocker remains gated on the
+> implementation.
+
+Do not apply this closure if the quoted condition is not the implementation
+merge. In that case the entry is re-scoped under PC-2 and remains open.
+
+Do not describe the closure as an outcome claim. A merge closes an
+implementation gate; it does not establish verification, release, deployment,
+or an outcome.
+
+## PC-2 – record the deployment-evidence dependency
+
+Record: new entry `TOR-DEP-002`, or the existing entry re-scoped to this
+condition if PC-1 found that the blocker already gates deployment.
+
+Required before application:
+
+- the target environment name;
+- the deployment owner or pipeline;
+- the revision expected to be deployed;
+- the observable check that constitutes acceptance;
+- the accepting owner.
+
+Proposed entry text:
+
+> Required capability: a deployment record for the implementation merged as
+> `<repository>#<pull request>` at commit `<SHA>`. The record must name the
+> target environment, the deployed artefact and revision, the deployment time,
+> and the result of an observable post-deployment check.
+>
+> Provider: `<deployment owner or pipeline>`.
+>
+> Consumer: `<programme record>`, release and deployment acceptance, and later
+> outcome validation.
+>
+> Availability condition: the deployment record exists and its revision
+> matches the merged revision.
+>
+> Gates: release and deployment acceptance, and outcome validation. It does not
+> gate the already merged implementation.
+>
+> Disposition: open. Unblock condition: evidence meeting the above is accepted
+> by `<owner>`.
+
+This entry must not be used to re-open completed implementation work. If
+deployment is intentionally not planned, that is a scope decision requiring
+explicit acceptance, not a silent closure of this edge.
+
+## PC-3 – correct the daily summary entry
+
+Record: the archived daily summary that reports the item as complete.
+
+Do not overwrite the archive. Append or annotate a correction that preserves
+the original text and states the date and source of the correction.
+
+Proposed replacement status line:
+
+> Implementation: reported merged (`<repository>#<pull request>`, `<SHA>`).
+> Verification: `<state or no evidence recorded>`. Release: `<state or no
+> evidence recorded>`. Deployment: no evidence recorded. Outcome: not
+> validated. Programme status: not complete; deployment evidence outstanding.
+
+If the summary owner prefers a shorter form, the minimum correction is that
+"complete" must be replaced by the delivery dimension it refers to, and the
+deployment gap must be stated explicitly.
+
+## PC-4 – pin the merge evidence
+
+Record: the programme entry that references the merged implementation.
+
+Add the merge revision and date, so a later reader can re-check the closure
+without relying on the summary. Evidence already recorded remains valid for
+what it recorded; it does not remain evidence for a later state.
+
+Proposed annotation:
+
+> Implementation merged at `<repository>#<pull request>`, commit `<SHA>`, on
+> `<date>`. Checked on `<date>`. This records the merge only; it does not
+> record verification, release, deployment, or an outcome.
+
+## Application rules
+
+1. Only the record owner or the named authority applies a correction.
+2. Preserve identifiers, history, and original text; add dated correction
+   notes rather than rewriting the archive.
+3. Do not backdate any correction.
+4. Do not apply PC-1 until PC-4's facts are available, unless the record
+   already pins them.
+5. After applying any correction, reassess the addendum's open questions and
+   record which ones the correction closes.
+
+## What this file does not do
+
+It does not edit the programme record, the daily summary, any issue or pull
+request, any release, or any deployment system. It does not name an owner or
+approve its own proposals. It does not claim that a deployment occurred or that
+one did not.

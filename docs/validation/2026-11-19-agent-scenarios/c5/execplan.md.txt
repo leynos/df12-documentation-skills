@@ -1,0 +1,536 @@
+# Change a released version 2.1 function without breaking its committed consumer
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (evidence incomplete; not approved for execution).
+
+Branch: `[OPEN]` – not supplied with the scenario. Do not execute until the
+branch and repository are recorded.
+
+Roadmap item: none supplied. No roadmap identifier is invented.
+
+## Purpose / big picture
+
+A function shipped in version 2.1. An external consumer runs it in a deployed
+environment, and the project promised that consumer compatibility. The working
+branch is ahead of the release tag. The request is to change the function.
+
+Today the function's 2.1 contract is published and in use. After the work, a
+maintainer can deliver the requested change while the committed consumer either
+keeps working unchanged (additive evolution) or moves through a planned,
+evidenced migration (deliberate migration). The observable difference is
+concrete: the frozen 2.1 consumer fixture compiles and produces its recorded
+outcomes against the supported release; the new behaviour is available to its
+intended callers; and any retired path is removed only after migration evidence.
+
+The branch being ahead of the tag is not a reason to skip compatibility. The
+2.1 contract is released; only the edit is unreleased. `TDD-DEC-001` records
+that classification and its consequence.
+
+This plan delivers one of two coherent outcomes. The evidence recorded in
+`EP-M0` selects which:
+
+- Additive evolution, where baseline call shapes and behaviour are untouched;
+  or
+- Deliberate migration, where the baseline is deprecated, the named consumer
+  migrates, and the baseline is removed at an approved release.
+
+The two are alternatives, not sequential milestones. `EP-M3` is removal work
+only on the migration branch; on the additive branch it is documentation and
+commitment-record closure.
+
+## Constraints
+
+- Implementation begins only after explicit approval of this plan. This draft
+  is not approval, and silence is not approval.
+- The 2.1 release contract is the authoritative baseline. Do not rewrite it to
+  match the working branch. `AXIOM-2.1-BASELINE`.
+- The explicit compatibility commitment is binding (`TOR-CONSTRAINT-001`). Do
+  not begin an interface edit until its text and source are recorded
+  (`TOR-OPEN-002`). If the commitment conflicts with the requested change,
+  escalate; do not silently break it.
+- The deployed external consumer must be named with its deployed version and
+  call sites (`TOR-CONSTRAINT-002`, `TOR-OPEN-003`). A passing local test is not
+  deployment evidence.
+- Compatibility machinery is permitted only for that named consumer under that
+  commitment. It must answer "compatible with whom or what?" in its own
+  documentation. Unnamed shims, permanent aliases, and dual implementations are
+  forbidden (`TOR-NONGOAL-001`, `TDD-DEC-002`).
+- Update every affected in-repository caller together with the interface. Do
+  not keep an old internal call path alive to make a milestone easier.
+- Do not change unrelated functions or unrelated API surfaces
+  (`TOR-NONGOAL-002`).
+- Do not extend the commitment's scope or duration by implication
+  (`TOR-NONGOAL-003`).
+- Persisted data and wire formats are separate. If `TOR-OPEN-005` finds them,
+  plan an explicit data migration; do not solve it with a source shim.
+- Do not modify historical completed plans. Do not fabricate consumer names,
+  owners, tags, identifiers, or evidence.
+
+## Tolerances (exception triggers)
+
+No repository survey was possible in this authoring scope, so the budgets below
+are provisional and must be re-baselined at the end of `EP-M0`. There is no
+comparable historical plan available in scope; state that explicitly rather
+than implying a history. ExecPlan files are excluded from every size count,
+including this file.
+
+Classify changes by purpose: production source and executable test or build
+logic are code; manifests, lockfiles, deployment descriptors, and CI
+configuration are configuration; prose and reference material are
+documentation. Enforce each budget independently; deletions in one category do
+not offset overruns in another.
+
+- Files: if the change touches more than 8 non-ExecPlan files, stop and
+  escalate. Exclude this ExecPlan from the count.
+- Code: if the change exceeds 300 net lines (additions minus deletions), stop
+  and escalate.
+- Configuration: if the change exceeds 40 net lines, stop and escalate.
+- Documentation: if the change exceeds 150 net lines, excluding ExecPlan files,
+  stop and escalate.
+- Interface: any public API change beyond the one authorized function and its
+  documented replacement, stop and escalate.
+- Dependencies: any new dependency, stop and escalate. None is authorized.
+- Architecture: any need to change the additive-versus-migration decision after
+  `EP-M0`, stop and escalate with the falsifying evidence.
+- Iterations: if the focused test still fails after 3 corrective attempts, stop
+  and escalate.
+- Time: if a milestone exceeds 4 hours of active work, stop and escalate.
+- Ambiguity: if two valid interpretations of "change the function" materially
+  change the outcome, stop and present both with trade-offs.
+
+Re-baseline these numbers after the `EP-M0` survey and record the change in
+`Decision log`. Do not raise a limit during execution to absorb discovered
+scope; escalate instead.
+
+## Risks
+
+- Risk: the surface is misclassified as unreleased because the branch is ahead
+  of the tag, so a breaking change ships to a live consumer.
+  Severity: high. Likelihood: medium. Mitigation: `TDD-DEC-001` and the §4
+  classification table govern; any "no compatibility needed" claim is reviewed
+  against the 2.1 lineage.
+- Risk: the compatibility commitment is stale or narrower than assumed.
+  Severity: high. Likelihood: medium. Mitigation: quote it in `EP-M0`; if it
+  has expired, return to `TOR-ASSUMPTION-001` and re-decide.
+- Risk: the consumer cannot be identified or reached. Severity: high.
+  Likelihood: medium. Mitigation: block migration work; an uncoordinated break
+  is not an option.
+- Risk: semantic drift on an unchanged call path. Severity: medium.
+  Likelihood: medium. Mitigation: differential test against a recorded 2.1
+  oracle with boundary and error classes.
+- Risk: the deprecation path becomes permanent because removal is treated as
+  cleanup. Severity: medium. Likelihood: high. Mitigation: `INV-MIGRATION`
+  release-gate check; removal is acceptance work in `EP-M3`.
+- Risk: the change alters a persisted or wire format not in scope.
+  Severity: high. Likelihood: low. Mitigation: `TOR-OPEN-005` inventory before
+  drafting the interface.
+
+## Progress
+
+- [x] (2026-11-19 00:00Z) Read the governing skills and references; recorded
+  the classification and drafted the ToR, design, and this plan.
+- [ ] Plan approved by the user. (Blocking for all implementation.)
+- [ ] `EP-M0` evidence, baseline fixture, and commitment/consumer identifiers
+  recorded; budgets re-baselined.
+- [ ] `EP-M1` additive evolution delivered, or explicit evidence that additive
+  evolution is impossible.
+- [ ] `EP-M2` deliberate migration delivered, if selected.
+- [ ] `EP-M3` removal and documentation closure (migration branch), or
+  commitment-record and changelog closure (additive branch).
+- [ ] Upstream reconciliation: ToR and design updated for any falsified
+  assumption before status becomes `COMPLETE`.
+
+## Surprises & discoveries
+
+- Observation: the scenario omits the function, package, commitment text,
+  consumer identity, and change type. Evidence: the supplied brief. Impact:
+  `EP-M0` is mandatory and no interface edit may precede it.
+- Observation: the branch-ahead-of-tag detail is a classification trap, not a
+  licence to break the API. Evidence: `problem-contract.md` and
+  `architecture-contract.md` state that an edit to an already released
+  1.0-plus API does not make that contract unreleased. Impact: compatibility or
+  deliberate migration is required; recorded in `TDD-DEC-001`.
+- No implementation surprises yet; none can be recorded before `EP-M0`.
+
+## Decision log
+
+- D1. Decision: classify the function as a released 1.0-plus external contract
+  with a deployed consumer and an explicit commitment, so compatibility or a
+  deliberate migration is required. Rationale: it shipped in 2.1; the branch
+  position does not unpublish that contract; the private, test-only, pre-1.0,
+  and unreleased-ahead-of-tag exclusions therefore do not apply. The strongest
+  alternative, treating the branch as unreleased, would reverse the governing
+  lineage rule. Date/Author: 2026-11-19, authoring agent.
+- D2. Decision: prefer additive evolution; fall back to deliberate migration
+  only if `TOR-OPEN-004` shows the change is irreconcilably source- or
+  behaviour-breaking. Rationale: least footprint that still honours the
+  commitment; avoids gratuitous compatibility machinery. Date/Author:
+  2026-11-19, authoring agent.
+- D3. Decision: no permanent shim or dual implementation. Any retained baseline
+  path names its consumer, commitment, and removal release. Rationale:
+  `TOR-NONGOAL-001`, `TDD-DEC-002`, and the prohibition on compatibility
+  theatre. Date/Author: 2026-11-19, authoring agent.
+- D4. Decision: this plan remains `DRAFT`; no implementation is authorized.
+  Rationale: the ExecPlan approval gate and missing identifiers. Date/Author:
+  2026-11-19, authoring agent.
+- D5. Decision: budgets are provisional pending the `EP-M0` survey. Rationale:
+  no repository was in scope, so no honest estimate exists. Date/Author:
+  2026-11-19, authoring agent.
+- D6. Decision: no model checker or formal prover; use compile and differential
+  verification. Rationale: the obligations are finite-interface regression
+  properties, and the unresolved guarantee is external deployment diversity,
+  which no local proof establishes. Date/Author: 2026-11-19, authoring agent.
+
+## Outcomes & retrospective
+
+No implementation outcome exists yet. At completion this section will compare
+the delivered branch against the purpose: baseline consumer preserved or
+migrated, new behaviour available, retired path removed with evidence, and
+upstream ToR and design reconciled. Lessons from `EP-M0` about the commitment
+and consumer must be reflected upstream before status `COMPLETE`.
+
+## Context and orientation
+
+The owning package, module, symbol, and tag are unrecorded (`TOR-OPEN-001`).
+The scenario supplies only the release version, the existence of an explicit
+commitment, the existence of a deployed external consumer, and the branch
+position. A novice must therefore begin with `EP-M0` and must not guess a path.
+
+Existing tooling is also unrecorded. At `EP-M0`, record the repository's actual
+format, lint, typecheck, and test commands and whether they are Makefile
+targets. Do not assume this repository uses `make`; substitute the recorded
+equivalents if it does not. The budget-setting survey required by the template
+belongs in `EP-M0`: count the affected callers, tests, documentation, and
+configuration, then re-baseline `Tolerances`.
+
+## Conformance basis
+
+Upstream artefacts, all uncommitted drafts dated 2026-11-19:
+
+- `terms-of-reference.md`, draft v0.1, 2026-11-19.
+- `tech-design.md`, draft v0.1, 2026-11-19.
+- Scenario brief, supplied 2026-11-19.
+- Installed `execplans` skill and `references/execplan-template.md`, inspected
+  2026-11-19. Installed `tech-design-doc` and `terms-of-reference-doc` skills,
+  inspected 2026-11-19.
+
+No ADR, roadmap, repository document, release record, or consumer artefact was
+available within the authoring scope. Their absence is recorded, not filled.
+
+Named requirements:
+
+- `REQ-CHANGE`: deliver the requested change to the function (`TOR-GOAL-001`).
+- `REQ-IDENTITY`: record the function, commitment, consumer, and change type
+  (`TOR-CONSTRAINT-001`, `TOR-CONSTRAINT-002`, `TOR-OPEN-001` to
+  `TOR-OPEN-004`).
+- `REQ-COMPAT`: preserve the 2.1 contract for the committed window
+  (`TOR-GOAL-002`, `TOR-SUCCESS-001`, `TOR-SUCCESS-004`).
+- `REQ-CONSUMER`: leave the consumer running or migrated with evidence
+  (`TOR-GOAL-003`, `TOR-SUCCESS-003`).
+- `REQ-NO-SHIM`: no permanent dual interface
+  (`TOR-NONGOAL-001`, `TDD-DEC-002`).
+
+Gaps: `GAP-001` commitment terms, `GAP-002` consumer identity, `GAP-003`
+baseline fixture, `GAP-004` lineage classification (already satisfied).
+
+Trace chain:
+
+```plaintext
+TOR-GOAL-002 -> REQ-COMPAT -> INV-COMPAT-SOURCE / INV-COMPAT-BEHAVIOUR
+  -> EP-M1 or EP-M2 -> frozen-consumer compile + differential oracle
+TOR-GOAL-003 -> REQ-CONSUMER -> INV-MIGRATION / L-REMOVAL-SAFE
+  -> EP-M2 -> EP-M3 -> recorded consumer migration evidence
+```
+
+## Verification plan
+
+### Abstract model
+
+The contract is a partial function from an input class to an outcome (value,
+error, or side effect), plus a source-level call shape. Baseline call shapes
+must preserve the baseline outcome relation inside the committed window; new
+call shapes must produce the specified new outcome. Malformed input is an
+observable outcome. The model is the same one recorded in `tech-design.md` §9.1;
+this plan discharges it, it does not re-derive it.
+
+### Invariants and lemmas
+
+- `INV-COMPAT-SOURCE`: every call site in the frozen 2.1 consumer fixture
+  compiles unchanged against the supported release.
+- `INV-COMPAT-BEHAVIOUR`: every baseline call shape observes the recorded 2.1
+  outcome, or a documented deprecation diagnostic, for every input class in the
+  committed domain.
+- `INV-ADDITIVE`: baseline call shapes cannot reach the new behaviour, and the
+  new behaviour does not alter the baseline relation.
+- `INV-MIGRATION`: the baseline path is removed only when migration evidence
+  names the consumer, the migrated version, and the approved removal release.
+- `L-REMOVAL-SAFE`: `INV-MIGRATION` plus the approved removal release implies
+  removal cannot break a committed consumer.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-2.1-BASELINE`: tag 2.1 artefacts are the authoritative baseline.
+- `AXIOM-COMPILER`: toolchain and semantic-versioning behaviour follow their
+  documented contracts.
+- `AXIOM-CONSUMER`: the consumer's declared version matches its deployment;
+  checked at the boundary by consumer-owner evidence, not proved locally.
+
+### Methods per obligation
+
+- Obligation: `INV-COMPAT-SOURCE`.
+  Method: compile the frozen 2.1 consumer fixture against the candidate
+  release. Rationale: source compatibility is exactly a compile property.
+  Domain: every recorded consumer call site. Artefact: fixture crate/package
+  and a compile-only target, path recorded in `EP-M0`. Evidence: zero-edit
+  compile; discharge when the fixture builds. Non-vacuity: a seeded signature
+  mutation must fail with the expected symbol or type error.
+- Obligation: `INV-COMPAT-BEHAVIOUR`.
+  Method: parameterized tests for finite classes and property tests for the
+  input range, compared against a recorded 2.1 oracle. Rationale: differential
+  comparison catches drift that a rewritten expectation would hide. Domain:
+  boundaries, ordinary inputs, malformed inputs, documented errors. Artefact:
+  oracle fixture plus differential harness. Evidence: all classes match; the
+  property run reports acceptable generator classification. Non-vacuity:
+  reject excessive filtering; include at least one witness per class; a seeded
+  semantic mutation must be caught.
+- Obligation: `INV-ADDITIVE`.
+  Method: property test over baseline call shapes plus interface inspection.
+  Rationale: proves the new path is not silently reachable. Domain: all baseline
+  shapes. Artefact: property suite. Evidence: no baseline shape invokes the new
+  path. Non-vacuity: a seeded routing fault must be rejected.
+- Obligation: `INV-MIGRATION`.
+  Method: release-gate check against the migration record. Rationale: removal
+  is a process decision with evidence, not a source property. Domain: the
+  removal release. Artefact: checklist assertion or CI check. Evidence: refusal
+  when evidence is absent. Non-vacuity: a no-evidence removal attempt must be
+  refused.
+- Obligation: `L-REMOVAL-SAFE`.
+  Method: reasoning over the two preceding obligations. Rationale: the lemma
+  connects evidence to action; it needs no separate tool. Domain: the removal
+  release. Artefact: conformance note. Evidence: complete chain. Non-vacuity:
+  exhibit a migrated version and the permitting release.
+
+### Formal verification decision
+
+No model checker or formal prover. The obligations are compile and differential
+properties over a finite interface and generated inputs; the selected methods
+are proportionate. The unresolved guarantee concerns external deployment
+diversity, which no local proof establishes; `AXIOM-CONSUMER` records that
+boundary. Recorded in `Decision log` D6.
+
+### Suggested BDD features
+
+```gherkin
+Feature: A committed 2.1 caller survives the change
+
+  Scenario: The deployed consumer compiles and behaves as before
+    Given the frozen 2.1 consumer fixture
+    When it is built against the supported release
+    Then it compiles without edits
+    And every recorded baseline outcome is unchanged
+
+  Scenario: Removal without migration evidence is refused
+    Given a removal release with no migration evidence
+    When the release gate evaluates the deprecated path
+    Then the gate refuses removal
+```
+
+Proposed until adopted. If no BDD runner exists, the same cases run as the
+compile fixture, differential suite, and release-gate check above. Adding a
+runner requires separate authorization.
+
+## Plan of work
+
+### `EP-M0` evidence, baseline, and budget re-baseline
+
+No production change. Record the exact package, module, symbol, and 2.1 tag
+(`REQ-IDENTITY`). Quote the compatibility commitment with its source and
+revision. Name the external consumer, its deployed version, and its call sites.
+Freeze a 2.1 consumer fixture and a behavioural oracle. Classify the requested
+change as additive or breaking using a concrete before/after call-site
+comparison (`TOR-OPEN-004`). Survey affected code, tests, configuration, and
+documentation, then re-baseline `Tolerances`. Record the repository's actual
+gate commands.
+
+Acceptance evidence: an evidence record that closes `TOR-OPEN-001` to
+`TOR-OPEN-006` or escalates each unresolved one; a fixture that compiles against
+2.1 and reproduces recorded outcomes. This milestone changes no production
+behaviour, so Red-Green-Refactor is not applicable; the observable substitute is
+the baseline fixture transcript. Do not proceed if the commitment or consumer
+cannot be named.
+
+### `EP-M1` additive evolution (selected when `TOR-OPEN-004` is additive)
+
+Assigned: `REQ-CHANGE`, `REQ-COMPAT`, `INV-ADDITIVE`,
+`INV-COMPAT-SOURCE`, `INV-COMPAT-BEHAVIOUR`.
+
+Red: add a focused test for the new behaviour that fails because the new surface
+does not exist, and add the differential case proving baseline outcomes are
+unchanged. The new-behaviour test must fail for the intended "surface absent"
+reason, not a setup error.
+
+Green: add the smallest new surface that satisfies the test: a new symbol, a new
+entrypoint, or an added optional parameter whose absence reproduces baseline
+behaviour exactly. Do not change baseline required arguments, results, errors,
+or side effects.
+
+Refactor: simplify without changing behaviour; rerun the focused tests and the
+recorded wider gates.
+
+Acceptance: the new test fails before and passes after; the compile fixture and
+differential suite pass. Compatibility decision for this milestone: the
+baseline path is unchanged and is not a shim; no unnamed layer is introduced.
+
+### `EP-M2` deliberate migration (selected when additive evolution is impossible)
+
+Assigned: `REQ-CHANGE`, `REQ-COMPAT`, `REQ-CONSUMER`, `INV-MIGRATION`,
+`INV-COMPAT-SOURCE`, `INV-COMPAT-BEHAVIOUR`.
+
+Red: add a test asserting the baseline remains callable and emits a deprecation
+diagnostic naming the replacement and removal release, plus a consumer migration
+fixture that fails until the consumer's call sites are updated.
+
+Green: add the deprecation diagnostic and the replacement surface; coordinate
+the consumer update with its owner. The retained baseline path is compatibility
+machinery justified by the named consumer and commitment; document both at the
+deprecation site.
+
+Refactor: remove duplication inside the implementation while preserving the
+diagnostic and both externally observable behaviours.
+
+Acceptance: baseline and consumer fixtures pass; the migration record names the
+consumer version and the new call sites. Compatibility decision: the named
+external consumer and explicit commitment require the retained path; the path
+has a removal release.
+
+`EP-M1` and `EP-M2` are alternatives. Do not run both.
+
+### `EP-M3` removal and closure
+
+Assigned: `REQ-CONSUMER`, `INV-MIGRATION`, `L-REMOVAL-SAFE`, `REQ-NO-SHIM`.
+
+On the migration branch: add a release-gate check that refuses removal without
+migration evidence, then remove the baseline path at the approved release and
+update every in-repository caller and the changelog. On the additive branch:
+record the commitment outcome, update the changelog, and confirm no deprecated
+path was created.
+
+Red: removal-attempt check fails when evidence is absent. Green: removal
+proceeds and the full gate sequence passes. Acceptance: the release-gate
+negative control is demonstrated; the migration record is complete; no old path
+remains.
+
+### Milestones and plateaus
+
+- `EP-M0`: coherent evidence state. Requirements: `REQ-IDENTITY`. Acceptance:
+  identifiers and fixture recorded. Conformance check: 2.1 baseline quoted; no
+  design departure; no public interface change; trace links current. Recovery:
+  discard the evidence draft and re-gather. Remaining gaps: `EP-M1`/`EP-M2`
+  selection. Compatibility decision: obligation confirmed, no machinery yet.
+- `EP-M1`: coherent additive state. Requirements: `REQ-CHANGE`, `REQ-COMPAT`.
+  Acceptance: new test red then green; differential suite passes. Conformance
+  check: requirements satisfied; design followed; assumptions valid; no
+  unapproved public surface beyond the authorized function; no persisted-format
+  change; trace links current. Recovery: revert the additive surface; baseline
+  remains valid. Remaining gaps: `EP-M3` closure. Compatibility decision: none
+  beyond the unchanged baseline; no layer written.
+- `EP-M2`: coherent migration state. Requirements: `REQ-CHANGE`,
+  `REQ-COMPAT`, `REQ-CONSUMER`. Acceptance: baseline and migrated consumer
+  fixtures pass; migration record exists. Conformance check: as above, plus the
+  retained path is justified by the named consumer and commitment. Recovery:
+  extend the window only by authority decision; otherwise revert the
+  migration. Remaining gaps: `EP-M3` removal. Compatibility decision: the named
+  deployed consumer and explicit commitment require the retained path.
+- `EP-M3`: coherent removal/closure state. Requirements: `REQ-CONSUMER`,
+  `REQ-NO-SHIM`. Acceptance: release gate refuses an unsupported removal; the
+  removal passes with evidence; gates pass. Conformance check: no retained old
+  path; trace links closed; upstream reconciliation done. Recovery: restore the
+  path if evidence is invalidated. Remaining gaps: none.
+
+## Concrete steps
+
+Working directory: the repository root recorded in `EP-M0`. The exact commands
+are unknown in this authoring scope; do not invent target names. At `EP-M0`,
+record the real sequence and label these slots with it:
+
+```plaintext
+EP-M0 evidence (repository root):
+  baseline compile: <recorded compile command for the frozen 2.1 fixture>
+  oracle capture:   <recorded command that records baseline outcomes>
+  survey counts:    <recorded counting command for code/config/docs>
+EP-M1 red:          <recorded focused test command> -> new-surface-absent failure
+EP-M1 green:        <same command> -> pass; fixture and differential pass
+EP-M1 gates:        <recorded format, lint, typecheck, test sequence in that order>
+EP-M2 red:          <recorded deprecation/migration test>, expected failure
+EP-M2 green:        <same command> -> pass
+EP-M3 red:          <recorded release-gate check> -> removal refused without evidence
+EP-M3 green:        <same check> -> removal accepted; full gates pass
+```
+
+Run the gate sequence sequentially, not in parallel, so build caches are reused
+safely. If output is piped through `tee`, enable `pipefail` so a failed gate
+cannot appear to pass. Record log paths. Distinguish baseline or host-specific
+failures from regressions; do not waive a gate quietly.
+
+## Validation and acceptance
+
+Behavioural acceptance:
+
+- The frozen 2.1 consumer fixture compiles unchanged and reproduces its
+  recorded outcomes against the supported release.
+- Under additive evolution, a caller using only 2.1 call shapes cannot reach the
+  new behaviour, and a caller using the new shape observes the specified result.
+- Under migration, the baseline call site still works inside the window and
+  emits a deprecation that names the replacement and removal release; the
+  consumer is recorded as migrated before removal.
+- An attempted removal without migration evidence is refused for the intended
+  reason.
+- A seeded signature break fails `INV-COMPAT-SOURCE`; a seeded semantic change
+  fails `INV-COMPAT-BEHAVIOUR`. These negative controls are required evidence,
+  not optional.
+
+Quality criteria: focused tests pass; the recorded wider gates pass; no new
+dependency; no unapproved public surface; no persisted-format change without an
+explicit migration.
+
+Quality method: run the recorded gate sequence and the release-gate negative
+control, retaining transcripts under `/tmp` as the repository policy allows.
+
+## Idempotence and recovery
+
+`EP-M0` is read-only and repeatable. Fixture creation is additive and safe to
+rerun. `EP-M1` and `EP-M2` are mutually exclusive; if the selected branch is
+abandoned, revert it before trying the other. `EP-M3` removal is destructive:
+keep the removal commit isolated so it can be reverted without orphaning the
+migration record. If evidence is later invalidated, restore the baseline path
+and re-open `INV-MIGRATION`.
+
+## Artefacts and notes
+
+- Draft documents in this directory are uncommitted drafts dated 2026-11-19;
+  they are not approved artefacts.
+- No build, lint, typecheck, or test gate was run. No implementation exists.
+- No Mermaid diagram was authored; none required nixie validation.
+- No external research was performed; no external claim is made.
+- Evidence is recorded as observed, planned, or unavailable. A planned check
+  is not a passed check.
+
+## Interfaces and dependencies
+
+The exact function, package, and signature are `TOR-OPEN-001` and are not
+invented. At `EP-M0`, record the language-native signature and the replacement
+surface. Use the project's existing types and modules; do not introduce a new
+abstraction layer merely to host the compatibility path. Callers inside the
+repository change with the interface. No dependency is authorized; if one
+becomes necessary, stop and escalate.
+
+## Revision note
+
+- 2026-11-19: Initial draft. Records the release-lineage classification, the
+  additive/migration decision rule, and the evidence gaps. Remaining work is
+  gated on approval and on `EP-M0` identifying the function, commitment, and
+  consumer.

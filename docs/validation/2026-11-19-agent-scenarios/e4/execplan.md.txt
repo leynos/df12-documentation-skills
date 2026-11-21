@@ -1,0 +1,679 @@
+# Restore stale-epoch recovery in batch persistence
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: BLOCKED (revision B of `stream-ledger` removed the cited error variant;
+`EP-M2`'s planned failure path is unreachable and its verification is vacuous;
+deviation D2 is proposed and awaits explicit acceptance)
+
+Branch: `feat/queue-store-epoch-recovery` (recorded at revision A; not
+re-verified in this revision)
+
+Roadmap item: not recorded in the plan revision inspected. See
+`Conformance basis`; this revision does not invent one.
+
+## Provenance of this revision
+
+This revision was prepared without read or write access to the repository that
+the plan describes. The plan document being revised, the source tree at either
+dependency revision, the installed `stream-ledger` source, and the upstream
+Terms of Reference, technical design, and ADR set were outside the permitted
+read set. Facts attributed to revision A are reproduced from the plan's own
+records as supplied to this revision. The revision B contract change is the
+reported change that triggered this revision. No claim below was produced by
+reading revision B's source, compiling anything, or running a gate; symbol-level
+facts are marked unverified until re-inspected.
+
+## Purpose / big picture
+
+A queue of records must reach the ledger exactly once. `persist_batch` in
+`crates/queue-store/src/persist.rs` accepts a batch, submits it to
+`stream_ledger::Ledger::commit`, and reports the outcome to its caller.
+
+Three terms are used throughout. An *epoch* is the ledger's monotonic generation
+counter; a submission built against an older generation is *stale*. A *replan*
+is the caller's recovery: rebuild the batch from the queue and submit it again.
+A *batch* is the ordered set of records submitted in one call.
+
+At dependency revision A the plan's observable outcome was this: a caller
+persisting a batch whose epoch had moved receives `StoreError::Replan`, and no
+record from that batch is written. The caller rebuilds and retries; the queue
+does not lose the batch.
+
+```rust
+// revision A: the planned call shape
+match ledger.commit(batch) {
+    Ok(receipt) => Ok(receipt),
+    Err(CommitError::StaleEpoch) => Err(StoreError::Replan),
+    Err(other) => Err(other.into()),
+}
+```
+
+Revision B changes that outcome's reachability, not just its spelling.
+`CommitError::StaleEpoch` no longer exists, and `commit` now requires an
+`EpochGuard` that the dependency itself refreshes. A stale epoch cannot reach
+the submission point, so the branch above has no input that can reach it. The
+observable purpose of the feature – "recover from a stale epoch" – is no longer
+demonstrable through the dependency, and whether the `Replan` outcome remains
+part of the store's contract is a design decision that this plan does not own.
+That question is D2.
+
+## Constraints
+
+Hard invariants that must hold throughout implementation. Violation requires
+escalation, not a workaround.
+
+- The cited dependency contract is `stream-ledger` `v2.4.1` (commit `a1b2c3d`).
+  Consuming `v2.5.0` is a dependency change beyond the plan's authorization and
+  is a tolerance breach, not an incidental upgrade.
+- Do not re-declare, wrap, or shadow the removed `CommitError::StaleEpoch`
+  variant to keep the planned match arm alive. That is compatibility machinery
+  for an obsolete external interface with no named consumer, and it is
+  prohibited.
+- `crates/queue-store/src/persist.rs` is the only production file in scope.
+  Callers of `persist_batch` change with it in the same milestone; no caller is
+  left on an older interface.
+- No implementation begins until the deviation in D2 is accepted. The existing
+  approval gate is not waived by this revision.
+- Historical documents, including completed ExecPlans, remain untouched.
+- ExecPlan files are excluded from every size count, including this file.
+
+## Tolerances (exception triggers)
+
+Thresholds that trigger escalation when breached. These define the boundaries of
+autonomous action. Enforce each category independently; spare capacity in one
+category must not offset another. Counts are net lines (additions minus
+deletions) unless stated otherwise, and ExecPlan files are excluded.
+
+- Files: more than 3 non-ExecPlan files changed – stop and escalate.
+- Code: more than 120 net lines of code – stop and escalate.
+- Configuration: more than 10 net lines of configuration – stop and escalate.
+- Documentation: more than 40 net lines excluding ExecPlan files – stop and
+  escalate.
+- Interface: any change to `persist_batch`'s signature, or to `StoreError`
+  variants, beyond those authorized here – stop and escalate.
+- Dependencies: any change to the `stream-ledger` requirement line, including
+  adopting `v2.5.0`, without explicit authorization – stop and escalate.
+- Architecture: revising the recovery contract (whether `Replan` remains an
+  outcome) without acceptance of D2 – stop and escalate.
+- Red stage: if the red test cannot be made to fail for the intended reason,
+  stop and escalate. Do not substitute a passing test, an expected-failure
+  marker, or a deleted test for the missing red.
+- Upstream contract: if a cited source symbol or dependency contract revision
+  changes, stop and re-conform before continuing. This trigger has fired; see
+  `Surprises & discoveries`.
+- Iterations: after 3 attempts at the same failing gate – stop and escalate.
+- Time: a milestone exceeding 4 hours – stop and escalate.
+- Ambiguity: if two readings of the recovery requirement produce materially
+  different code, stop and present both.
+
+The budget figures above reproduce the plan's revision-A records. This revision
+did not re-survey the tree, because it made no code change and could not read
+the tree; see `Context and orientation`.
+
+## Risks
+
+- Risk: revision-A evidence is treated as current evidence for revision B.
+  Severity: high. Likelihood: high. Mitigation: every revision-A artefact is
+  labelled with its revision and re-checked before use; see
+  `Evidence freshness re-check` beside each claim.
+- Risk: pressure to make the plan green by deleting the unreachable failure path
+  and calling the deletion a success. Severity: high. Likelihood: medium.
+  Mitigation: the path is suspended, not removed; its removal is D2 option A and
+  requires upstream acceptance.
+- Risk: a vacuous check passes and is recorded as discharge. Severity: high.
+  Likelihood: high. Mitigation: the non-vacuity argument for
+  `INV-replan-on-stale` states that no satisfying witness exists at revision B,
+  which is a verification failure, not a pass.
+- Risk: the change is assumed mechanical and merged without design review.
+  Severity: medium. Likelihood: medium. Mitigation: the deviation is recorded
+  and the status is BLOCKED.
+- Risk: an unauthorized dependency bump lands alongside the work, hiding the
+  contract change in a lockfile diff. Severity: medium. Likelihood: low.
+  Mitigation: the dependency tolerance above; review `Cargo.lock` in the diff.
+- Risk: a hidden consumer of `StoreError::Replan` exists outside the repository.
+  Severity: low. Likelihood: unknown. Mitigation: none claimed; the plan records
+  no external consumer, and D2 must not assume one in either direction.
+
+## Progress
+
+- [x] (2026-11-14 10:20Z) Reconnaissance and initial draft at revision A.
+- [x] (2026-11-18 16:05Z) `EP-M0` feasibility probe completed against
+      `stream-ledger` `v2.4.1`; transcript in `Artefacts and notes`.
+- [x] (2026-11-19 01:10Z) Re-conformance check after the reported revision B
+      contract change; vacuity finding recorded; plan set to BLOCKED.
+- [ ] Deviation D2 accepted by the decision owner.
+- [ ] `EP-M1` exhaustive `CommitError` to `StoreError` translation; scope
+      shrinks by the removed variant.
+- [ ] `EP-M2` stale-epoch recovery path; suspended, unreachable at revision B.
+- [ ] `EP-M3` documentation and delivery closure; guide text still asserts
+      replan-on-stale.
+- [ ] Consumer audit completed: does `StoreError::Replan` still have a producer?
+
+## Surprises & discoveries
+
+- Observation: revision B removes `CommitError::StaleEpoch` and requires an
+  `EpochGuard` at the submission point. The plan's failure path is unreachable
+  by construction, not merely unexercised.
+  Evidence: the contract change reported for `v2.5.0` (commit `f9e8d7c`); see
+  `Artefacts and notes`. Symbol-level re-inspection was not run.
+  Impact: `EP-M2` cannot start; `INV-replan-on-stale` cannot be discharged; the
+  plan stops at BLOCKED pending D2.
+- Observation: the revision-A probe constructed a stale epoch through a
+  constructor that no longer exists. The probe's transcript cannot be replayed.
+  Evidence: the probe code in `Artefacts and notes` references the removed
+  variant.
+  Impact: the probe is historical evidence only. It supports no current claim.
+
+## Decision log
+
+- D1. Decision: translate every `CommitError` variant into a `StoreError` in
+  `persist_batch`, so a stale epoch surfaces to the caller as `Replan`.
+  Rationale: an exhaustive translation keeps the dependency's error surface from
+  leaking, and `Replan` is the only outcome the caller can act on.
+  Date/Author: 2026-11-14, plan author (revision A).
+
+- D2. Decision: PROPOSED, not accepted – record the revision B contract change
+  as a deviation and stop. This entry proposes options; it does not choose one.
+  Rationale: whether the store still owns a stale-epoch recovery behaviour is a
+  requirement and design question. The plan can record the options and their
+  costs; it cannot retire an upstream requirement on its own authority.
+  Affected identifiers: `REQ-stale-epoch-recovery`, `GAP-replan-unreachable`,
+  `INV-replan-on-stale`, `L-translation-total`, `EP-M1`, `EP-M2`, `EP-M3`, and
+  the compatibility classification of `StoreError::Replan`.
+  Option A – retire the failure path. Delete the translation arm and its test;
+  replace the obligation with `AXIOM-ledger-epoch-safety` plus a boundary check
+  at the real interface. Cost: `StoreError::Replan` loses its only producer and
+  should be removed; the technical design and Terms of Reference must state that
+  epoch recovery is delegated to the dependency. Evidence at completion: a
+  documented `v2.5.0` guarantee and a test proving the store accepts the real
+  guard interface.
+  Option B – preserve the behaviour under repository ownership. Have the store
+  acquire and validate the guard in its own critical section, so a stale guard
+  is rejected before `commit` and `Replan` stays reachable. Cost: new
+  repository-owned precondition logic, a new invariant (`L-guard-validity`), a
+  seeded fault that must be rejected, and a design change. This is a larger
+  change than the plan's approved scope.
+  Option C – pin `v2.4.1`. Rejected as written: it preserves an obsolete
+  dependency interface with no named consumer, deployed peer, or compatibility
+  commitment. It would become admissible only if such a commitment is named and
+  sourced.
+  Required upstream action: the technical design owner updates the recovery
+  requirement and the affected verification obligation; the Terms of Reference
+  owner confirms whether the user-visible `Replan` outcome remains a success
+  criterion. Until both respond, the plan stays BLOCKED.
+  Date/Author: 2026-11-19, plan author (revision B).
+
+- D3. Decision: do not re-declare `CommitError::StaleEpoch` locally, and do not
+  add an adapter that reconstitutes the old error shape.
+  Rationale: the variant belongs to an external interface; a local replica would
+  assert a guarantee the dependency no longer makes and would satisfy the
+  compiler without satisfying the contract.
+  Date/Author: 2026-11-19.
+
+- D4. Decision: mark every revision-A result for the affected symbols as stale,
+  and keep it with its revision label rather than overwriting it.
+  Rationale: freshness rules treat a changed external contract and a moved
+  symbol as expiry triggers. A green result from an earlier tree is not current
+  evidence, but it remains useful history.
+  Date/Author: 2026-11-19.
+
+## Outcomes & retrospective
+
+No implementation outcome exists. At revision A the plan was approved for
+execution; at revision B its central failure path is unreachable, so the plan
+cannot reach COMPLETE. The lesson recorded for the next revision of this plan
+is that the feasibility probe validated a constructor the dependency was free to
+remove, and that the probe's result should have been tied to a named expiry
+trigger. It was, retrospectively, and that trigger fired. The plan is not
+complete and must not be reported as such; the upstream deviation in D2 is
+unaccepted.
+
+## Context and orientation
+
+`crates/queue-store/src/persist.rs::persist_batch` is the sole owning function.
+It receives a `Batch`, calls `stream_ledger::Ledger::commit`, and maps the
+result into `crate::error::StoreError`. Its callers are the queue drain loop and
+the CLI's `flush` subcommand; both read the `StoreError` variant and both change
+with it.
+
+The dependency is the external crate `stream-ledger`, pinned at `v2.4.1` (commit
+`a1b2c3d`) when the plan was written. The source symbol the plan cites is
+`stream_ledger::Ledger::commit` together with the error variant
+`stream_ledger::CommitError::StaleEpoch`.
+
+The base revision inspected during reconnaissance was the tree recorded in the
+plan at revision A. No line numbers are reproduced here, because the tree was
+not re-read; relocate symbols with:
+
+```bash
+rg -n 'persist_batch|StoreError::Replan' crates/queue-store/src
+```
+
+The plan's recorded test framework is the repository's `cargo test` harness,
+with integration tests under `crates/queue-store/tests/`. The recorded gate
+sequence is `make check-fmt`, `make lint`, `make typecheck`, and `make test`,
+run sequentially, preferring Makefile targets. Those gate commands are recorded
+from revision A and were not run in this revision.
+
+The budget survey behind `Tolerances` was carried out at revision A. This
+revision adds no code and could not re-read the tree, so the figures stand as
+recorded rather than re-derived.
+
+## Conformance basis
+
+This plan is a lightweight architecture contract. It records what it actually
+knows and marks the rest missing.
+
+Dependency contract:
+
+- `stream-ledger` `v2.4.1` (commit `a1b2c3d`): the revision the plan cited.
+  Status: superseded by revision B. Retained as history; it is not the current
+  contract.
+- `stream-ledger` `v2.5.0` (commit `f9e8d7c`): the reported current revision.
+  Status: reported, not symbol-inspected in this revision. Adopting it is a
+  dependency change requiring authorization.
+
+Repository symbols:
+
+- `crates/queue-store/src/persist.rs::persist_batch`.
+- `crate::error::StoreError::Replan`.
+
+Upstream artefacts:
+
+- The plan's cited Terms of Reference, technical design, and ADR revisions are
+  not reproduced in the input this revision received. They are carried forward
+  unchanged from revision A and are unverified here. If any is absent from the
+  plan document itself, it is missing, not satisfied.
+
+Plan-derived requirements and gaps:
+
+- `REQ-batch-atomic`: a failed persist writes no partial batch.
+- `REQ-stale-epoch-recovery`: a batch that meets a stale ledger epoch is not
+  lost; the store reports a replan outcome and writes nothing.
+- `GAP-replan-unreachable` (new at revision B): the dependency no longer
+  produces a stale-epoch error, so the planned recovery capability has no
+  reachable trigger.
+
+Trace chain and its state at revision B:
+
+```plaintext
+REQ-stale-epoch-recovery -> GAP-replan-unreachable -> EP-M2 -> tests::persist::stale_epoch_replans
+```
+
+The final link is no longer satisfiable: `EP-M2` cannot produce a red test. The
+chain is retained, not renumbered, and marked broken pending D2.
+
+```plaintext
+REQ-batch-atomic -> EP-M1 -> tests::persist::error_translation_is_total
+```
+
+This chain is unaffected by the contract change except that one variant leaves
+the input set.
+
+Impact assessment, upstream and downstream, before any acceptance:
+
+- Upstream: the recovery requirement's feasibility changed; the design's
+  statement that the store recovers from stale epochs is falsified at revision
+  B unless Option B is adopted.
+- Downstream: `EP-M1` loses one match arm, `EP-M2` is unreachable, `EP-M3`'s
+  guide text becomes false, and `StoreError::Replan` loses its only producer.
+- Unaffected: `REQ-batch-atomic` and its evidence.
+
+## Verification plan
+
+### Abstract model
+
+States: the store holds a batch and a ledger connection. A call to
+`persist_batch` either succeeds, fails without writing, or (revision A only)
+fails with a stale-epoch signal that the caller answers by replanning.
+
+At revision A the model contained a transition labelled `stale-epoch` from the
+submission state to the replan state, enabled by the dependency returning
+`CommitError::StaleEpoch`.
+
+At revision B that transition is removed from the dependency's own transition
+relation: an `EpochGuard` can only be constructed for a current epoch, and the
+error constructor that produced the transition no longer exists. The state the
+planned test targets is therefore unreachable in the model. This is the vacuity
+finding: an obligation whose antecedent is unsatisfiable is not discharged by a
+check that never exercises it.
+
+### Invariants and lemmas
+
+- `INV-batch-atomic`: for every failed persist, the ledger contains no record
+  from the batch. Unaffected by revision B. Linked to `REQ-batch-atomic`.
+- `INV-replan-on-stale`: for every batch submitted against a stale epoch, the
+  store returns `StoreError::Replan` and writes nothing. SUSPENDED at revision
+  B: no admissible input witnesses the antecedent. Linked to
+  `REQ-stale-epoch-recovery`.
+- `L-translation-total`: the mapping from `CommitError` to `StoreError` is
+  total over the dependency's error variants. At revision B the variant set
+  shrank, so the lemma's domain shrank; the lemma remains provable by
+  exhaustiveness, and the lemma as written at revision A no longer describes the
+  contract.
+
+Proposed under D2 option B, not approved:
+
+- `L-guard-validity`: every call to `commit` passes a guard acquired and
+  validated in the repository's own critical section, so a guard retained across
+  an epoch refresh is rejected before submission.
+- `INV-no-dropped-batch`: for every batch accepted by `persist_batch`, exactly
+  one of success or a surfaced replayable outcome occurs.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-ledger-epoch-safety` (new at revision B): a call to
+  `stream_ledger::Ledger::commit` carrying a valid `EpochGuard` cannot fail for
+  a stale epoch, because the failure is excluded by the dependency's type and
+  documented contract. Source: the `v2.5.0` contract as reported. Repository
+  boundary that depends on it: `persist_batch`. This axiom must be checked
+  against the real interface, not a mock; a mock that asserts the guarantee
+  would prove nothing about it.
+- `AXIOM-cargo-lock`: the resolved dependency version is the one the manifest
+  requires. Non-trivial here only because a lockfile drift would silently change
+  the contract again.
+
+### Methods per obligation
+
+- Obligation: `INV-batch-atomic`.
+  Method: parameterized test over failure classes reachable at the pinned
+  revision.
+  Rationale: finite, enumerable partition.
+  Domain: every `CommitError` variant present at the pinned revision.
+  Artefact: `crates/queue-store/tests/persist.rs`.
+  Evidence: `cargo test -p queue-store --test persist batch_atomic` fails before
+  the change and passes after.
+  Non-vacuity: at least one witness per variant; a seeded fault that writes a
+  partial batch must be rejected.
+
+- Obligation: `INV-replan-on-stale`.
+  Method: none available at revision B. Suspended.
+  Rationale: the state machine transition that the test exercised is absent from
+  the dependency's contract. A parameterized test, a property test, and a
+  bounded model check all share the same unsatisfiable antecedent, so none can
+  discharge the obligation. Recording a pass would be vacuous.
+  Domain: empty at revision B; non-empty at revision A.
+  Artefact: `tests::persist::stale_epoch_replans` (revision A, now unusable).
+  Evidence: at revision A the red failure was `expected Replan, got Ok(_)`. At
+  revision B the red cannot be produced, which is an escalation trigger, not a
+  pass.
+  Non-vacuity: fails – no satisfying witness exists. This is the finding, not an
+  omission.
+
+- Obligation: `L-translation-total`.
+  Method: type-level exhaustiveness plus a parameterized test.
+  Rationale: the compiler proves totality over the variant set; the test pins
+  the intended mapping per variant.
+  Domain: the `CommitError` variants present at the adopted revision.
+  Artefact: the `match` in `persist_batch` and
+  `tests::persist::error_translation_is_total`.
+  Evidence: removing a match arm fails to compile; the test enumerates each
+  variant.
+  Non-vacuity: every variant in the domain has a witness; if the domain is empty
+  the obligation is vacuous and must be withdrawn, not passed.
+
+- Obligation: `L-guard-validity` (proposed, option B only).
+  Method: state-machine property test over refresh and submit interleavings.
+  Rationale: the property is temporal and the repository owns the orchestration.
+  Domain: guard acquisition, refresh, and submission orderings; bounded to two
+  concurrent submissions.
+  Artefact: `crates/queue-store/tests/guard_validity.rs`.
+  Evidence: a seeded fault that retains a guard across a refresh must be
+  rejected for the intended reason.
+  Non-vacuity: the fault is reachable by construction; if the dependency offers
+  no way to observe a stale guard, record the exception rather than fabricate a
+  witness.
+
+### Formal verification decision
+
+No prover and no model checker. The disputed property is reachability of a
+state that the dependency's type excludes. A prover would restate
+`AXIOM-ledger-epoch-safety` rather than establish anything about repository
+code, and a model would have no reachable target state – exactly the vacuity the
+skill forbids. Type-level absence plus a real-boundary check is proportionate.
+This decision is recorded in D2 and D4 and would be revisited under option B,
+where `L-guard-validity` is genuinely temporal.
+
+### Suggested BDD features
+
+Proposed path: `crates/queue-store/tests/features/persist.feature`.
+
+```gherkin
+Feature: Batch persistence across ledger epochs
+
+  Scenario: A batch is written once
+    Given an empty ledger at the current epoch
+    When the store persists a batch of three records
+    Then the ledger contains exactly three records
+    And the store reports success
+
+  Scenario: A stale epoch forces a replan
+    Given a batch built against an epoch that has since advanced
+    When the store persists the batch
+    Then the store returns a replan outcome
+    And the ledger contains no record from the batch
+```
+
+The second scenario is suspended under D2. At revision B its precondition cannot
+be established through the dependency's public interface, so it must either be
+retired with the requirement or rewritten against a repository-owned guard check
+under option B. It is not a passing scenario.
+
+## Plan of work
+
+### `EP-M0` feasibility probe (completed at revision A, expired)
+
+The probe asked whether a stale epoch could be constructed and observed through
+the dependency's public interface. It compiled against `v2.4.1`, constructed the
+removed variant, and observed the translation. The observation stands at
+revision A only. The probe is not promoted and is not replayed: the constructor
+it used no longer exists. Its transcript is retained with its revision label.
+
+### `EP-M1` exhaustive error translation
+
+Owning file `crates/queue-store/src/persist.rs`; owning symbols `persist_batch`
+and `StoreError`. Requirements: `REQ-batch-atomic`. The red test enumerates each
+`CommitError` variant and asserts the mapping; it fails at revision A because
+the match is non-exhaustive. At revision B the variant set is smaller by one, so
+the milestone's scope shrinks by one arm. Whether `StoreError::Replan` survives
+at all depends on D2, so this milestone is held with the rest until D2 is
+accepted, even though its mechanics are unaffected.
+
+### `EP-M2` stale-epoch recovery path
+
+Owning file `crates/queue-store/src/persist.rs`. Required by
+`REQ-stale-epoch-recovery`; evidence `tests::persist::stale_epoch_replans`.
+This milestone cannot start. The red test cannot be made to fail for the
+intended reason, because no input reaches the branch, and the helper that
+constructed the input no longer compiles. It is suspended, not deleted.
+
+### `EP-M3` documentation and delivery closure
+
+Update the store's guide text, the changelog, and any reference to
+replan-on-stale. At revision B that text is false unless option B is adopted, so
+the milestone is held. Search for stale claims with:
+
+```bash
+rg -n 'stale epoch|Replan|StaleEpoch' docs crates README.md
+```
+
+## Milestones and plateaus
+
+- Identifier and outcome: `EP-M1` – exhaustive translation with a total match.
+- Requirements and gaps: `REQ-batch-atomic` advanced; `GAP-replan-unreachable`
+  untouched.
+- Acceptance evidence: `tests::persist::error_translation_is_total` passes; the
+  match compiles with no wildcard arm.
+- Conformance check:
+  - Requirements satisfied: `REQ-batch-atomic` only.
+  - Design still followed: no – the recovery design is under D2.
+  - Upstream assumptions still valid: no – the epoch-safety assumption changed.
+  - No unapproved public interface or dependency change: true only while the pin
+    stays at `v2.4.1`; adopting `v2.5.0` requires authorization.
+  - No unapproved trust boundary or persisted-format change: true.
+  - Trace links current: no – the `REQ-stale-epoch-recovery` chain is broken.
+- Recovery: revert is trivial, because no code has been written. Continuing
+  requires D2 acceptance.
+- Remaining gaps: all of `GAP-replan-unreachable`.
+- Compatibility decision: none. No named consumer, deployed peer, or commitment
+  requires preserving `StoreError::Replan` or the `v2.4.1` error surface.
+
+- Identifier and outcome: `EP-M2` – a stale epoch produces a replan and no
+  write.
+- Requirements and gaps: `REQ-stale-epoch-recovery`.
+- Acceptance evidence: `tests::persist::stale_epoch_replans`, which cannot be
+  made red at revision B.
+- Conformance check:
+  - Requirements satisfied: none; the milestone is suspended.
+  - Design still followed: no.
+  - Upstream assumptions still valid: no.
+  - No unapproved public interface or dependency change: n/a, nothing changes.
+  - No unapproved trust boundary or persisted-format change: true.
+  - Trace links current: no.
+- Recovery: none until D2 is accepted.
+- Remaining gaps: the whole milestone.
+- Compatibility decision: none; option C is rejected in D2.
+
+- Identifier and outcome: `EP-M3` – documentation matches the delivered
+  behaviour.
+- Requirements and gaps: delivery closure for the accepted option.
+- Acceptance evidence: the stale-claim search returns only statements true of
+  the accepted option.
+- Conformance check: all six lines are false until D2 is accepted, because the
+  behaviour the guide would describe is undecided.
+- Recovery: none; the milestone is held.
+- Remaining gaps: all.
+- Compatibility decision: none.
+
+## Concrete steps
+
+```plaintext
+Working directory: <repository root>
+Red (EP-M2, revision A): cargo test -p queue-store --test persist stale_epoch_replans
+  Revision A expectation: assertion failure `expected Replan, got Ok(_)`.
+  Revision B status: no red can be established. The helper that constructs a
+  stale epoch no longer compiles, and no public input reaches the branch.
+  Action on observing this: stop and escalate; do not delete or mark the test.
+```
+
+```plaintext
+Working directory: <repository root>
+Gate sequence (recorded at revision A; not run in this revision):
+  set -o pipefail
+  make check-fmt  | tee /tmp/check-fmt-queue-store-epoch.out
+  make lint       | tee /tmp/lint-queue-store-epoch.out
+  make typecheck  | tee /tmp/typecheck-queue-store-epoch.out
+  make test       | tee /tmp/test-queue-store-epoch.out
+```
+
+Run the gates sequentially, in that order, for the candidate worktree. This
+revision produced no code change, so there was nothing for the gates to judge.
+
+## Validation and acceptance
+
+Quality criteria, all conditional on the accepted option:
+
+- Tests: `cargo test -p queue-store` passes; the new test fails before the
+  change and passes after.
+- Verification: `INV-batch-atomic` is discharged at the adopted revision;
+  `L-translation-total` is discharged by exhaustiveness; `INV-replan-on-stale`
+  is discharged only under option B, and only by a witness that the dependency
+  can actually produce.
+- Lint and typecheck: `make lint` and `make typecheck` pass.
+- Security: no change to trust boundaries; no new secret handling.
+- Performance: no threshold is claimed; the guard argument adds no measured
+  cost, and none is assumed.
+
+Quality method: run the gate sequence above for the candidate worktree and read
+the log files rather than re-running a failing gate.
+
+Acceptance is not established by this document. Design acceptance and plan
+approval are separate states, and neither is granted here.
+
+## Idempotence and recovery
+
+This revision changed no repository file; nothing needs rolling back. Applying
+the plan later is idempotent: the translation milestone rewrites one `match`, and
+re-running the test suite is safe at any point. Recovering from BLOCKED means
+recording the accepted option in D2, reconciling the upstream design and Terms
+of Reference, and then resuming `EP-M1` before `EP-M3`.
+
+## Artefacts and notes
+
+Evidence is labelled by revision. Observations from revision A are not presented
+as current.
+
+```plaintext
+Revision A – inspected during EP-M0 reconnaissance (2026-11-18)
+  stream-ledger v2.4.1 (commit a1b2c3d)
+  Ledger::commit(&mut self, batch: Batch) -> Result<CommitReceipt, CommitError>
+  CommitError::StaleEpoch present
+  plan: persist_batch maps StaleEpoch -> StoreError::Replan
+  probe: constructed StaleEpoch via the public constructor; observed Replan
+```
+
+```plaintext
+Revision B – reported by the change that triggered this revision (2026-11-19)
+  stream-ledger v2.5.0 (commit f9e8d7c)
+  Ledger::commit(&mut self, batch: Batch, guard: EpochGuard<'_>)
+  CommitError::StaleEpoch removed
+  consequence: the planned failure path is unreachable; the red test cannot fail
+  for the intended reason
+```
+
+The revision B block is a change report. The symbol-level re-inspection that
+would confirm it – for example a diff of the dependency's error and ledger
+modules between the two commits – was not run, so the block is recorded as
+reported, not verified.
+
+## Interfaces and dependencies
+
+At revision A the contract was:
+
+```rust
+// stream-ledger v2.4.1
+pub fn commit(&mut self, batch: Batch) -> Result<CommitReceipt, CommitError>;
+
+pub enum CommitError {
+    StaleEpoch,
+    // further variants omitted
+}
+```
+
+At revision B, as reported:
+
+```rust
+// stream-ledger v2.5.0
+pub fn commit(
+    &mut self,
+    batch: Batch,
+    guard: EpochGuard<'_>,
+) -> Result<CommitReceipt, CommitError>;
+
+pub enum CommitError {
+    // StaleEpoch removed
+}
+```
+
+The repository surface that changes is `persist_batch` and the `StoreError`
+variant it returns. Authorized dependencies: `stream-ledger` at the revision the
+plan pinned; no new dependency is needed for any option. Adopting `v2.5.0` is a
+change to that authorization and is part of D2. No compatibility layer,
+re-export, or local copy of the removed variant is authorized.
+
+## Revision note
+
+- 2026-11-19: Re-conformance check after the reported `stream-ledger` `v2.5.0`
+  contract change. The cited source symbol `CommitError::StaleEpoch` is gone and
+  the submission point now takes an `EpochGuard`. Consequence: `EP-M2`'s
+  planned failure path is unreachable, `INV-replan-on-stale` cannot be
+  discharged non-vacuously, `EP-M1` loses one arm, and `EP-M3`'s guide text
+  becomes false. Revision-A evidence is retained with its revision label and is
+  not used as current evidence. Status moved from APPROVED to BLOCKED. Deviation
+  D2 is proposed with three options and awaits explicit acceptance from the
+  technical design and Terms of Reference owners. No code changed in this
+  revision and no gate was run.

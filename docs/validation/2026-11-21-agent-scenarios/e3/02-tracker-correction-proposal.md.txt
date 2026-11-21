@@ -1,0 +1,114 @@
+# Proposed programme-record corrections
+
+Status: Proposal only; not applied.
+
+Date: 2026-11-21.
+
+Authority to apply: Not granted. The programme tracker, daily summary, and
+deployment systems are outside the authoring boundary.
+
+Applies to: The programme record reported as still blocking the merged
+implementation, the daily summary that says complete, and any downstream status
+view repeating either claim.
+
+## Preconditions
+
+Apply a correction only when its precondition is met. Do not apply one on the
+strength of the daily summary.
+
+- **P1.** The merge record identifies the implementation, its revision, its
+  merge date, and the required capability; the blocker's unblock condition is
+  confirmed as that merge.
+- **P2.** The merge record is verified at the required revision.
+- **P3.** The intended deployment environment and acceptance boundary are
+  named, or an explicit deferral is authorized.
+- **P4.** P1 through P3 are resolved against evidence.
+- **P5.** The authoritative record is corrected first, or an interim annotation
+  links to this proposal.
+
+## Proposed corrections
+
+### COR-1: resolve the implementation-scoped blocker
+
+Proposed record state: "Resolved – required implementation merged at
+`<revision>` on `<merge date>`; evidence: `<merge record>`."
+
+Preserve the blocker's original text, scope, and history. Mark it resolved; do
+not delete it. If the blocker's unblock condition is deployment rather than
+merge, do not apply COR-1. Reclassify the edge as a deployment dependency under
+COR-3 instead.
+
+### COR-2: record implementation evidence without inferring delivery
+
+Proposed record state: "Implemented: merged at `<revision>` on `<merge date>`.
+Verification: `<state or not established>`. Release: `<state or not
+established>`. Deployment: `<state or not established>`. Outcome validation:
+`<state or not established>`."
+
+Fill only the states supported by records. Do not advance a state because a
+later one is desired.
+
+### COR-3: open or retain the deployment-validation dependency
+
+Proposed record state: "Deployment acceptance pending for `<environment>` at
+`<revision>`. Unblock condition: a deployment record naming environment,
+revision, time, actor, result, and acceptance evidence, or an explicitly
+accepted deferral by `<authority>`."
+
+If no deployment is intended, record the accepted deferral and its authority.
+Do not convert an absent deployment into an implicit cancellation.
+
+### COR-4: replace the unqualified completion claim
+
+Proposed wording: "Completion not established beyond the reported
+implementation merge. Deployment evidence is absent."
+
+Replace `complete` with the state actually evidenced. Do not write `deployed`
+without a deployment record, `verified` on the strength of a merge, or
+`blocked` once the implementation edge is resolved.
+
+### COR-5: correct or annotate the daily summary
+
+If the summary is generated, correct its source fields and regenerate it. If it
+is manually maintained, add a dated correction that links to the authoritative
+record. Do not edit a derived summary in place and assume the next generation
+will preserve the edit.
+
+## What must not change
+
+- Unrelated blockers and programme priorities: leave them as they are. Do not
+  mirror every GitHub execution event into programme goals.
+- Merge, release, deployment, and verification records: correct only the
+  programme record's interpretation of them, never the underlying history.
+- Compatibility surfaces: this is a status reconciliation, not a source-API
+  change. No alias, shim, wrapper, or dual implementation is warranted.
+- The daily summary's historical text, unless the owner authorizes an
+  annotation. Prefer a correction entry over silent rewriting.
+
+## Verification after applying
+
+- Re-read the programme record. The blocker is resolved only with linked merge
+  evidence, or reclassified with a named deployment unblock condition.
+- Confirm the implementation entry carries a revision and a merge date.
+- Confirm the deployment item names an environment, a revision, an unblock
+  condition, and an owner, or records an authorized deferral.
+- Confirm no bare `complete` remains in the programme record or the daily
+  summary.
+- Search the downstream artefacts named by their owners for the old blocker and
+  completion wording.
+- Record who applied each correction, when, and the evidence used.
+- Treat the merge evidence as expiring if the revision is rewritten, the branch
+  is rebased, or the reference is retargeted. Recheck it before repeating the
+  correction.
+
+## Rollback
+
+These are status changes, not data migrations. Keep prior values in the edit
+history or in a comment. If merge verification fails, restore the blocker to
+its retained state and record why. If deployment evidence later appears, update
+the state matrix and completion wording from that evidence; do not leap from
+deployment to outcome validation.
+
+## Revision note
+
+- 2026-11-21: Initial proposal. Not applied; no external tracker was changed.

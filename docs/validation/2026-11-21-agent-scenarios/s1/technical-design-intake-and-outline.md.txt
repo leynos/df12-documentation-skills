@@ -1,0 +1,118 @@
+# New library – technical design intake and provisional outline
+
+Status: proposal for agreement. Phase 0 (intake) is incomplete and Phase 2
+(outline) is provisional. This file makes no design decisions, and no design
+drafting may begin from it.
+
+Inputs: `terms-of-reference.md` v0.1 draft (2026-11-21, unapproved). The brief
+is referenced but its text is not available here. No `docs/context.md`, ADR,
+roadmap, existing design, or ExecPlan exists to inherit.
+
+## Phase 0 status
+
+| Intake question | Answer available |
+| --- | --- |
+| Problem statement | None; `[OPEN]` upstream (TOR-OPEN-003). |
+| Audience | Proposed: implementing developer and design reviewer. Unconfirmed. |
+| Scope boundaries | Greenfield, single-actor, no imposed technology. Capability scope `[OPEN]`. |
+| Decision authority | `[OPEN]` (TOR-OPEN-007). |
+| Prior art | None inspected; `intake-note.md` has an empty catalogue. |
+| Verification scope | Cannot be stated yet; all properties unknown. |
+| Baseline and obligations | No implementation baseline. No released contract, deployed data, or peer is established. |
+
+Phase 0 cannot complete without the brief's problem statement. The outline
+below therefore fixes which records the design owes, not what they will say.
+The design skill treats the outline as a contract: deviations during drafting
+would require justification, and drafting waits for agreement.
+
+## Proposed section selection
+
+| Catalogue section | Use | Reason |
+| --- | --- | --- |
+| Front matter | Yes | Status, audience, conformance basis. |
+| Problem and context | Yes | Short; rests on terms of reference §1–§3. |
+| Scope and goals | Yes | Inherits upstream goals and non-goals. |
+| Terminology | If terms arise | No vocabulary yet; `context.md` is normative. |
+| Personas and actors | Minimal | One caller; no system actors (TOR-CONSTRAINT-003). |
+| Architecture | Yes | One component; one diagram only if it answers a question. |
+| Domain model | Conditional | Only if the library owns entities or state. |
+| Component specifications | Conditional | Proportional; no invented decomposition. |
+| Interfaces and contracts | Yes | The published API is the primary contract. |
+| Data model and storage | Conditional | Only if persistence or an on-disk format appears. |
+| Operations | Minimal | Build, package, and distribution only. |
+| Security | Conditional | Only if inputs cross a trust boundary. |
+| Testing and verification | Yes | Design-level invariants only; unit tests stay in the ExecPlan. |
+| Roadmap and phasing | No | Sequencing belongs to `roadmap-doc`. |
+| Appendices | As needed | Glossary pointer and references. |
+
+## Contract records owed
+
+- Conformance basis. Cite terms of reference v0.1 with its identifiers, this
+  outline's agreement state, and any later brief revision. No design, ADR, or
+  roadmap revision exists to cite.
+- Concerns and views. Two candidate concerns come from §4 of the terms of
+  reference: the sponsor's outcome question and the maintainer's support
+  obligation. Choose the smallest representation that answers each; do not
+  default to a diagram.
+- Baseline, target, and gaps. No implementation baseline exists, so the design
+  states that explicitly and records no gap register or migration programme.
+  The target cannot be described until TOR-OPEN-003 to TOR-OPEN-006 resolve.
+- Verification obligations. None can be named yet. That is a state, not a
+  decision: requirements, invariants, lemmas, axioms, and any combinatorial
+  surface are unknown. When they exist, each obligation needs a method,
+  artefact, evidence, discharge condition, and a non-vacuity argument.
+- Compatibility assessment. No released surface, external consumer, deployed
+  data, or peer is established. Pre-1.0 source-API compatibility machinery is
+  excluded by policy. If the design introduces a persisted or wire format, the
+  assessment changes even though no deployed state exists today.
+- Handoff and readiness. Not ready. See below.
+
+## First design decision: technology selection
+
+No technology is imposed (TOR-CONSTRAINT-002). The design must therefore select
+and justify the language and runtime, the packaging and distribution channel,
+the dependency set, and the API shape against the terms of reference's
+requirements and constraints. It must not present a preference as a constraint,
+and this outline proposes none.
+
+The choice is gated by TOR-OPEN-002 (caller ecosystem) and TOR-OPEN-006
+(environmental constraints). Research into alternatives cannot be targeted
+before both resolve; a survey conducted now would be a literature review with
+no decision to inform.
+
+## Research status and gaps
+
+- Ecosystem survey: not performed. No design-relevant question is answerable
+  without the caller ecosystem and the capability set.
+- Standards and specifications: unknown; they depend on the domain.
+- Technology baseline: deferred to the selected ecosystem. Version claims must
+  be current when drafting starts, not inherited from this note.
+- Firecrawl and web research were not used. The gap is recorded rather than
+  filled with generalities.
+
+## What would change this outline
+
+- Multiple actors, lifecycle behaviour, or an integration path: add the
+  scenario probe to the terms of reference, a state-machine view, and
+  ordering or liveness obligations.
+- An imposed platform or distribution mandate: record it as an upstream
+  constraint and constrain the design options accordingly.
+- Persistence or a wire protocol: add data-model, migration, and deployment
+  records.
+- A published API with external consumers: release lineage and a compatibility
+  commitment become material.
+- A trust boundary: add a threat model, authentication, and secrets sections.
+
+## Handoff
+
+- Design drafting is blocked on resolution of the terms of reference and on
+  agreement of this outline. No design-element identifier is assigned, because
+  no element exists.
+- No diagram was drafted or validated. nixie is not needed until a diagram
+  exists.
+- The ExecPlan is not started. It requires an approved design slice and its own
+  approval gate, and the input supplies neither. The installed `execplans`
+  skill and template were inspected on 2026-11-21; the installed files carry no
+  version identifier.
+- Design acceptance would not authorize implementation. The ExecPlan's
+  approval gate is separate.

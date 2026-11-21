@@ -1,0 +1,96 @@
+# Evidence request and handoff
+
+Status: Awaiting decision authority.
+
+Date: 2026-11-21.
+
+Scope: The minimum evidence needed to close the reconciliation in
+`01-status-reconciliation.md` and to decide the corrections in
+`02-tracker-correction-proposal.md`.
+
+## Handoff classification
+
+This reconciliation is ready only for bounded discovery: confirm the blocker's
+definition and locate the underlying records. It is not ready to certify
+completion, release, deployment, or outcome validation.
+
+Implementation-scoped work is conditionally unblockable once the merge evidence
+is verified. Deployment validation remains blocked on evidence. The completion
+claim is unestablished.
+
+## First question
+
+**Q1. What is the reported blocker's exact unblock condition, and what work
+does it gate: an implementation milestone, a release, or later outcome
+validation?**
+
+Why this is first: the answer decides whether the implementation-scoped
+blocker is removed or reclassified as a deployment dependency. Asking for
+merge or deployment evidence before this is settled risks collecting the wrong
+proof for the wrong edge. The owner is not identified in the brief.
+
+Do not treat the daily summary's "complete" wording as an answer to this
+question.
+
+## Questions pending Q1
+
+Ask these in order, one at a time, after Q1 is answered. They are recorded here
+so the handoff is complete, not so they can be issued as a questionnaire.
+
+1. **Q2.** Which merge record identifies the implementation, its revision, its
+   merge date, and the capability it delivered?
+2. **Q3.** Which environment and revision must supply deployment evidence, and
+   what record counts as acceptance at that boundary?
+3. **Q4.** Who may accept the programme-record correction and the replacement
+   completion wording?
+4. **Q5.** Which downstream artefacts repeat the stale blocker or the
+   "complete" claim, and who owns each correction?
+
+## Evidence request
+
+- **Programme record.** The blocker identifier, scope, unblock condition, and
+  current state. This determines whether the edge is stale and which work it
+  gates. Source: programme tracker. Owner: unknown.
+- **Merge record.** PR or merge commit, revision, merge date, and delivered
+  capability. This discharges the implementation prerequisite. Source: Git
+  history or pull-request record. Owner: unknown.
+- **Verification record.** The revision and boundary exercised, and the result.
+  This distinguishes implemented from verified. Source: test, review, or
+  acceptance record. Owner: unknown.
+- **Release record.** The tag or release entry naming the revision, if any.
+  This distinguishes merged from released. Owner: unknown.
+- **Deployment record.** Environment, revision, time, actor, result, and
+  acceptance evidence. A search that finds nothing must itself be recorded with
+  its scope. This establishes or refutes deployment. Source: deployment or
+  operations record. Owner: unknown.
+- **Outcome-validation record.** Baseline, measure, window, result, and owner,
+  if an outcome is claimed. This distinguishes deployed from outcome-validated.
+  Owner: unknown.
+- **Daily-summary provenance.** Whether the summary is generated or manual, and
+  which source fields feed it. This determines whether to correct a source or
+  annotate a document. Owner: unknown.
+
+## What would change the dispositions
+
+- A merge record that fails verification, or a blocker whose unblock condition
+  is not the merge: retain B1 and do not apply COR-1.
+- A deployment record with acceptance evidence: deployment becomes established;
+  only then may the completion wording advance to deployed. Outcome validation
+  remains separate.
+- An explicit, authorized decision to defer deployment: record the deferral and
+  its authority. Absence of evidence is not a deferral.
+- A different blocker with a different scope: reconcile it separately. Do not
+  treat one resolved edge as resolving every programme dependency.
+
+## Feedback route
+
+If this reconciliation is later falsified, record the evidence and the proposed
+revision in `01-status-reconciliation.md` before changing any downstream claim.
+Do not replace an approved outcome with what the implementation happens to
+achieve. Reconcile affected programme, design, roadmap, and ExecPlan links
+before claiming the change complete.
+
+## Revision note
+
+- 2026-11-21: Initial evidence request from the scenario brief. No external
+  record was inspected and no owner is asserted.

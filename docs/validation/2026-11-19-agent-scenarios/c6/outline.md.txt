@@ -1,0 +1,75 @@
+# Outline – record store reshape
+
+Status: PROPOSED (presented for agreement; no user agreement was obtainable in
+this run, so drafting proceeded against this outline and every downstream
+artefact is marked DRAFT).
+
+Date: 2026-11-19
+
+## Inputs
+
+The task input is one sentence:
+
+> Reshape a private API and storage representation; a deployed binary has
+> already written records that must remain readable.
+
+No terms of reference, repository revision, ADR, or record sample was available
+to the authoring run, and the run's isolation constraints forbade inspecting
+them. The brief is therefore the only upstream intent. Section 2 of the design
+records that absence rather than inventing an approval.
+
+## Skill contract applied
+
+- `tech-design-doc` owns the architecture, compatibility classification, gap
+  register, and verification obligations.
+- `execplans` receives the bounded slice as a separate `DRAFT` plan. Design
+  acceptance does not approve execution, and no approval is claimed here.
+- `terms-of-reference-doc` was read for the compatibility rules it shares with
+  the design skill. No terms of reference is authored: the brief is
+  design-shaped, and inventing problem-space intent (users, market, success
+  measures) for an unnamed application would fabricate evidence.
+
+## Research decision
+
+Phase 1 research found no decision-relevant external dependency. The design
+selects no library, service, or protocol; it defines a format-versioning and
+decode strategy whose obligations are internal. Firecrawl, `web_search`, and
+`web_fetch` were unavailable in this run, and nothing in the design depends on
+them. The only external contract relied on is JSON parsing (RFC 8259), recorded
+as an axiom rather than researched.
+
+## Section-level outline
+
+1. Problem and scope – verbatim brief, goals, non-goals, design intent.
+2. Upstream state and conformance basis – what was inspected, what is missing,
+   revisions and content hashes.
+3. Baseline, target, and gaps – baseline limited to the brief, target
+   classification, gap register with dispositions.
+4. Compatibility assessment – surface classification; the private API decision;
+   why persisted records do not authorize a source shim; prohibited mechanisms.
+5. Architecture and components – record model, codec, store, callers; one
+   validated flow diagram.
+6. Storage representation and migration – v2 envelope, classification rule,
+   v1 field dispositions, upgrade-on-write, rollback and crash behaviour.
+7. Failure modes – condition/behaviour table.
+8. Verification obligations – invariants, methods, artefacts, non-vacuity,
+   formal-verification decision, residual gaps.
+9. Handoff and readiness – what the ExecPlan inherits; unresolved decisions.
+10. Glossary and references.
+
+## External artefacts
+
+- `storage-record-v2.schema.json` – normative v2 record schema, validated as
+  JSON Schema before incorporation.
+- `execplan.md` – DRAFT execution contract.
+- The architecture diagram is inline in the design and is validated with
+  nixie; it is not duplicated as a standalone file.
+
+## Stable identifiers
+
+- Requirements: `TDD-REQ-001` to `TDD-REQ-005`.
+- Components: `TDD-COMP-record-model`, `TDD-COMP-codec`, `TDD-COMP-store`.
+- Gaps: `TDD-GAP-001` to `TDD-GAP-007`.
+- Verification obligations: `TDD-VER-001` to `TDD-VER-006`.
+- Open decisions: `TDD-OPEN-001` (rollback), `TDD-OPEN-002` (decoder
+  retention).

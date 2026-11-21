@@ -1,0 +1,297 @@
+# Upstream change feedback: technical design and terms of reference
+
+Status: PROPOSED. Nothing in this record is accepted, and no upstream document
+has been edited. The ExecPlan is BLOCKED pending the decisions in
+`03-decision-request.md`.
+
+Date: 2026-11-21 08:12Z.
+
+Governing basis: the `tech-design-doc` architecture contract requires an impact
+check in both directions when a traced item changes, preserves historical
+findings with their original revision, and requires a proposed deviation when
+implementation invalidates the design. The `terms-of-reference-doc` problem
+contract requires a proposed revision when implementation falsifies an
+assumption, separate evidence from approval, and a completed reconciliation
+before the ExecPlan can reach `COMPLETE`. The exact installed skill revisions
+are not recorded in this isolated authoring workspace; the referenced rules
+were inspected on 2026-11-21.
+
+## 1. Trigger, ownership, and evidence limits
+
+The live ExecPlan cites `<SYM>` and dependency contract `<DEP>` at revision A.
+Revision B changes the contract and makes the planned failure path `<F>`
+unreachable. The design may record `<FAILURE>` as a supported failure mode and
+may assign verification obligation `<VO-FAIL>` to it. The terms of reference
+may record the dependency condition or an assumption that the failure can
+occur.
+
+Ownership remains separated: the terms of reference owns problem intent, the
+technical design owns the chosen architecture and verification obligations, and
+the ExecPlan owns execution tolerances and acceptance evidence. This record
+proposes upstream changes; it does not approve them, and design acceptance does
+not approve implementation.
+
+The exact upstream paths, revisions, identifiers, and approval authority are not
+available here. Record them before filing this feedback. Do not replace a
+missing value with a plausible one.
+
+## 2. Technical design impact
+
+### 2.1 Baseline and expired evidence
+
+At design revision `<D-A>`, the relevant claim is:
+
+```plaintext
+<SYM> is provided by <DEP>@A.
+<SYM> can produce <FAILURE>.
+Component <TDD-COMP> handles <FAILURE> by <behaviour>.
+Requirement <TDD-REQ> requires that behaviour.
+Verification obligation <VO-FAIL> is discharged by <test-old>.
+```
+
+Revision B changes the contract so that `<FAILURE>` is absent, not producible,
+or excluded by a precondition. The revision-A design statement and its
+verification evidence have therefore expired. Preserve them with the revision-A
+label; do not restate them as current truth. A green revision-A result does not
+establish conformity at revision B.
+
+The design change is required only if the trace check finds one of those claims
+in the authoritative design. If the design never mentions `<F>`, record that
+finding and treat the plan change as mechanical. Do not manufacture a design
+revision to match the plan.
+
+### 2.2 Affected design records
+
+| Record                  | Revision-A statement                            | Revision-B impact                                  | Proposed disposition                                      | Approval state |
+| ----------------------- | ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------------- | -------------- |
+| `<TDD-REQ>`             | `<FAILURE>` must be handled                     | The addressed failure is not producible            | Retire, or re-source the requirement at a reachable boundary | PROPOSED   |
+| `<TDD-COMP>`            | Error contract includes `<FAILURE>`             | The component's failure model is stale             | Replace with the total outcome set of `<SYM>@B`            | PROPOSED       |
+| `<VO-FAIL>`             | Verified by `<test-old>`                        | The test cannot enter the branch                   | Withdraw; replace with `<VO-ERRMAP>` and conditional `<VO-FAIL-B>` | PROPOSED |
+| `AXIOM-DEP-B`           | Not present; revision A contract was the axiom  | Revision B's documented guarantee is the new axiom | Add with exact source, scope, and repository boundary      | PROPOSED       |
+| Failure-modes section   | Describes `<FAILURE>` handling                  | The mode no longer exists as written               | Describe the revision-B total outcome set and the deliberate removal | PROPOSED |
+| Persisted or wire format | `<FAILURE>` may appear in a stored record or protocol | Deployed data or peers may still contain it   | Assess separately; a migration may be required even without source compatibility | OPEN |
+| Compatibility record    | May expose `<FAILURE>` through a repository API | Depends on the surface and release lineage         | Assess the actual surface; do not infer a shim from the dependency change | OPEN |
+
+### 2.3 Proposed design revision
+
+This text is a proposal, not an approved claim:
+
+> Revision `<D-B>` of the technical design records `<DEP>@B` as the dependency
+> baseline. `<SYM>` permits the outcome set `<O_B>`; `<FAILURE>` is
+> `<absent | not producible | excluded by precondition>` under that contract.
+> Requirement `<TDD-REQ>` is `<retired | re-sourced at <boundary>>` with the
+> accepting decision referenced. The component maps every permitted outcome to
+> `<documented repository outcome>` and does not retain an unreachable branch,
+> a suppression attribute, or a test that forces the obsolete failure.
+> Verification obligation `<VO-FAIL>` is withdrawn as evidence and replaced by
+> `<VO-ERRMAP>`, plus `<VO-FAIL-B>` if `<O_B>` contains a permitted failure
+> outcome. `AXIOM-DEP-B` records the provider's documented guarantee and the
+> repository boundary that relies on it. No source-compatibility layer is
+> introduced for the changed dependency contract.
+
+If `<O_B>` contains no failure outcome, the design must say so explicitly and
+justify why no non-trivial failure invariant remains. It must not substitute a
+test of an impossible state, an ignored test, or an expected failure.
+
+The design revision identifier is not assigned here. Assign it through the
+design's normal revision process after approval; do not invent a revision.
+
+### 2.4 Verification obligations at design level
+
+The design states the discharge criteria; the ExecPlan holds the concrete
+commands and artefact paths. Proposed obligations:
+
+- `VO-ERRMAP`: every permitted outcome of `<SYM>@B` maps to exactly one
+  documented repository outcome, with no panic, unwrap, silent discard, or
+  unreachable branch. Method: exhaustive type checking or parameterized
+  contract tests over the finite outcome classes.
+- `VO-FAIL-B`: conditional on a permitted failure outcome. Method: a reachable
+  witness at the real boundary or a faithful contract-level boundary, with a
+  negative control that the check rejects when handling is wrong.
+- `VO-NO-DEAD`: no production branch or test targets a state revision B cannot
+  produce. Method: compiler or linter unreachable-pattern and dead-code
+  reporting, plus review.
+- `VO-FAIL`, revision A: withdrawn, not discharged. The design must not count a
+  passing, ignored, filtered, or mock-forced test as evidence.
+
+Non-vacuity is local to each obligation: show a satisfying witness, exercise
+each permitted class, and include a negative control rejected for the intended
+reason. An unreachable assertion is a verification failure, not a green result.
+A mock that injects the removed failure would assert the disputed guarantee and
+cannot discharge `VO-FAIL-B`.
+
+### 2.5 Compatibility assessment
+
+The dependency contract change is external to the repository. Update the
+repository's callers and the interface together. Do not add aliases, facade
+types, deprecated entrypoints, dual implementations, or temporary wrappers whose
+purpose is to preserve the obsolete source interface of a private API, a
+test-only API, a pre-1.0 API, or an unreleased change ahead of the latest formal
+release tag. A necessary domain or external-protocol adapter is judged by its
+purpose, not its name; preserving the obsolete interface is the prohibited
+purpose.
+
+Two surfaces need separate checks:
+
+1. Repository API exposure. If `<FAILURE>` is part of a released 1.0+
+   repository API, record the actual external consumer, deployed state, and
+   commitment. No known consumer normally means no compatibility machinery,
+   subject to explicit project policy. Do not decide this from the dependency
+   change alone.
+2. Persisted and wire formats. If `<FAILURE>` appears in stored records or in a
+   protocol with a deployed peer, that is a separate migration question. The
+   existence of deployed data does not justify an unrelated source-API shim.
+
+If an inherited upstream document demands compatibility for a prohibited
+surface, record the contradiction for explicit resolution. Do not silently add
+a wrapper to satisfy it.
+
+### 2.6 Handoff and approval
+
+The design owner accepts or rejects the proposal and records the resulting
+revision. The ExecPlan remains BLOCKED until that acceptance and the
+dependency authorization are recorded. The ExecPlan then maps the accepted
+requirement, component, obligation, axiom, and acceptance boundary into its
+`Conformance basis` and `Verification plan`. Design acceptance is not
+implementation approval, and a proposed design text is not evidence that any
+obligation has been discharged. Approval, evidence, and delivery state remain
+independent: this record is a proposal, the revision-B evidence is unverified,
+and no delivery state has changed. A passing check demonstrates only the
+property and scope it actually exercises; it does not approve the design.
+
+If an ADR records the revision-A dependency choice, follow the repository's
+convention. Where ADRs are immutable, propose a superseding ADR rather than
+rewriting the historical record; otherwise append a dated revision. Do not leave
+the ADR contradicting the accepted design.
+
+## 3. Terms of reference impact
+
+Keep the existing evidence labels. The revised dependency entry remains `[OPEN]`
+until the revision-B provider evidence is inspected and accepted; its proposed
+wording is `[PROPOSED]`. No claim is promoted to `[KNOWN]` here. An assumption
+that is not yet confirmed remains `[ASSUMED]` and keeps its failure consequence,
+verification route, and expiry trigger.
+
+### 3.1 Dependency record
+
+The terms of reference dependency record needs the provider, consumer, required
+capability, version or availability condition, linked evidence, last check, and
+the precise work it gates. The revision-A condition is stale. A proposed update
+is:
+
+| Field                  | Revision-A value            | Proposed revision-B value                  | Evidence state |
+| ---------------------- | --------------------------- | ------------------------------------------ | -------------- |
+| Required capability    | `<capability>`              | `<capability, revised if B changes it>`    | PROPOSED       |
+| Provider               | `<provider>`                | `<provider>`                               | ASSERTED       |
+| Consumer               | `<consumer>`                | `<consumer>`                               | ASSERTED       |
+| Version or condition   | `<DEP>@A`                   | `<DEP>@<immutable B identifier>`           | PROPOSED       |
+| Linked evidence        | `<revision-A contract link>` | `<revision-B contract link>`              | OPEN           |
+| Last check             | `<date>`                    | `<date of revision-B inspection>`          | OPEN           |
+| Gates                  | `<design decision / milestone / release / outcome validation>` | `<re-check and restate>` | OPEN           |
+
+Classify the gate precisely. A prerequisite for one design decision is not
+automatically a release blocker or an outcome-validation dependency. Re-check
+the old edge against the actual unblock condition rather than keeping it
+because a summary or tracker still shows it. Do not edit an external tracker
+without authorization; propose the correction instead.
+
+### 3.2 Assumptions
+
+Check the authoritative terms of reference at revision `<T>` for an assumption
+that names `<FAILURE>`, the dependency's reliability, availability, or contract
+stability. If one exists and it asserts the revision-A failure behaviour,
+revision B falsifies it and it needs a proposed revision in this form:
+
+```plaintext
+TOR-ASSUMPTION-<id> [PROPOSED]
+Statement at revision <T>: <exact statement>.
+Falsifying evidence: <DEP>@B changes the contract so that <FAILURE> is
+  <absent | not producible | excluded>.
+Failure consequence: <what breaks if the assumption is relied on anyway>.
+Verification route: <how the replacement claim is checked>.
+Expiry trigger: changed external contract at <DEP>@B.
+Downstream affected: <TDD-REQ>, <TDD-COMP>, <EP-Mn>, <roadmap item>.
+Approval and owner: <unknown until recorded>.
+```
+
+If no such assumption exists, record the revision checked and state that no
+load-bearing ToR assumption is affected. Do not invent an assumption to make
+the plan's dependency story look complete. Absence of an affected assumption
+is a finding, not a gap to fill.
+
+### 3.3 Success criteria, constraints, and scope
+
+Check whether a success criterion measured the failure behaviour, availability,
+or retry outcome. If it did, reassess the baseline, target, measurement
+condition, evidence source, and owner. Do not lower a target or substitute a
+cheaper measure because revision B makes the old result easier to claim; return
+the decision to its owner.
+
+If a hard constraint imposed the revision-A dependency contract, revision B
+changes an imposed baseline and needs a sourced constraint revision. If the
+terms of reference inherit a compatibility demand for a private, test-only,
+pre-1.0, or unreleased API, record that conflict for explicit resolution rather
+than authorizing a shim. A scope change that removes a promised failure mode is
+a non-goal or scope revision, not an implementation detail.
+
+### 3.4 Proposed terms-of-reference change record
+
+```plaintext
+TOR change <id> [PROPOSED]
+Kind: dependency record | assumption | constraint | scope | success criterion
+Source revision: <T>
+Statement: <the revised statement, with the old statement preserved as
+  superseded rather than rewritten in place>
+Evidence status: proposed; not accepted
+Provenance: <DEP>@<immutable B identifier>, inspected <date>
+Approval and owner: <decision authority, unknown until recorded>
+Downstream links: <TDD-REQ>, <TDD-COMP>, <EP-Mn>; link only to items that
+  exist.
+```
+
+Preserve established identifiers. If the change is material, record the
+supersession explicitly and do not recycle the identifier for an unrelated
+obligation.
+
+### 3.5 Feedback route and reconciliation gate
+
+Name the upstream sections and the decision authority to revisit if
+implementation later falsifies the replacement assumption. That authority is
+unknown here and must be recorded before filing. The ExecPlan's `Decision log`
+records the deviation; an architectural deviation enters `BLOCKED` until it is
+explicitly accepted. Before the plan reaches `COMPLETE`, the approved
+resolution must appear in the authoritative terms of reference, technical
+design, and any ADR, with every affected link updated. An unrecorded promise to
+reconcile later is not completion, and a follow-up list cannot absorb an
+unaccepted deviation.
+
+## 4. Roadmap impact
+
+Check the roadmap item linked to `<EP-Mn>`. If its unblock condition names
+revision A or `<FAILURE>`, propose a correction to the dependency condition and
+record whether the item is blocked for design, implementation, release, or
+outcome validation. This record proposes no sequencing change and edits no
+tracker.
+
+## 5. Open evidence and checks not run
+
+1. Read the authoritative technical design at `<D-A>` and record whether it
+   contains the claims in §2.1.
+2. Read the authoritative terms of reference at `<T>` and record whether a
+   dependency record or load-bearing assumption is affected.
+3. Record exact upstream identifiers, revisions, owners, and approval state.
+4. Confirm the revision-B contract, outcome set, and reachability
+   classification; do not file this feedback as accepted before that evidence
+   exists.
+5. Run the repository's documentation and markdown gates after any eventual
+   upstream edit. No upstream file was edited here.
+6. Mermaid validation is not applicable: this record contains no diagrams.
+7. Skill-manifest validation is not applicable: no skill was changed.
+
+## 6. Companion records
+
+- `00-contract-revision-impact.md` holds the evidence register, impact map, and
+  options.
+- `01-execplan-revision.md` holds the blocked plan's replacement text.
+- `03-decision-request.md` requests the explicit decisions that unblock either
+  upstream or execution work.

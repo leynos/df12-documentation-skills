@@ -1,0 +1,630 @@
+# Rename the unreleased exported function before the next release
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (compatibility policy settled; awaiting approval, the intended
+new name, and confirmation of the release baseline)
+
+Branch: not created – no repository mutation has been performed.
+
+Roadmap item: none.
+
+## Purpose / big picture
+
+A version 2 library exports a function that was added after the library's
+latest formal release tag. Because the function appears in no tagged release,
+it is an unreleased API change ahead of the latest formal release tag. The
+library's released 1.0-or-later lineage does not make this particular symbol
+released: the release tag, not the major version number, is the baseline.
+
+The task is to rename that function before the next release, while the rename
+still costs nothing to consumers. Today a caller writes the old name:
+
+```plaintext
+<old_name>(<arguments>)
+```
+
+After the change the same caller writes:
+
+```plaintext
+<new_name>(<arguments>)
+```
+
+with the same signature, visibility, attributes, and runtime behaviour. The old
+name is removed from the source and from the exported namespace. It is not kept
+as an alias, a deprecated entrypoint, a facade, or a wrapper. There is no
+released contract to preserve, so retaining the old name would be compatibility
+theatre and would leave the public surface describing a name that never
+shipped.
+
+The affected callers are renamed in the same coherent change. The change also
+updates tests, documentation, examples, doc comments, and generated bindings or
+API snapshots that name the symbol. It does not alter any symbol that exists at
+the latest formal release tag.
+
+The intended new name, the target repository, and the exact release tag have
+not been supplied. They are recorded as unresolved inputs, not invented.
+
+## Constraints
+
+Hard invariants that must hold throughout implementation. Violation requires
+escalation, not a workaround.
+
+- The renamed symbol is unreleased: it was introduced after the latest formal
+  release tag and is absent at that tag. Implementation must confirm this
+  baseline before editing. If the symbol is present at the tag, stop and
+  escalate; the compatibility rules for a released surface then apply instead.
+- No source-API compatibility machinery. Do not add or retain an alias, a
+  deprecated entrypoint, a facade, a wrapper, a dual implementation, or any
+  other shim for the old name. The applicable df12 rules prohibit such
+  machinery for unreleased API changes ahead of the latest formal release tag.
+- Rename atomically. The definition, every caller, tests, documentation,
+  examples, and generated artefacts that name the symbol change together. A
+  milestone must be a coherent validated state, not an old-and-new bridge.
+- Preserve behaviour. The signature, parameters, return type, visibility,
+  attributes, error behaviour, and semantics are unchanged. Only the identifier
+  changes unless the user explicitly authorizes more.
+- Do not change any symbol that exists at the latest formal release tag. If the
+  old or new name collides with a released symbol, stop and escalate.
+- Do not change persisted data formats, wire formats, configuration keys, or
+  serialized representations. If the identifier appears in such a format, stop
+  and escalate; that is a separate migration question, not a rename.
+- Do not rewrite released changelog entries or historical documents. Record the
+  rename in a new entry for the upcoming, unreleased version.
+- Do not authorize implementation. This plan begins execution only after the
+  user approves it and supplies the intended new name.
+- Authorized dependency changes: none.
+- The ExecPlan file is excluded from every file and line budget below.
+
+## Tolerances (exception triggers)
+
+Thresholds that trigger escalation when breached. They bound autonomous action;
+they are not quality criteria.
+
+No comparable historical ExecPlans were inspected for this draft, because the
+target repository was outside the permitted read set. The budgets below are
+therefore an initial estimate for a mechanical rename in a small library, not a
+measured figure.
+
+- Files: more than 10 non-ExecPlan files changed – stop and escalate.
+- Code: more than 200 net lines of code changed – stop and escalate. Net lines
+  are additions minus deletions, counted over production source and tests.
+- Configuration: more than 10 net lines of configuration changed – stop and
+  escalate. Declarative settings, manifests, lockfiles, and CI configuration
+  are configuration; no configuration change is expected.
+- Documentation: more than 150 net lines of documentation, excluding this
+  ExecPlan, changed – stop and escalate.
+- Interface: any exported-surface change other than the one authorized
+  identifier – stop and escalate.
+- Dependencies: any new or upgraded dependency – stop and escalate.
+- Architecture: any module boundary, ownership, or persistence change – stop
+  and escalate.
+- Iterations: focused tests still failing after 3 attempts – stop and escalate.
+- Time: a milestone exceeding 2 hours – stop and escalate.
+- Ambiguity: the intended new name, the latest release tag, or the presence of
+  external consumers remains unclear and changes the outcome – stop and present
+  the options.
+
+Each category is enforced independently. Spare capacity in one category does
+not offset an overrun in another.
+
+## Risks
+
+- Risk: the intended new name is not in the request.
+  Severity: high. Likelihood: certain (confirmed from the request).
+  Mitigation: this draft uses `<new_name>` as a placeholder and does not begin
+  implementation until the user supplies the name or approves a proposal.
+- Risk: the baseline cannot be confirmed, so the change may touch a symbol that
+  a tag already released.
+  Severity: high. Likelihood: medium.
+  Mitigation: `EP-M0` records the latest tag, its commit, and the absence of the
+  symbol at that tag before any edit.
+- Risk: hidden references survive the rename – re-exports, glob imports,
+  string-based lookup, macros, generated bindings, documentation snippets, or
+  downstream examples.
+  Severity: medium. Likelihood: medium.
+  Mitigation: search tracked content case-sensitively and word-wise, including
+  non-code files, and use a negative control that proves the search finds the
+  old name before the edit.
+- Risk: the rename is applied to a released symbol because the repository
+  contains two similarly named functions.
+  Severity: high. Likelihood: low.
+  Mitigation: inventory the exported namespace and record each candidate's
+  provenance relative to the tag.
+- Risk: the rename changes behaviour through a trait implementation, overload,
+  or dispatch rule rather than a plain call target.
+  Severity: medium. Likelihood: low.
+  Mitigation: `EP-M1` keeps the full test suite green and records any
+  language-specific dispatch concern in `Decision log`.
+
+## Progress
+
+- [x] (2026-11-19 01:10Z) Planning reconnaissance of the applicable ToR,
+  tech-design, and ExecPlan compatibility rules completed.
+- [ ] Plan approved by the user.
+- [ ] Intended new name supplied.
+- [ ] `EP-M0` release baseline and reference inventory recorded.
+- [ ] `EP-M1` definition and all callers renamed; focused tests green.
+- [ ] `EP-M2` documentation, examples, and changelog updated.
+- [ ] `EP-M3` wider gates run and release readiness confirmed.
+
+## Surprises & discoveries
+
+- Observation: the request names no replacement identifier.
+  Evidence: the supplied scenario says only "Rename that function".
+  Impact: implementation cannot start from this draft alone. The plan carries
+  `<new_name>` and an unresolved decision.
+- Observation: the request names no repository, module path, symbol, or release
+  tag.
+  Evidence: the supplied scenario is a policy-level description.
+  Impact: planning-time reconnaissance could not inspect the target tree, so
+  `EP-M0` performs the concrete inventory after approval.
+- Observation: no terms of reference, technical design, ADR, roadmap, or prior
+  ExecPlan was supplied or inspected for this change.
+  Evidence: only the three installed skill directories were in the permitted
+  read set.
+  Impact: `Conformance basis` states the absence rather than inventing upstream
+  identifiers.
+
+## Decision log
+
+- D1. Decision: do not add a compatibility alias for the old name.
+  Rationale: the function was introduced after the latest formal release tag
+  and appears in no tagged release. The ToR, tech-design, and ExecPlan rules
+  all prohibit source-API compatibility machinery for unreleased API changes
+  ahead of that tag. A released 1.0-or-later lineage does not extend to a symbol
+  that never shipped. The rejected alternative – a deprecated wrapper or alias –
+  would preserve a name no consumer could have depended on and would leave a
+  permanent artefact in the public surface.
+  Date/Author: 2026-11-19, authoring agent.
+- D2. Decision: no terms-of-reference or technical-design revision is required.
+  Rationale: the change is mechanical. It alters neither problem intent, nor a
+  requirement, nor the architecture, nor a verification obligation. The
+  ExecPlan records that conclusion explicitly rather than manufacturing
+  upstream documents.
+  Date/Author: 2026-11-19, authoring agent.
+- D3. Decision: treat the latest formal release tag for the affected package as
+  the release baseline, not the library's major version number.
+  Rationale: the scenario states that the function postdates the latest formal
+  release tag. Release status is a property of the symbol and tag, not of the
+  package's version string. In a multi-package repository the applicable
+  package's tag governs.
+  Date/Author: 2026-11-19, authoring agent.
+- D4. Decision: leave the new name unresolved and use `<new_name>` throughout.
+  Rationale: the skills forbid inventing requirements. Naming is a user
+  decision with semantic consequences.
+  Date/Author: 2026-11-19, authoring agent.
+- D5. Decision: status remains `DRAFT`.
+  Rationale: the ExecPlan approval gate requires explicit user approval before
+  execution, and the new name is missing. Silence is not approval.
+  Date/Author: 2026-11-19, authoring agent.
+
+## Outcomes & retrospective
+
+Nothing has been implemented. The draft records the compatibility decision and
+the execution shape. At completion this section must state whether the old name
+is absent from the tracked tree and the exported surface, whether the new name
+is exported with unchanged behaviour, and whether any released symbol changed.
+It must also record any discovery that falsified the release-baseline
+assumption. No upstream assumption has been exercised yet.
+
+## Context and orientation
+
+The affected artefact is a version 2 library with a public exported function
+added after its latest formal release tag. The plan deliberately does not name a
+repository, module, or symbol, because none was supplied; `EP-M0` discovers and
+records them.
+
+Before editing, `EP-M0` must record:
+
+- the applicable package and its latest formal release tag, with the tag's
+  commit identifier;
+- the definition path and symbol name;
+- the language, build tool, test runner, formatter, linter, and type checker the
+  repository actually configures, distinguishing them from tools merely
+  installed on the host;
+- every tracked reference to the old name, grouped as production source, tests,
+  documentation, examples, generated artefacts, or configuration;
+- whether the symbol appears at the release tag;
+- whether any external consumer exists. For an unreleased symbol the expected
+  answer is none; a discovered consumer invalidates D1 and triggers escalation.
+
+The full repository-relative paths and exact symbol names must replace the
+placeholders before `EP-M1` begins. The budget-setting survey named in
+`Tolerances` is part of that record.
+
+## Conformance basis
+
+No Terms of Reference, technical design, ADR, roadmap, or prior ExecPlan was
+inspected, because none was supplied and only the installed documentation-skill
+directories were in the permitted read set. No upstream identifier is invented.
+
+Requirements derived for this bounded change:
+
+- `REQ-RENAME-NAME`: every tracked reference to the old identifier, and the
+  exported definition itself, uses the approved new identifier.
+- `REQ-RENAME-NO-ALIAS`: the old identifier is absent from the exported
+  namespace; no alias, deprecated entrypoint, facade, or wrapper preserves it.
+- `REQ-RENAME-RELEASED-SURFACE`: the set of symbols exported at the latest
+  formal release tag is unchanged.
+- `REQ-RENAME-BEHAVIOUR`: the function's signature, visibility, attributes, and
+  observable behaviour are unchanged.
+
+Observed gaps:
+
+- `GAP-TARGET-NAME`: the intended new name is unknown.
+- `GAP-BASELINE-TAG`: the repository, package, and exact latest tag are
+  unconfirmed.
+- `GAP-CONSUMERS`: absence of external consumers is assumed from the
+  unreleased status, not yet evidenced.
+
+Trace links (milestones and evidence, to be finalized after `EP-M0`):
+
+```plaintext
+REQ-RENAME-NAME           -> EP-M1, EP-M2 -> reference search + focused tests
+REQ-RENAME-NO-ALIAS       -> EP-M1, EP-M3 -> exported-surface check
+REQ-RENAME-RELEASED-SURFACE -> EP-M0, EP-M3 -> tag-to-HEAD surface diff
+REQ-RENAME-BEHAVIOUR      -> EP-M1, EP-M3 -> full test suite
+```
+
+Compatibility assessment:
+
+| Question | Recorded answer |
+| -------- | --------------- |
+| Surface class | Exported library function. |
+| Release lineage | Version 2 library; the specific symbol postdates the latest formal release tag and is absent at that tag. |
+| Source-API compatibility required | No. The symbol is an unreleased API change ahead of the latest formal release tag. |
+| External consumer or commitment | None known; evidence pending in `EP-M0`. |
+| Proposed alias or shim | None, deliberately. |
+| Persisted or wire-format obligation | None identified. Escalate if the identifier is serialized. |
+
+## Verification plan
+
+### Abstract model
+
+Let `E_tag` be the set of exported identifiers at the latest formal release tag
+`T`. Let `E_head` be the set at the working tree before the change. Let `R` map
+the old identifier `old` to `new`. The change requires `old` not in `E_tag`, a
+new tree in which `R(old) = new` is exported with the identical signature, `old`
+is absent from the exported namespace and from tracked non-historical content,
+and `E_tag` remains a subset of the new exported set with unchanged entries.
+
+Preconditions: `EP-M0` confirms `old` is absent at `T`; the new name is
+supplied and is a valid identifier not already exported; the repository is on a
+non-main working branch. Malformed preconditions stop the change rather than
+being repaired by guesswork.
+
+### Invariants and lemmas
+
+- `INV-NO-OLD-REF`: no tracked production source, test, documentation, example,
+  or generated file references `old` after the change, excluding released
+  changelog history and tagged revisions. Establishes `REQ-RENAME-NAME`.
+- `INV-NEW-EXPORT`: `new` is exported with the same signature, visibility,
+  attributes, and behaviour as `old`. Establishes `REQ-RENAME-BEHAVIOUR`.
+- `INV-NO-ALIAS`: `old` is not exported under any alias or deprecated form.
+  Establishes `REQ-RENAME-NO-ALIAS`.
+- `INV-TAG-SURFACE`: every identifier in `E_tag` is exported unchanged.
+  Establishes `REQ-RENAME-RELEASED-SURFACE`.
+- `L-ALL-CALLERS`: every reference found in the `EP-M0` inventory is either
+  renamed or recorded as historical. Connects `INV-NO-OLD-REF` to the actual
+  call graph.
+- `L-SEARCH-SOUND`: the reference search used for `INV-NO-OLD-REF` demonstrably
+  finds the old identifier in a controlled positive case. Without this lemma a
+  zero-hit search is vacuous.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-COMPILER`: the compiler or interpreter resolves every static
+  identifier reference, so a successful build with the new name and no old name
+  means no static caller was missed. Dynamic lookup is outside this axiom and is
+  covered by the inventory.
+- `AXIOM-TAG`: the repository's formal release tag records the released source
+  state. This is a project convention, not something this plan can prove.
+- `AXIOM-SEARCH`: the tracked-file search tool reports textual matches for the
+  paths and encodings used by this repository. Generated binary artefacts are
+  outside the search and must be identified and regenerated.
+
+### Methods per obligation
+
+- Obligation: `INV-NO-OLD-REF` and `L-SEARCH-SOUND`.
+  Method: exhaustive parameterized search over tracked files, with
+  case-sensitive and word-boundary variants.
+  Rationale: the identifier space is finite and the repository is fully
+  searchable, so exhaustive enumeration is stronger than sampling.
+  Domain: all tracked files; explicit exclusions limited to tagged revisions and
+  released changelog sections.
+  Artefact: the `git grep` commands in `Concrete steps`.
+  Evidence: before the edit, the search reports at least one match for `old`;
+  after the edit, it reports zero. The pre-edit match is the non-vacuity
+  witness.
+  Non-vacuity: a seeded reference to `old` in a scratch documentation file must
+  be found; the file is removed afterwards. A search rooted at the wrong
+  directory would find neither name and is rejected because the pre-edit search
+  must find the old name and the post-edit search must find the new one.
+- Obligation: `INV-NEW-EXPORT`, `INV-NO-ALIAS`, and `L-ALL-CALLERS`.
+  Method: compile-time red/green test plus exported-surface inspection.
+  Rationale: the compiler proves static call resolution; the surface check
+  proves no residual alias is exported.
+  Domain: the focused test calling the new name, and the package's public API
+  surface as reported by its documentation or API-diff tool.
+  Artefact: the red test in `EP-M1` and the surface command recorded in
+  `EP-M0`.
+  Evidence: the new-name test fails before the rename for the expected
+  missing-identifier reason and passes afterwards; the surface listing contains
+  `new` once and `old` zero times.
+  Non-vacuity: the red failure must cite the missing new identifier, not an
+  unrelated compile error.
+- Obligation: `INV-TAG-SURFACE`.
+  Method: parameterized diff of the exported surface at `T` against the new
+  tree.
+  Rationale: the released set is finite and directly comparable.
+  Domain: the package's exported symbols at `T` and after the change.
+  Artefact: `git show <tag>:<path>` plus the current surface listing.
+  Evidence: the diff contains no removed or altered released symbol.
+  Non-vacuity: the diff must show at least the unchanged released entries;
+  an empty listing is a failure of the measurement, not a pass.
+- Obligation: `INV-NEW-EXPORT` behavioural clause.
+  Method: the repository's existing test suite, run unchanged except for
+  renamed references.
+  Rationale: this is a rename, so unchanged behaviour should keep the suite
+  green; any failure is a regression signal.
+  Domain: all tests covering the function and its callers.
+  Artefact: the gate commands recorded in `EP-M0`.
+  Evidence: the suite passes before and after; the only diffs in tests are
+  renamed identifiers.
+  Non-vacuity: at least one test must call the function; if none does, add a
+  focused behavioural test before claiming coverage.
+
+### Formal verification decision
+
+No model checking or formal proof is warranted. The change introduces no new
+state, transition, concurrency, arithmetic, or protocol behaviour. The
+obligations are identifier-set and call-resolution properties, which exhaustive
+search, the compiler, and the existing behavioural suite establish more cheaply
+and with fewer abstractions than a model. The residual gap is dynamic lookup,
+which the inventory must enumerate explicitly.
+
+### Suggested BDD features
+
+Proposed path: `features/rename_unreleased_export.feature`. This is a
+suggestion; if the repository has no BDD runner, the scenarios map to the
+focused compile test and the reference search instead.
+
+```gherkin
+Feature: Rename an unreleased exported function
+
+  Scenario: Callers use the new name
+    Given the exported function is absent at the latest formal release tag
+    And the working tree exports the old name
+    When the rename lands
+    Then the library exports the new name once
+    And no tracked source or documentation references the old name
+
+  Scenario: The old name is not preserved
+    Given the rename has landed
+    When the exported surface is listed
+    Then the old name appears zero times
+    And no deprecated alias or wrapper exposes it
+
+  Scenario: Released symbols are untouched
+    Given the latest formal release tag exports a set of symbols
+    When the exported surface is compared with that set
+    Then every released symbol is still present and unchanged
+```
+
+## Plan of work
+
+### `EP-M0` baseline and inventory (no edits)
+
+Record the repository, package, latest formal release tag, tag commit,
+definition path, symbol name, build and test commands, formatter, linter, and
+type checker.
+Confirm the old name is absent at the tag. Inventory every tracked reference.
+Record the exported surface at the tag for later diffing. Capture the budget
+survey described in `Tolerances`.
+
+Acceptance: `GAP-BASELINE-TAG` and `GAP-CONSUMERS` are closed with recorded
+evidence, and every placeholder has a concrete value.
+
+### `EP-M1` rename definition and all callers
+
+Write the red test first: a focused test that calls `new` and fails because the
+identifier does not exist. Then rename the definition and every caller,
+re-export, and test reference. Run the focused test to green. Do not add an
+alias for `old`.
+
+Assigned requirements: `REQ-RENAME-NAME`, `REQ-RENAME-NO-ALIAS`,
+`REQ-RENAME-BEHAVIOUR`.
+
+### `EP-M2` documentation, examples, and changelog
+
+Update doc comments, README passages, user-guide examples, and generated or
+committed bindings that name the symbol. Add a changelog entry for the upcoming
+unreleased version. Leave released changelog entries untouched. Re-run the
+reference search.
+
+Assigned requirements: `REQ-RENAME-NAME`.
+
+### `EP-M3` gates and release readiness
+
+Run the repository's gates in order, export the current surface, diff it against
+the tag record, and confirm the old name appears nowhere. Confirm no alias
+exists. Reconcile this plan's living sections. Mark the plan `COMPLETE` only
+after the user accepts the result.
+
+Assigned requirements: all four.
+
+## Milestones and plateaus
+
+### `EP-M0` release baseline recorded
+
+- Outcome: a pinned baseline and complete reference inventory exist.
+- Requirements and gaps: advances `REQ-RENAME-RELEASED-SURFACE`; closes
+  `GAP-BASELINE-TAG` and `GAP-CONSUMERS`.
+- Acceptance evidence: tag name, commit, `git show <tag>:<path>` output showing
+  no old name, and the reference inventory.
+- Conformance check:
+  - Baseline tag and commit recorded; the symbol is absent at the tag.
+  - The intended new name is still required before `EP-M1`.
+  - No unapproved interface or dependency change was made.
+  - No persisted-format change is implied.
+  - Trace links now use concrete paths.
+- Recovery: none needed; this milestone makes no edits.
+- Remaining gaps: `GAP-TARGET-NAME`.
+- Compatibility decision: none – the symbol is unreleased and no consumer is
+  known.
+
+### `EP-M1` coherent renamed source state
+
+- Outcome: definition, callers, and tests use the new name; focused tests pass;
+  the old name is absent from source and tests.
+- Requirements and gaps: discharges `REQ-RENAME-NAME`,
+  `REQ-RENAME-NO-ALIAS`, and `REQ-RENAME-BEHAVIOUR`.
+- Acceptance evidence: red failure citing the missing new identifier, then a
+  green focused run; a source search for the old name returning zero.
+- Conformance check:
+  - The rename is complete and atomic.
+  - The design remains a mechanical rename.
+  - The unreleased-baseline assumption still holds.
+  - No unapproved exported symbol other than the new name exists.
+  - No trust-boundary or persisted-format change occurred.
+  - Trace links are current.
+- Recovery: revert the branch's rename commit; no data or external state
+  changes.
+- Remaining gaps: documentation and examples.
+- Compatibility decision: none – unreleased symbol with no known consumer.
+
+### `EP-M2` coherent documented state
+
+- Outcome: documentation, examples, and the unreleased changelog entry use the
+  new name; no tracked non-historical file references the old name.
+- Requirements and gaps: completes `REQ-RENAME-NAME`.
+- Acceptance evidence: the full reference search returns zero; the changelog
+  diff touches only the unreleased section.
+- Conformance check:
+  - Documentation matches the code.
+  - Released changelog history is untouched.
+  - No new claim or requirement was introduced.
+  - Trace links are current.
+- Recovery: revert the documentation commit.
+- Remaining gaps: wider gates.
+- Compatibility decision: none.
+
+### `EP-M3` validated delivery state
+
+- Outcome: all gates pass; the exported surface differs only by the rename; the
+  plan is reconciled.
+- Requirements and gaps: discharges all four requirements.
+- Acceptance evidence: gate transcripts; surface diff; final zero-hit search.
+- Conformance check:
+  - Every assigned requirement is satisfied.
+  - No unapproved interface, dependency, or format change exists.
+  - Upstream assumptions remain valid or are recorded as changed.
+  - Trace links and acceptance evidence are current.
+- Recovery: revert the final commit if a gate fails.
+- Remaining gaps: release execution, which is outside this plan.
+- Compatibility decision: none.
+
+## Concrete steps
+
+Working directory: the repository root. Commands are illustrative until
+`EP-M0` substitutes the repository's actual toolchain. Enable `pipefail` when
+piping any gate through `tee`, and write logs under `/tmp`.
+
+```plaintext
+Baseline:
+  git describe --tags --abbrev=0
+    -> <latest-formal-tag>
+  git rev-list -n 1 <latest-formal-tag>
+    -> <tag-commit>
+  git show <latest-formal-tag>:<path-to-definition> | grep -n "<old_name>"
+    -> no match (expected for an unreleased symbol)
+
+Reference inventory:
+  git grep -n -w "<old_name>" -- .
+    -> <N> matches in <files>; N must be greater than zero
+  git grep -n -w "<new_name>" -- .
+    -> expected zero before the rename
+
+Red:
+  <focused-test-command>
+    -> fails because <new_name> is not defined / not exported
+
+Green:
+  <focused-test-command>
+    -> passes, <N> tests
+
+Gates, in repository order:
+  <format-command>
+  <lint-command>
+  <typecheck-command>
+  <test-command>
+    -> all pass
+```
+
+If any step is re-run, it must produce the same result or a clear already-done
+state. No destructive operation is planned.
+
+## Validation and acceptance
+
+Acceptance is behavioural. After the change, a caller using `<new_name>` builds
+and runs with unchanged results, a focused test that failed before the rename
+passes, a search of tracked non-historical content finds no `<old_name>`, and
+the exported-surface listing contains `<new_name>` once and `<old_name>` zero
+times. The symbols exported at `<latest-formal-tag>` are byte-for-byte unchanged
+in name, signature, and visibility.
+
+Quality criteria:
+
+- Tests: the full suite passes; the focused rename test fails before and passes
+  after for the intended reason.
+- Verification: `INV-NO-OLD-REF`, `INV-NEW-EXPORT`, `INV-NO-ALIAS`,
+  `INV-TAG-SURFACE`, `L-ALL-CALLERS`, and `L-SEARCH-SOUND` are discharged with
+  the evidence above.
+- Lint and typecheck: the repository's configured commands pass.
+- Performance: no change expected; no benchmark required for a rename.
+- Security: no new input surface or trust boundary; no scan required beyond the
+  normal gates.
+
+Quality method: run the gate sequence from `Concrete steps` sequentially and
+capture each transcript.
+
+## Idempotence and recovery
+
+The rename is idempotent at the file level: applying it again finds the new
+name and no old name. Work on a dedicated branch. If a gate fails, revert the
+most recent commit rather than layering a corrective alias. No database,
+deployment, or persisted state is touched, so rollback is a Git revert. Remove
+any seeded negative-control file before committing.
+
+## Artefacts and notes
+
+Planning reconnaissance produced no repository transcripts; only the policy
+sources were read. `EP-M0` must add the tag, commit, inventory, surface listing,
+and toolchain record. `EP-M1` and later milestones must add the red/green
+transcripts and the gate logs. Expected evidence is stated above; observed
+evidence must replace it rather than be assumed.
+
+## Interfaces and dependencies
+
+The exported signature is unchanged apart from the identifier:
+
+```plaintext
+pub fn <old_name>(<parameters>) -> <return type>
+  becomes
+pub fn <new_name>(<parameters>) -> <return type>
+```
+
+with identical parameter names, types, visibility, attributes, and error
+contract. No new library, module, or service is introduced. No dependency is
+added or upgraded. Callers access the function exactly as before, under the new
+name.
+
+## Revision note
+
+- 2026-11-19: Initial draft. Records the unreleased release baseline, the
+  no-alias decision, the missing new name, and the planned milestones. No
+  implementation has begun; the plan awaits approval and the intended name.

@@ -1,0 +1,729 @@
+# Compatibility-preserving change to a released 2.1 function
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: DRAFT (intake facts outstanding; awaiting approval).
+
+Branch: `<branch-under-change>`. The supplied statement says the current branch
+is ahead of the release tag; its name was not supplied.
+
+Roadmap item: none supplied.
+
+## Purpose / big picture
+
+A function was shipped in version 2.1, an explicit compatibility commitment
+covers it, and an external consumer is deployed against it. The team wants to
+change the function. Today the change has no specified content and no
+implementation plan; the risk is that an implementer edits the shipped function
+in place and breaks a consumer that cannot upgrade in lockstep.
+
+After this work, an existing consumer can keep calling the released entry point
+and observe the same documented behaviour it had in 2.1, while new callers use
+a new entry point that provides the new behaviour. The old entry point is
+deprecated, documented, and removed only at a release the commitment permits.
+Terms used here: the *contract* is the observable behaviour of the function
+under its documented preconditions, including errors and side effects; a
+*characterization test* pins observed behaviour rather than a written
+specification; the *commitment* is the explicit compatibility promise whose
+text is outstanding (TOR-OPEN-002).
+
+Observable acceptance, once the change is supplied: calling the existing entry
+point with a 2.1 example produces the recorded 2.1 result, and the repository's
+gates pass; calling the new entry point with the agreed example produces the
+agreed new result. The work closes no roadmap item; none was supplied.
+
+## Constraints
+
+Hard invariants. Violation requires escalation, not a workaround.
+
+- The existing entry point must preserve its documented 2.1 observable
+  contract for the lifetime the commitment requires. No semantic change may
+  hide behind the same name.
+- The new entry point must not change the meaning or resolution of any existing
+  call. In a language with overloading, default arguments, or implicit
+  conversions, this constrains naming and signature design.
+- In-repository callers of the old entry point must be updated in the same
+  change where the surface is not externally committed. No source compatibility
+  path is to be created for them.
+- No compatibility machinery may be added for symbols that exist only on the
+  branch and in no release tag.
+- The old entry point may be removed only at a release that the commitment
+  permits, with the notice it requires.
+- Unrelated public surfaces, package-wide compatibility policy, and dependency
+  manifests are out of scope.
+- No new dependency is authorised. Any need for one is an escalation.
+- Implementation begins only after explicit user approval of this plan, unless
+  standing instructions already authorise execution.
+- ExecPlan files are excluded from every size count, including this file when
+  added or updated.
+
+## Tolerances (exception triggers)
+
+The invoking session's isolation rule prevented surveying the repository,
+existing code, tests, and past ExecPlans. The budgets below are provisional,
+derived from the bounded shape of the change (one released entry point, one new
+entry point, characterization tests, and migration material). They must be
+re-based at approval after the survey named in `Context and orientation`. No
+comparable historical plan was read, and that absence is recorded rather than
+masked.
+
+- Files: more than 6 changed non-ExecPlan files – stop and escalate.
+- Code: more than 300 net lines (additions minus deletions) – stop and escalate.
+- Configuration: more than 30 net lines – stop and escalate.
+- Documentation: more than 250 net lines, excluding ExecPlan files – stop and
+  escalate.
+- Interface: any change to the committed surface beyond adding the authorised
+  new entry point – stop and escalate.
+- Dependencies: any new dependency – stop and escalate.
+- Architecture: any departure from the compatibility decisions in `D1` to
+  `D3`, including early removal of the old entry point – stop and escalate.
+- Iterations: more than 3 failed attempts to make an obligation pass – stop and
+  escalate.
+- Time: more than 4 hours on one milestone – stop and escalate.
+- Ambiguity: any choice that materially alters the outcome with more than one
+  valid reading – stop and present the options.
+
+Category classification: code is production source, tests, and executable
+build or automation logic; configuration is declarative settings, dependency
+manifests and lockfiles, deployment descriptors, and CI configuration; all
+other prose is documentation. Each counted change belongs to one category only;
+spare capacity in one does not offset an excess in another. Counts are net
+lines under this command, with the ExecPlan excluded:
+
+```bash
+git diff --numstat <base-revision>..<head-revision> -- . \
+  ':(exclude)<execplan-path>'
+```
+
+## Risks
+
+- Risk: the consumer relies on undocumented 2.1 behaviour.
+  Severity: high. Likelihood: medium.
+  Mitigation: obtain consumer acceptance evidence and a representative
+  workload before removal; record the residual risk.
+- Risk: the commitment is stricter than assumed, for example a promise never to
+  remove the entry point.
+  Severity: high. Likelihood: medium.
+  Mitigation: read the commitment text before `EP-M2`; keep the frozen
+  implementation approach until then.
+- Risk: a deprecation warning breaks a consumer that treats warnings as errors.
+  Severity: medium. Likelihood: medium.
+  Mitigation: documentation-only deprecation if the consumer build policy
+  requires; prove with a warning-as-error fixture.
+- Risk: the new entry point captures existing calls through overload
+  resolution.
+  Severity: medium. Likelihood: low.
+  Mitigation: use a distinct symbol where the language permits ambiguity; add
+  a resolution test.
+- Risk: the old path drifts towards the new semantics.
+  Severity: medium. Likelihood: medium.
+  Mitigation: run the characterization suite against the old path on every
+  change; seed a mutation in a negative control.
+- Risk: the 2.1 baseline cannot be reconstructed because the tag, tests, or
+  build instructions are unavailable.
+  Severity: high. Likelihood: low.
+  Mitigation: recover the tag and build before any edit; if impossible, stop
+  and escalate to the release authority.
+- Risk: a useful new entry point is delayed by a contentious name or signature.
+  Severity: low. Likelihood: medium.
+  Mitigation: record naming as a decision within `EP-M2`; do not block the
+  equivalence work on it.
+
+## Progress
+
+- [x] (2026-11-21 08:12Z) Intake, surface classification, terms-of-reference
+  constraint record, technical design, and draft plan completed.
+- [ ] TOR-OPEN-001, TOR-OPEN-002, TOR-OPEN-003, and TOR-OPEN-004 resolved.
+- [ ] Plan approved by the user.
+- [ ] `EP-M0` feasibility probe: confirm the change can be expressed without
+  altering the old contract.
+- [ ] `EP-M1` 2.1 contract captured as characterization evidence.
+- [ ] `EP-M2` new entry point implemented; equivalence and additivity proven.
+- [ ] `EP-M3` deprecation, migration guide, and consumer acceptance.
+- [ ] `EP-M4` release and removal gate recorded.
+- [ ] Upstream reconciliation completed before `COMPLETE`.
+
+## Surprises & discoveries
+
+- Observation: none yet. Reconnaissance was prohibited by the invoking
+  session's isolation rule, and no implementation has begun.
+  Evidence: this plan's intake note. Impact: the context and budget survey is
+  deferred to the start of execution, and the plan must not be approved as if
+  the survey had occurred.
+
+## Decision log
+
+- D1. Decision: classify the function as a released 1.0-or-later committed
+  source contract, not as an unreleased change, despite the branch being ahead
+  of the tag. Rationale: release lineage is a property of the symbol; an edit
+  to a released API does not unpublish its contract. The exemption covers
+  symbols present in no formal release tag. Date/Author: 2026-11-21, authoring
+  agent.
+- D2. Decision: adopt the additive approach as the default – freeze the old
+  entry point, add a new entry point, deprecate, migrate, and remove only at a
+  commitment-permitted release. Rationale: a deployed consumer cannot be
+  updated atomically with the package, so compatibility would be required even
+  for one atomic change. The rejected alternative, an in-place break with a
+  coordinated consumer upgrade, is permissible only if the commitment allows it
+  and the consumer confirms. Date/Author: 2026-11-21, authoring agent.
+- D3. Decision: no compatibility path for in-repository callers or branch-only
+  symbols. Rationale: the obligation answers "compatible with whom or what?" –
+  the deployed external consumer under the commitment – and does not extend to
+  callers the change can update atomically. Date/Author: 2026-11-21, authoring
+  agent.
+- D4. Decision: capture the baseline at the 2.1 release tag, not at the current
+  branch tip. Rationale: the branch contains unreleased changes; a baseline
+  taken from it would pin behaviour the consumer never had. Date/Author:
+  2026-11-21, authoring agent.
+- D5. Decision: no formal proof or model checking is planned unless
+  reconnaissance shows the function is stateful, concurrent, or
+  protocol-bearing. Rationale: the obligations are contract equivalence over a
+  documented input domain and API-surface constraints, for which
+  characterization plus property-based differential testing are proportionate.
+  Date/Author: 2026-11-21, authoring agent.
+- D6. Decision: keep the plan at `DRAFT` and do not implement. Rationale: four
+  intake facts are missing (the change itself, the commitment text, the
+  consumer profile, and the function identity), and the approval gate has not
+  been passed. Date/Author: 2026-11-21, authoring agent.
+- D7. Decision: treat the size budgets as provisional pending the repository
+  survey. Rationale: isolation prevented counting existing files and reading
+  comparable plans; invented precision would be misleading. Date/Author:
+  2026-11-21, authoring agent.
+
+## Outcomes & retrospective
+
+Not started. No implementation, verification, release, or deployment claim is
+made. At completion, this section must compare the delivered behaviour with
+`Purpose / big picture`, record the evidence obtained, and reconcile every
+discovery with the terms-of-reference constraint record and the technical
+design. A falsified assumption (for example, undocumented consumer reliance)
+must be recorded upstream before the plan can be set to `COMPLETE`.
+
+## Context and orientation
+
+The target repository was not inspected; the invoking session's isolation rule
+prohibits reading any path outside the installed skills. Consequently this
+section records the survey required at the start of execution rather than its
+results.
+
+At execution, inspect and record:
+
+1. `AGENTS.md` and the `Makefile` for the gate sequence: formatting, lint,
+   typecheck, and test commands. Prefer Makefile targets.
+2. The package manifest and the module or file that owns the released function,
+   with full repository-relative paths and exact symbol names.
+3. Every in-repository caller of the function and its tests.
+4. The release record for 2.1: the tag name, commit, release notes, and any
+   published API documentation.
+5. The compatibility commitment and the release/removal policy.
+6. The external consumer's identity, deployed version, and representative
+   workload, if the maintainers can supply them.
+7. Existing test frameworks, fixtures, and any golden or characterization
+   suites that can be reused.
+8. The repository's historical ExecPlans, if any, for budget evidence. This
+   plan had none available at drafting.
+
+Record the inspected base revision. Line numbers, if used, must be qualified
+with that revision and paired with a search command to relocate each symbol.
+
+## Conformance basis
+
+Upstream artefacts and revisions:
+
+- Terms-of-reference constraint record, draft v0.1,
+  `01-terms-of-reference-constraint-record.md`, dated 2026-11-21, unaccepted,
+  sha256
+  `892ff9765556f8459270cd9b31aaaa99c4de350bf61d679e2adcccdbf8ca6cf2`.
+- Technical design, draft v0.1, `02-technical-design.md`, dated 2026-11-21,
+  unaccepted, sha256
+  `0fbd5484169c128b85087cb1ba11622959dee700a4ffad047756b571c76d2ffb`.
+- Installed `execplans` skill (`~/.claude/skills/execplans/SKILL.md`) and
+  `references/execplan-template.md`, inspected on 2026-11-21.
+- Target repository terms of reference, design, ADRs, roadmap, and release
+  records: not inspected. No accepted upstream artefact exists for this plan.
+
+Named requirements and gaps, stated here rather than only in the design:
+
+- `REQ-PRESERVE`: the existing entry point keeps the documented 2.1 observable
+  contract for the commitment's lifetime.
+- `REQ-ADDITIVE`: the new behaviour is reachable without changing the meaning
+  or resolution of existing calls.
+- `REQ-DEPRECATE`: the old entry point is announced as deprecated without
+  breaking the consumer's build.
+- `REQ-MIGRATE`: a migration guide and consumer acceptance path exist before
+  removal.
+- `REQ-REMOVAL-GATE`: removal occurs only in a commitment-permitted release
+  with the required notice.
+- `GAP-001` to `GAP-006`: as recorded in the technical design, carried forward
+  unchanged.
+
+Trace chain, illustrative until the change and symbols are supplied:
+
+```plaintext
+TOR-CONSTRAINT-001 -> TDD-OBL-001 -> EP-M2 -> tests::target::contract_equivalence_2_1
+TOR-GOAL-002       -> TDD-OBL-004 -> EP-M3 -> consumer acceptance run
+```
+
+When a traced item changes, record its upstream and downstream impacts before
+accepting the change and update every affected link.
+
+## Verification plan
+
+### Abstract model
+
+Let `D` be the documented input domain of the released function at the 2.1
+baseline, including malformed inputs that the contract says are rejected. Let
+`old_2_1(x)` be the observable result of the released entry point at the 2.1
+tag for `x` in `D`, where the result comprises the return value, the error or
+exception behaviour, side effects, and ordering. Let `old_new(x)` be the same
+observable result after the change. Let `new(x)` be the observable result of
+the new entry point. Preconditions: `x` satisfies the documented preconditions
+of `D`; the 2.1 baseline is built from the release tag. Violated preconditions
+are part of the contract: if 2.1 rejects them, equivalence requires the same
+rejection class.
+
+### Invariants and lemmas
+
+- `INV-EQUIV`: for every `x` in `D`, `old_new(x) = old_2_1(x)`. Linked to
+  `REQ-PRESERVE`.
+- `INV-ADDITIVE`: the release exposes the new symbol and changes no existing
+  signature, resolution, or documented meaning. Linked to `REQ-ADDITIVE`.
+- `INV-WARN`: the chosen deprecation mechanism does not change the consumer's
+  build outcome. Linked to `REQ-DEPRECATE`.
+- `INV-REMOVAL-GATE`: the old symbol is present in every release the commitment
+  does not permit it to be removed from. Linked to `REQ-REMOVAL-GATE`.
+- `L-FROZEN`: if the old implementation is left untouched, `INV-EQUIV` follows
+  from the unchanged code plus the characterization suite. If the old path is
+  delegated to a shared core, `L-ADAPTER` states that the adapter is the
+  identity on `D`; it requires both tests and code inspection.
+- `L-CONSUMER`: the consumer's exercised calls lie within `D`, or are covered
+  by captured regressions. This lemma depends on `AXIOM-CONSUMER` and is not
+  discharged by the package's own suite.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-COMMITMENT`: the exact terms of the compatibility commitment. Source:
+  the commitment document, currently unread (TOR-OPEN-002). The plan's removal
+  gate depends on it.
+- `AXIOM-CONSUMER`: the consumer's usage profile and deployment lag. Source:
+  consumer evidence, currently absent (TOR-OPEN-003).
+- `AXIOM-TOOLCHAIN`: the language's deprecation, warning, and overload
+  resolution behaviour. Source: the language and toolchain documentation. The
+  design verifies repository-owned choices against the real toolchain, not the
+  toolchain's internals.
+
+### Methods per obligation
+
+- Obligation `INV-EQUIV` / `TDD-OBL-001`.
+  Method: characterization tests captured from the 2.1 tag plus property-based
+  differential testing over generated inputs in `D`; parameterized boundary
+  classes for empty, minimal, maximal, and malformed inputs.
+  Rationale: equivalence is defined over an input space, which examples alone
+  cannot establish.
+  Domain: `D` and the documented rejection classes.
+  Artefact: `<repo-relative characterization test path>` and
+  `<repo-relative property test path>`.
+  Evidence: baseline suite passes against the 2.1 revision; after the change it
+  passes against the old entry point; a seeded mutation makes it fail for the
+  intended reason.
+  Non-vacuity: one witness per documented class, plus a negative-control
+  mutation of the old path that the suite rejects.
+- Obligation `INV-ADDITIVE` / `TDD-OBL-003`, `TDD-OBL-007`.
+  Method: exported-symbol and documentation diff between releases, plus a
+  resolution fixture that calls every existing signature.
+  Rationale: source compatibility is a surface property not established by
+  behavioural tests alone.
+  Domain: the package's public export list at the 2.1 tag and at the change.
+  Artefact: `<repo-relative export-diff script or test>`.
+  Evidence: the diff shows only the new symbol; the fixture compiles and
+  resolves each existing call to the same target; changing a signature makes
+  the check fail.
+  Non-vacuity: the check must be run against a deliberately altered signature
+  in a scratch revision and reject it.
+- Obligation `INV-WARN` / `TDD-OBL-004`.
+  Method: build a representative consumer fixture with warnings treated as
+  errors under the chosen marker policy.
+  Rationale: a deprecation announcement must not itself break the commitment.
+  Domain: the consumer's compiler or linter policy, represented by the fixture.
+  Artefact: `<repo-relative consumer fixture>`.
+  Evidence: the fixture builds before and after the announcement; a deliberate
+  breaking warning makes it fail.
+  Non-vacuity: the fixture must import and call the old entry point.
+- Obligation `INV-REMOVAL-GATE` / `TDD-OBL-005`.
+  Method: release checklist plus inspection of exported symbols in the release
+  artefact, gated on the version and the commitment terms.
+  Rationale: the obligation spans releases and is not a runtime property.
+  Domain: each release the commitment covers.
+  Artefact: `<repo-relative release check>` or a documented checklist step.
+  Evidence: the check fails if the symbol is absent before the permitted major,
+  demonstrated on a fixture release; it passes on a permitted release.
+  Non-vacuity: exercise both the prohibited and permitted cases.
+- Obligation `L-CONSUMER` / `TDD-OBL-006`.
+  Method: consumer acceptance run against a representative workload.
+  Rationale: only the consumer can show that documented-contract preservation
+  is sufficient for it.
+  Domain: the consumer's exercised calls.
+  Artefact: consumer acceptance report, owned by the consumer operator.
+  Evidence: the workload passes on the new entry point before removal.
+  Non-vacuity: the workload must include at least one call that exercises the
+  changed behaviour.
+- Obligation `TDD-OBL-002`, `REQ-ADDITIVE` new behaviour.
+  Method: parameterized and property tests over the contract supplied under
+  TOR-OPEN-001.
+  Rationale: the new contract is not yet known; once supplied, its input classes
+  determine the method.
+  Domain: the new contract's domain.
+  Artefact: `<repo-relative new-contract test path>`.
+  Evidence: a red test fails for the missing behaviour; the implementation
+  makes it pass.
+  Non-vacuity: each new behaviour class has a witness and at least one
+  rejection case.
+
+### Formal verification decision
+
+No model checking or formal proof is planned at drafting time. The obligations
+are contract equivalence over a documented input domain and API-surface
+constraints; characterization plus generated differential tests give
+proportionate rigour, and a formal proof would first require a formal model of
+an unspecified language contract. This decision is recorded as `D5`. If
+execution reconnaissance shows the function is stateful, concurrent, or
+protocol-bearing, stop and revisit the obligation set and this decision before
+`EP-M2`; state-machine model checking may then be warranted.
+
+### Suggested BDD features
+
+Proposed feature file path: `<repo-relative features/released_function_compatibility.feature>`.
+These scenarios are proposals; no BDD runner was identified, and adding one
+requires separate authorisation. If the repository has no runner, exercise the
+same scenarios through the existing test framework or a documented manual
+check.
+
+```gherkin
+Feature: Compatible change to a released function
+  Scenario: Existing caller keeps the 2.1 behaviour
+    Given a caller using the documented 2.1 contract
+    When the caller invokes the existing entry point with a recorded 2.1 input
+    Then the observable result matches the 2.1 baseline
+    And the caller's build still succeeds
+
+  Scenario: New caller gets the new behaviour
+    Given the new entry point is released
+    When a caller invokes it with the agreed example
+    Then the agreed new result is produced
+
+  Scenario: Deprecation does not break the consumer
+    Given a consumer that treats warnings as errors
+    When the consumer builds against the release that announces the deprecation
+    Then the build still succeeds
+
+  Scenario: Removal is gated by the commitment
+    Given a release that the commitment does not permit removal from
+    When the release artefact is inspected
+    Then the existing entry point is present
+```
+
+Link the first scenario to `REQ-PRESERVE`, `EP-M1`, and `EP-M2`; the second to
+`REQ-ADDITIVE` and `EP-M2`; the third to `REQ-DEPRECATE` and `EP-M3`; the
+fourth to `REQ-REMOVAL-GATE` and `EP-M4`.
+
+## Plan of work
+
+### `EP-M0` feasibility probe (optional prototype)
+
+Question: can the intended change be expressed such that the old entry point
+retains its 2.1 semantics and the new behaviour is reachable separately? If the
+change is an internal refactor with an unchanged contract, the probe confirms
+that no new entry point is needed. If the change is mandatory and cannot
+coexist with the old behaviour, the probe establishes that a commitment
+deviation decision is required. Command or artefact:
+`<repo-relative scratch probe or design note>`. Go/no-go: proceed to `EP-M1`
+when the change class row in the design's decision table is selected and
+accepted; stop and escalate if no row satisfies the commitment. Delete the
+probe unless it is promoted into a test. Planning-time reconnaissance does not
+authorise implementation before approval.
+
+### `EP-M1` Capture the 2.1 contract
+
+Assigned requirements: `REQ-PRESERVE`, `TDD-OBL-001`, `GAP-002`. Owning files:
+`<repo-relative module path>` and `<repo-relative test path>`. Record the tag,
+the exact function symbol, and every caller.
+
+Red: add the smallest test that asserts the new behaviour from TOR-OPEN-001;
+run it and confirm it fails for the expected missing-behaviour reason. Add the
+characterization tests and confirm they pass against the 2.1 revision. Prove
+they can fail by seeding a mutation in a scratch copy and observing the
+intended rejection; revert the mutation and confirm the suite is clean.
+
+Green: the characterization suite and the new-behaviour test framework are in
+place; the latter remains red until `EP-M2`.
+
+Refactor: separate fixtures from assertions; rerun.
+
+Commands: `<focused test command>`, then `<focused test command>` for green.
+Expected: the new-behaviour test fails with the named missing capability; the
+characterization suite passes with the recorded case count.
+
+### `EP-M2` Add the new entry point
+
+Assigned requirements: `REQ-ADDITIVE`, `REQ-PRESERVE`, `TDD-OBL-002`,
+`TDD-OBL-003`, `TDD-OBL-007`, `GAP-002`, `GAP-006`. Owning files:
+`<repo-relative module path>`, `<repo-relative export path>`, callers, and
+tests.
+
+Implement the new internal core or the new function, keep the old path
+identical or adapter-equivalent, and expose the new entry point without
+changing existing resolution. Update every in-repository caller to the new
+entry point where atomic adoption is possible, and leave the old path only for
+the committed external surface.
+
+Red: the new-behaviour tests fail before implementation. Green: they pass, the
+characterization suite still passes, the export diff shows only the new symbol,
+and the resolution fixture passes. Refactor: remove duplication if a shared
+core was chosen; rerun all focused checks and the repository gates.
+
+### `EP-M3` Deprecate and prepare migration
+
+Assigned requirements: `REQ-DEPRECATE`, `REQ-MIGRATE`, `TDD-OBL-004`,
+`TDD-OBL-006`, `GAP-003`, `GAP-004`. Owning files: the old entry point's
+documentation and marker, the migration guide, release notes, and the consumer
+fixture.
+
+Apply the marker policy chosen in the design: a machine-readable deprecation
+where it does not change build outcomes, otherwise documentation-only. Write the
+migration guide: old symbol, new symbol, mapping, behavioural differences, and
+removal release. Run the consumer fixture and, if available, the consumer's
+representative workload.
+
+Red: the warning-as-error fixture fails if a breaking marker is applied
+deliberately; the migration fixture has no guide path. Green: the fixture
+builds, the guide exists, and the consumer acceptance run passes or its absence
+is recorded as an unresolved gap. Do not silently treat an unavailable consumer
+run as acceptance.
+
+### `EP-M4` Release and removal gate
+
+Assigned requirements: `REQ-REMOVAL-GATE`, `TDD-OBL-005`, `GAP-005`, `GAP-001`.
+Owning artefacts: the release checklist and the exported-symbol check.
+
+Release the new entry point and deprecation according to the repository's
+release process. Confirm that the old entry point is present in the release
+artefact. Schedule removal only for the release the commitment permits, and
+record the version and notice. This milestone does not authorise removal unless
+the commitment permits it now; if it does, treat removal as a separate approved
+change with the same evidence.
+
+Commands: the repository's release verification target and the exported-symbol
+check. Expected: the symbol check passes; the checklist records the permitted
+removal release.
+
+## Milestones and plateaus
+
+- `EP-M1`.
+  Outcome: the 2.1 contract and callers are pinned by executable evidence.
+  Requirements and gaps: `REQ-PRESERVE`, `TDD-OBL-001`, `GAP-002`.
+  Acceptance evidence: characterization suite passes at the 2.1 tag; seeded
+  mutation rejected.
+  Conformance check:
+  - `REQ-PRESERVE` is exercised and the baseline is recorded.
+  - The design is followed; the baseline comes from the tag, not the branch.
+  - No upstream assumption changed.
+  - No public interface or dependency change was introduced.
+  - No trust boundary or persisted-format change was introduced.
+  - Trace links are current.
+  Recovery: revert the tests; the production code is untouched.
+  Remaining gaps: the new behaviour is unimplemented.
+  Compatibility decision: required by the deployed external consumer under
+  TOR-CONSTRAINT-001 and TOR-CONSTRAINT-002; no compatibility machinery in this
+  milestone.
+- `EP-M2`.
+  Outcome: the new entry point works and the old contract is preserved.
+  Requirements and gaps: `REQ-ADDITIVE`, `REQ-PRESERVE`, `TDD-OBL-002`,
+  `TDD-OBL-003`, `TDD-OBL-007`.
+  Acceptance evidence: new tests pass; equivalence passes; export diff
+  additive; resolution fixture passes.
+  Conformance check:
+  - Requirements are satisfied.
+  - The design's two-path or frozen-path choice is followed.
+  - The commitment is still unread; no removal decision was made.
+  - Only the authorised interface addition exists.
+  - No persisted-format change was introduced.
+  - Trace links are current.
+  Recovery: revert the commit; the old path was never altered.
+  Remaining gaps: deprecation and migration material.
+  Compatibility decision: the old entry point is preserved for the deployed
+  consumer under the explicit commitment; it is not theatre because the
+  consumer cannot be updated atomically.
+- `EP-M3`.
+  Outcome: deprecation and migration are available and non-breaking.
+  Requirements and gaps: `REQ-DEPRECATE`, `REQ-MIGRATE`, `TDD-OBL-004`,
+  `TDD-OBL-006`.
+  Acceptance evidence: warning-as-error fixture passes; migration guide exists;
+  consumer acceptance run recorded or gap recorded.
+  Conformance check:
+  - Requirements are satisfied to the evidence available.
+  - The marker policy follows the design.
+  - `TOR-ASSUMPTION-001` remains unverified if consumer evidence is absent.
+  - No unapproved public interface or dependency change exists.
+  - No unapproved trust boundary or persisted-format change exists.
+  - Trace links are current.
+  Recovery: revert the marker and documentation; the entry point remains.
+  Remaining gaps: removal scheduling and consumer acceptance if unavailable.
+  Compatibility decision: the consumer is offered a migration path under the
+  explicit commitment.
+- `EP-M4`.
+  Outcome: the release carries the additive surface and the removal gate.
+  Requirements and gaps: `REQ-REMOVAL-GATE`, `TDD-OBL-005`.
+  Acceptance evidence: exported-symbol check and release checklist.
+  Conformance check:
+  - Requirements are satisfied.
+  - The design's removal boundary is followed.
+  - The commitment text has been read; if not, this milestone is blocked.
+  - No unapproved release content exists.
+  - No persisted-format change was introduced.
+  - Trace links are current.
+  Recovery: withdraw the release candidate; the previous release remains valid.
+  Remaining gaps: actual removal at the permitted release.
+  Compatibility decision: the existing entry point remains for the committed
+  consumer until the commitment permits removal.
+
+## Concrete steps
+
+Working directory: `<repository root>`.
+
+```plaintext
+Red (EP-M1): <new-behaviour focused command>
+  -> fails with the named missing-behaviour assertion or missing symbol.
+
+Green (EP-M1): <characterization focused command>
+  -> passes against the 2.1 revision with <N> recorded cases.
+  -> seeded mutation in a scratch copy fails for the intended reason; mutation
+     reverted.
+
+Red (EP-M2): <new-behaviour focused command>
+  -> fails before implementation for the same intended reason.
+
+Green (EP-M2): <focused command>
+  -> passes; equivalence suite passes; export diff additive; resolution fixture
+     passes.
+
+Refactor (EP-M2): <focused command and wider gates>
+  -> passes.
+
+Green (EP-M3): <consumer fixture build with warnings as errors>
+  -> passes; migration guide present.
+
+Green (EP-M4): <release verification target> and <exported-symbol check>
+  -> passes; checklist records the permitted removal release.
+```
+
+Before running, read `AGENTS.md` and prefer Makefile targets over direct
+commands. Run the repository gates sequentially, in the order the repository
+requires. Capture long output with `tee` after enabling `pipefail`:
+
+```bash
+set -euo pipefail
+<gate-command> 2>&1 | tee /tmp/<action>-<project>-<branch>.out
+```
+
+Record baseline or host-specific failures separately from regressions, with
+evidence and a recovery path; do not waive a gate silently. The gate sequence
+cannot be named here because the repository was not inspected.
+
+## Validation and acceptance
+
+Behavioural acceptance:
+
+- With a recorded 2.1 example, the existing entry point returns the recorded
+  result, including error behaviour, and the consumer fixture still builds.
+- With the agreed new example, the new entry point returns the agreed result.
+- The exported-symbol diff shows only the new symbol.
+- The release that announces the deprecation still builds under a
+  warnings-as-errors consumer policy, or the recorded policy explains why no
+  marker is used.
+- The old entry point is present in every release not permitted to remove it.
+
+Red-Green-Refactor evidence is recorded per milestone in `Artefacts and notes`,
+including the red failure reason, the green passing result and case count, and
+the refactor gate results. Verification obligations are recorded with their
+initial failure or counterexample and their post-implementation evidence; an
+obligation that cannot be discharged is listed as undischarged, not passed.
+Any implementation discovery that requires a new invariant, lemma, or axiom
+returns to `Verification plan` before further elaboration.
+
+Quality criteria:
+
+- Tests: the repository's full test gate passes; the new and characterization
+  tests fail before their respective implementation and pass afterwards.
+- Verification: `TDD-OBL-001` to `TDD-OBL-007` discharged, or each residual gap
+  recorded with its scope.
+- Lint and typecheck: the repository's gates pass.
+- Performance: no performance claim is made; if the change affects a documented
+  performance bound, add a benchmark with workload, environment, and threshold.
+- Security: no security claim is made; if the change is a security fix, the
+  advisory and commitment-deviation route in the design applies.
+
+Quality method: run the repository's documented gate sequence from `AGENTS.md`
+and `Makefile`, sequentially, and record the logs.
+
+## Idempotence and recovery
+
+All steps are re-runnable. Test additions are additive and can be reverted
+independently. The old entry point is never edited before `EP-M1` completes,
+so a failed attempt leaves the shipped contract intact. Release steps are
+gated by the checklist and can be withdrawn before publication. If a step fails
+halfway, revert to the last coherent plateau and rerun from its focused
+command. No destructive operation is planned; if one becomes necessary, take a
+backup and record the rollback before proceeding.
+
+## Artefacts and notes
+
+No evidence has been obtained. The following are planned artefacts, not
+results:
+
+- Characterization suite output at the 2.1 tag, with the tag and revision.
+- Seeded-mutation transcript showing the negative control rejected.
+- Export-diff output showing only the new symbol.
+- Warning-as-error consumer fixture build.
+- Consumer acceptance report, if the consumer supplies one.
+- Release checklist and exported-symbol evidence.
+
+Label every future transcript by milestone, command, and revision, and
+distinguish reconnaissance observations from implementation results.
+
+## Interfaces and dependencies
+
+The concrete signatures are intake items (TOR-OPEN-004). The shape the plan
+requires at the end of `EP-M2` is:
+
+```plaintext
+<!-- Existing, frozen at the 2.1 observable contract -->
+<existing-symbol>(<2.1 parameters>) -> <2.1 result or error>
+
+<!-- New, name and signature provisional until TOR-OPEN-001 is resolved -->
+<new-symbol>(<new parameters>) -> <new result or error>
+```
+
+The new symbol must not shadow, capture, or change the resolution of existing
+calls. Where the language offers overloading, default arguments, or implicit
+conversions, prefer a distinct name; a same-name overload is acceptable only
+with a resolution fixture proving every existing call still resolves to the old
+entry point.
+
+Ownership and exports: the module that owns the released function owns both
+paths until the deprecation window closes; callers reach the new behaviour
+through the package's normal export mechanism. No parallel implementation of
+the new behaviour is permitted outside that module.
+
+Authorised dependencies: none. Any new dependency is an escalation. Existing
+test frameworks should be reused; adding a BDD runner or property-testing
+library requires separate authorisation.
+
+## Revision note
+
+- 2026-11-21: initial draft. Records the surface classification, the
+  compatibility decision, and the open intake facts. No implementation or
+  verification has occurred; the plan is `DRAFT` pending the unresolved
+  questions and user approval.

@@ -1,0 +1,88 @@
+# Test-only helper reshape – technical design outline
+
+Status: PROPOSED. Awaiting agreement. A review draft of the design has been
+prepared against this outline; neither the outline nor that draft is agreed.
+This outline is a contract; deviations during drafting require justification.
+
+Audience: the maintainer, implementer, and reviewers.
+
+Companion document: `/tmp/val2-c2/terms-of-reference.md`, draft v0.1,
+2026-11-21.
+
+Date: 2026-11-21.
+
+## Purpose
+
+Agree the section structure, requirement mapping, and verification targets.
+The existing prose is a review draft prepared against this outline, not an
+agreed design. Agreement is separate from design acceptance.
+
+## Proposed sections and requirement mapping
+
+| Section | Content | Traces to |
+| --- | --- | --- |
+| 1. Problem and scope | The request, the test-only surface, in-scope and out-of-scope work | `TOR-GOAL-001`, `TOR-GOAL-002`, `TOR-NONGOAL-001` to `TOR-NONGOAL-003` |
+| 2. Baseline, target, and gaps | Present exposure, target exposure, retained/changed/removed elements, gap register | `TOR-GOAL-002`, `TOR-ASSUMPTION-001`; `GAP-001` to `GAP-005` |
+| 3. Compatibility assessment | Surface classification, release lineage, consumer test, conflict record, disposition | `TOR-CONSTRAINT-001`, `TOR-CONFLICT-001`, `TOR-ASSUMPTION-003` |
+| 4. Reshape design | Requirements, candidate mechanisms, selection criteria, failure modes | `TDD-REQ-001` to `TDD-REQ-003`, `TDD-REQ-005` |
+| 5. Caller migration and test-intent preservation | Caller classes, migration procedure, assertion policy, per-test disposition | `TDD-REQ-002`, `TDD-REQ-004`, `TOR-CONSTRAINT-003` |
+| 6. Verification design | Invariants, lemma, axioms, methods, non-vacuity, negative controls | `TDD-REQ-006`, `TOR-SUCCESS-001` to `TOR-SUCCESS-003` |
+| 7. Alternatives considered | Rejected compatibility machinery, rejected non-atomic variants, retained options | `TOR-NONGOAL-001`, `TOR-CONSTRAINT-002` |
+| 8. Handoff and readiness | ExecPlan inputs, approval boundary, unresolved decisions | `TOR-OPEN-001` to `TOR-OPEN-005` |
+| 9. Conformance basis, evidence, and expiry | Exact revisions, inspected sources, expiry triggers, reconciliation route | `TOR-CONSTRAINT-004` |
+
+## Sections deliberately excluded
+
+- Market context, personas, security, operations, data model, and storage.
+  The change alters one internal test-support surface; none of these has a
+  decision to make.
+- Mermaid diagrams. There is one component and one direction of change; a
+  diagram would restate prose.
+- External artefacts (schemata, interface definitions, configuration). The
+  target signature and visibility cannot be specified without repository
+  reconnaissance; inventing them would create a false contract.
+- A general testing section. Unit and behavioural test mechanics belong in
+  the ExecPlan. Only design-level verification obligations appear in §6.
+- Ecosystem research. The design makes no technology or library selection;
+  the governing authority is the installed policy. Research gaps are
+  repository facts, listed below.
+
+## Verification targets
+
+- `INV-001` – No obsolete helper surface remains after the change.
+- `INV-002` – Every baseline test caller exists in the target and reaches the
+  reshaped helper.
+- `INV-003` – No compatibility machinery is introduced.
+- `INV-004` – Each migrated test preserves its asserted behaviour.
+- `L-001` – Atomic caller migration removes the need for any compatibility
+  layer.
+- `AXIOM-001` to `AXIOM-003` – Toolchain visibility semantics, test-runner
+  coverage, and gate authority, each stated with its source and the
+  repository boundary that relies on it.
+
+Each obligation needs a method, artefact, expected initial failure, discharge
+condition, non-vacuity witness, and negative control or justified substitute.
+
+## Section dependency order
+
+Sections 1 to 3 settle the problem and the compatibility classification.
+Section 4 depends on 2 and 3. Section 5 depends on 4. Section 6 depends on 4
+and 5. Section 7 follows 4 and 5. Sections 8 and 9 close the document.
+
+## Outstanding research and input gaps
+
+No external research is required. The following repository facts must be
+supplied by reconnaissance before implementation:
+
+- the helper's identity, definition site, and every caller;
+- the language, test framework, and documented gate commands;
+- the release lineage of the package that contains the helper;
+- the requester's precise meaning of "reshape";
+- the decision authority for plan approval and conflict resolution.
+
+## Agreement gate
+
+The design is not to be treated as agreed, and implementation is not
+authorized, until this outline is accepted and the downstream ExecPlan passes
+its own explicit approval gate. If the requester prefers a different section
+set, revise this outline first; do not draft against a contested structure.

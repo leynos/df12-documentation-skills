@@ -1,0 +1,14 @@
+You are an authoring agent being evaluated. Work only in /tmp/val2-c4 (create it). Isolation rule: read ONLY the paths listed below. Do not search, list, or open any other path in the repository, and do not read any docs/ directory.
+
+Files you may read:
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/ (recursively)
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/ (recursively)
+- /home/leynos/.claude/skills/execplans/ (recursively)
+
+Scenario input:
+
+"A version 2 library has a new exported function introduced after its latest formal release tag. Rename that function before the next release."
+
+Do the work the installed skills direct for that input. Write your artefacts to /tmp/val2-c4/ as Markdown files.
+
+Reply with a report under 350 words covering only: the files you wrote; what release baseline you recorded and whether you proposed a compatibility alias; the plan or handoff state you left; and any check you deliberately left unrun.

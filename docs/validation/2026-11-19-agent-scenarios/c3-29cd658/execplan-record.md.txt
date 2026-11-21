@@ -1,0 +1,387 @@
+# ExecPlan revision record – LIB rename, current milestone
+
+This record states the change the existing, already-executing ExecPlan requires.
+It does not replace the plan and must be applied to it. The plan remains the
+self-contained execution contract; this record supplies the edits, the new
+status, and the reasoning behind them.
+
+Provisional identifiers follow the terms of reference: `LIB` is the published
+0.8 package; `OLD` and `NEW` are the current and replacement public names;
+`CONSUMER` is the single downstream project; `RFC-A` is the inherited RFC that
+demands an alias. The plan already exists, so its file path, milestone
+identifier, and decision numbering are not reproduced or invented here. Use the
+plan's own current milestone identifier and its next free decision number.
+
+## Status to record
+
+Status: BLOCKED (inherited RFC alias demand conflicts with the pre-1.0
+compatibility prohibition; awaiting explicit upstream resolution, TOR-OPEN-001)
+
+Branch: unchanged.
+
+Roadmap item: unchanged.
+
+`BLOCKED` is required, not optional. The execplans contract says that when
+evidence shows the approved design cannot or should not be followed, the plan
+must not silently amend the implementation or plan around it. The plan records a
+proposed deviation in `Decision log` with the affected identifiers, impacts,
+options, and the upstream documents that must change, sets the status to
+`BLOCKED`, and waits for explicit acceptance of the deviation before continuing.
+That is precisely this situation: the executing rename reaches a live
+compatibility demand that the governing policy prohibits.
+
+Two starting states are possible and both end here. If the plan's milestone
+text already repeats the `RFC-A` alias, that text is the deviation and must not
+be implemented. If the plan never repeated it, the plan has still discovered an
+inherited commitment that it may not leave unrecorded or unaccepted: an
+unaccepted deviation and an unreconciled upstream conflict both prevent
+`COMPLETE`.
+
+`BLOCKED` here means "a governance decision is missing". It does not mean the
+design is unclear. The technical design is complete enough to execute; the
+prohibition and the permitted path are decided. Implementation stops at the
+milestone boundary, not in the middle of an unvalidated edit.
+
+## Why this status, in the plan's terms
+
+The package is published at 0.8. The affected surface is therefore a pre-1.0
+public API. The policy forbids source-API compatibility machinery for pre-1.0
+APIs, and it states that a named consumer does not create an exception. `RFC-A`
+demands an alias, so the demand falls inside the prohibited category. The RFC's
+age gives it no precedence over the governing policy, and adopting the alias
+would be compatibility theatre: an alias, deprecated entrypoint, or shim added
+to preserve an obsolete source interface.
+
+An executing plan may not work around a tolerance or a constraint. It also may
+not rewrite the RFC silently, and it may not pretend the conflict does not
+exist. The only compliant path is an atomic rename with a coordinated
+migration, and the only way to resume is an explicit, dated upstream resolution.
+
+No option within the supplied policy authorizes the alias. Resumption therefore
+means one of two recorded outcomes:
+
+1. The decision authority supersedes `RFC-A` on this point. This is the
+   expected outcome; it requires a dated written record naming `RFC-A` and the
+   superseded clause.
+2. The owner of the governing policy changes that policy. This is outside the
+   plan's authority and still requires the change to be recorded in the
+   authoritative upstream artefacts. An RFC owner alone cannot grant it.
+
+Until one outcome is recorded, the plan stays `BLOCKED`.
+
+## Section edits
+
+Apply the following edits. Leave every other section as it stands.
+
+### Constraints
+
+Add these invariants:
+
+- The milestone must not add, retain, or scaffold any alias, deprecated
+  re-export, facade, adapter, default-name binding, or shim for `OLD`. This
+  follows TOR-CONSTRAINT-001 and TDD-REQ-02.
+- The definition, every in-repository caller, tests, examples, and
+  documentation references change together, in one coherent change
+  (TOR-CONSTRAINT-002).
+- The plan may not resume implementation until the `RFC-A` conflict is
+  explicitly accepted and recorded (TOR-CONSTRAINT-005).
+- ExecPlan files remain excluded from every size count, including this file
+  when the record is applied.
+
+State the authorized interface change exactly: one rename, `OLD` to `NEW`, with
+no additive surface. Any signature or behaviour change is outside the approved
+design and triggers escalation.
+
+### Tolerances (exception triggers)
+
+Retain the existing values. This situation does not justify raising a budget,
+and no number in this record is a new budget.
+
+Add or tighten the following triggers:
+
+- Interface: if the change would leave `OLD` reachable by any name, stop and
+  escalate. The authorized interface change is exactly one replacement.
+- Architecture: if the rename requires a signature change, a type alias, or a
+  forwarding implementation, stop and escalate.
+- Ambiguity: if `RFC-A` turns out to require only a documentation mapping, stop
+  and reassess TOR-ASSUMPTION-003 before acting.
+- Ambiguity: if more than one downstream consumer is discovered, stop and
+  escalate so the release notice can widen. This does not reopen the alias
+  decision.
+
+### Risks
+
+Add:
+
+- Risk: a contributor implements the alias during the pause, because `RFC-A`
+  asks for it. Severity high; likelihood medium. Mitigation: the `BLOCKED`
+  status, the constraint above, and a `Decision log` entry naming the RFC as
+  the reason the alias is refused.
+- Risk: `CONSUMER` cannot migrate on the release schedule. Severity medium;
+  likelihood medium. Mitigation: keep previously published 0.8 artefacts
+  available and sequence the release with `CONSUMER`. Do not add a shim.
+- Risk: an undiscovered consumer uses `OLD`. Severity medium; likelihood
+  medium. Mitigation: the changelog and the release notice; accept the residual
+  and state it in TDD-AXIOM-02.
+- Risk: `OLD` appears in persisted data, a wire format, or a configuration key.
+  Severity medium; likelihood unknown. Mitigation: TOR-OPEN-003 before release;
+  a data obligation is assessed separately and still does not justify a source
+  alias.
+
+### Progress
+
+Existing entries keep their original dates. Append:
+
+```plaintext
+- [x] (2026-11-19) Rename milestone reached the compatibility decision point.
+      The RFC-A alias demand was identified and classified as prohibited
+      compatibility machinery for a pre-1.0 API.
+- [ ] RFC-A conflict resolved by the named decision authority (TOR-OPEN-001).
+- [ ] Implementation resumed at the milestone boundary.
+- [ ] Milestone completed: release candidate exports NEW only.
+- [ ] Consumer migration evidence recorded (TOR-SUCCESS-003).
+- [ ] Release published and changelog entry confirmed.
+```
+
+Record the pause explicitly. A future reader must be able to tell that the work
+stopped because a decision is missing, not because a step failed.
+
+### Surprises & discoveries
+
+Add:
+
+- Observation: the inherited `RFC-A` requirement is a live compatibility
+  demand, not a migration note, and the governing policy has no exemption for
+  a named consumer.
+  Evidence: the scenario brief and the policy clause in
+  `skills/terms-of-reference-doc/references/problem-contract.md` that a named
+  consumer does not create an exception for a pre-1.0 API.
+  Impact: the approved change cannot include the alias; the plan enters
+  `BLOCKED` until `RFC-A` is explicitly superseded.
+- Observation: publishing at 0.8 does not place the surface in the policy's
+  released 1.0-or-later category.
+  Evidence: the policy distinguishes pre-1.0 from released 1.0+ contracts and
+  evaluates release lineage rather than downloadability.
+  Impact: the consumer's existence and the package's availability are not
+  grounds for compatibility machinery.
+
+### Decision log
+
+Add one entry, using the plan's next free identifier:
+
+```plaintext
+- D-<next free>. Decision: do not implement the RFC-A alias. Treat the demand
+  as an inherited conflicting commitment, rename atomically, and block until
+  an explicit upstream resolution is recorded.
+
+  Rationale: the affected surface is a pre-1.0 public API. The governing df12
+  policy prohibits source-API compatibility machinery for such surfaces, and
+  a named consumer does not create an exception. An alias or deprecated
+  re-export would be compatibility theatre, and it would create a second public
+  name that later needs its own removal work. Keeping a 0.8 line is a dual
+  implementation and is equally prohibited. The atomic rename is the only
+  compliant option. The policy also forbids silently rewriting history, so the
+  refusal is recorded rather than left implicit.
+
+  Affected identifiers: TOR-GOAL-001 to TOR-GOAL-004; TOR-CONSTRAINT-001 to
+  TOR-CONSTRAINT-006; TOR-NONGOAL-001; TOR-OPEN-001; TDD-REQ-01 to TDD-REQ-04;
+  TDD-INV-01 to TDD-INV-03; TDD-LEMMA-01; the current rename milestone.
+
+  Upstream documents: terms of reference records the conflict and creates no
+  compatibility requirement; the technical design records the compatibility
+  decision as none; RFC-A is unchanged and its supersession is recorded
+  separately. Whether the supersession warrants an ADR is an ADR candidate in
+  the terms-of-reference handoff; no ADR is claimed to exist.
+
+  Options: (1) add the alias, rejected as prohibited machinery; (2) maintain a
+  0.8 line alongside a new line, rejected as a dual implementation; (3) defer
+  the rename until after 1.0, rejected as out of scope and as creating a 1.0
+  commitment to OLD; (4) atomic rename with a coordinated release notice and
+  consumer migration, selected.
+
+  Approving authority: the RFC-A decision authority named in TOR-OPEN-001 for
+  the conflict; the maintainer for technical approval; the release authority
+  for publication. Identities are unknown and are not invented.
+
+  Status: proposal pending acceptance. Date: 2026-11-19.
+```
+
+Do not describe the alias as a temporary, transitional, or follow-up item. It
+is rejected, not deferred.
+
+### Conformance basis
+
+Add or replace the upstream rows:
+
+```plaintext
+- Terms of reference: /tmp/val-c3/terms-of-reference.md, dated draft
+  TOR-C3-2026-11-19, v0.1, not accepted. Inherited IDs: TOR-GOAL-001 to 004,
+  TOR-CONSTRAINT-001 to 006, TOR-SUCCESS-001 to 004, TOR-ASSUMPTION-001 to
+  005, TOR-OPEN-001 to 005.
+- Technical design: /tmp/val-c3/tech-design.md, v0.1 dated 19 November 2026,
+  not accepted. Inherited IDs: TDD-REQ-01 to 04, TDD-GAP-01 to 06,
+  TDD-INV-01 to 03, TDD-LEMMA-01, TDD-AXIOM-01 to 05.
+- RFC-A: not inspected in this task; inherited conflicting commitment,
+  revision unknown.
+- ExecPlan skill: /home/leynos/.claude/skills/execplans/SKILL.md and
+  references/execplan-template.md, installed copy inspected 19 November 2026.
+- Repository baseline: not inspected; every path, tag, and count is
+  provisional.
+```
+
+Record these named requirements and gaps, or map them to the plan's existing
+ones rather than duplicating them:
+
+```plaintext
+REQ-rename-atomic: rename the definition and all in-repository callers in one
+coherent change. Serves TOR-GOAL-001, TOR-GOAL-002.
+REQ-no-compat-surface: no alias, re-export, facade, wrapper, or shim for OLD.
+Serves TOR-CONSTRAINT-001, TOR-CONSTRAINT-002, TOR-NONGOAL-001.
+REQ-release-notice: dated changelog entry and direct notice to CONSUMER.
+Serves TOR-GOAL-003, TOR-SUCCESS-004.
+REQ-conflict-record: record the RFC-A conflict and its resolution separately.
+Serves TOR-GOAL-004, TOR-CONSTRAINT-003.
+
+GAP-surface: OLD is exported at 0.8; target exports NEW only.
+GAP-callers: in-repository callers and docs use OLD.
+GAP-rfc: RFC-A demands an alias; disposition blocked on TOR-OPEN-001.
+GAP-consumer: CONSUMER calls OLD; outcome dependency, not an implementation
+gap.
+GAP-data: persisted/wire embedding unknown; blocked on TOR-OPEN-003.
+```
+
+Add the trace chain:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-01 -> TDD-INV-01 -> <current rename milestone> -> exported-name inventory
+TOR-CONSTRAINT-001 -> TDD-REQ-02 -> TDD-INV-02 -> <current rename milestone> -> absence search
+TOR-GOAL-003 -> TDD-REQ-03 -> TDD-LEMMA-01 -> <release milestone> -> CONSUMER build
+```
+
+State the compatibility classification in the plan's own words: affected
+surface is a pre-1.0 public API; known consumer is `CONSUMER`; no admissible
+commitment; compatibility decision `none`.
+
+### Verification plan
+
+Add these obligations, or extend existing ones with the same content. Do not
+retain any existing obligation that asserts `OLD` still resolves; such a test
+is itself prohibited compatibility machinery and must be removed.
+
+- `INV-no-old-symbol`: the release candidate's exported-name inventory
+  contains `NEW` and zero `OLD`. Method: parameterized inventory comparison
+  with the 0.8 baseline. Discharge: zero `OLD` entries. Non-vacuity: the same
+  command on the baseline must list `OLD`, and a check that cannot find it is
+  inspecting the wrong artefact.
+- `INV-no-compat-surface`: no source, manifest, or generated documentation
+  outside the changelog allowlist names `OLD`. Method: word-boundary search
+  with an allowlist. Discharge: zero matches. Non-vacuity: the baseline has
+  matches, and a seeded mention outside the allowlist must be rejected.
+- `INV-callers-current`: the focused test that calls `NEW` fails before the
+  implementation with a missing-symbol diagnostic and passes after it; the
+  gates pass after refactoring. Non-vacuity: the failure must be the missing
+  symbol, not an unrelated error.
+- `L-consumer-migrates`: `CONSUMER` builds against the release candidate after
+  substituting `NEW`, with no reference to `OLD`. Method: the consumer's real
+  build. Discharge: passing consumer build cited by revision. Non-vacuity: the
+  build must exercise the renamed call path. Evidence is planned, not yet
+  obtained.
+- Axioms: `AXIOM-pre1.0` (no released 1.0+ contract), `AXIOM-single-consumer`,
+  `AXIOM-no-wire-embedding`, `AXIOM-toolchain`, `AXIOM-alias-form`. Re-check
+  the first three and the last at the release candidate.
+
+Record the formal-verification decision: none of these properties needs model
+checking or proof. They are finite inventory membership, absence in a bounded
+tree, and a real consumer build. The residual gap is that no check can prove an
+unknown consumer does not use `OLD`; that assumption is explicit and the
+changelog is its mitigation.
+
+If the repository has a BDD runner, the proposed feature in the technical design
+(`tests/features/rename.feature`) may be adopted; otherwise the focused test and
+inventory check exercise the same behaviour. Adopting a runner requires separate
+authorization.
+
+### Milestones and plateaus
+
+Update the current milestone's record:
+
+```plaintext
+- Identifier: <the plan's existing current milestone identifier>.
+- Outcome: the release candidate exports NEW only; every in-repository caller,
+  test, example, and documentation reference uses NEW.
+- Requirements and gaps: REQ-rename-atomic, REQ-no-compat-surface,
+  REQ-release-notice; GAP-surface, GAP-callers. GAP-rfc remains blocked on an
+  upstream decision; GAP-consumer remains an outcome dependency.
+- Acceptance evidence: exported-name inventory; absence search; focused
+  Red-Green-Refactor result and gate run; changelog entry.
+- Conformance check: requirements satisfied; design followed; upstream
+  assumptions still valid; no unapproved public interface or dependency
+  change; no unapproved trust-boundary or persisted-format change; trace links
+  current.
+- Recovery: revert the rename change as one unit. Do not add a compatibility
+  layer as a recovery path.
+- Remaining gaps: GAP-consumer (outcome validation), GAP-data (if TOR-OPEN-003
+  finds an obligation). The RFC alias is not a remaining gap; it is a rejected
+  demand.
+- Compatibility decision: none.
+```
+
+Leave every other milestone unchanged. Do not split the rename into an alias
+milestone and a removal milestone: that split is the compatibility theatre the
+policy rejects, and it is not required by an atomic change.
+
+### Validation and acceptance
+
+Record that implementation is paused. The red test, gate sequence, inventory
+check, and absence search are planned and unexecuted; do not record a passing
+result. When the plan is resumed after acceptance, run the gates in their
+documented order and capture the evidence under `Artefacts and notes`.
+
+### Outcomes & retrospective
+
+Do not write a completion outcome. Add one line:
+
+```plaintext
+- Paused at a governance decision. No milestone acceptance is claimed.
+```
+
+Before any `COMPLETE` status, reconcile every discovery with the `Conformance
+basis`: the approved resolution to the `RFC-A` conflict must appear in the
+authoritative upstream artefacts and every affected link. An unrecorded promise
+to reconcile later is not completion.
+
+### Revision note
+
+Append:
+
+```plaintext
+- 2026-11-19: Recorded the RFC-A alias conflict, set status to BLOCKED,
+  added the no-compatibility constraint and the associated tolerance and risk
+  entries, recorded the deviation in Decision log, updated the conformance
+  basis and verification obligations, and set the current milestone's
+  compatibility decision to none. Remaining work is paused pending explicit
+  resolution of TOR-OPEN-001; the rename's technical scope is unchanged and
+  contains no alias.
+```
+
+## What this record explicitly does not do
+
+It does not add an alias, deprecated entrypoint, facade, wrapper, dual
+implementation, or temporary shim. It does not rewrite `RFC-A`. It does not
+invent an approver, a decision date, a consumer response, or a passing check.
+It does not mark the plan `COMPLETE`, and it does not authorize resumption
+before the conflict is accepted.
+
+It also does not convert the RFC's demand into "remaining work". A plan that
+lists the alias as a follow-up item has preserved the demand under a new name
+and has not resolved it.
+
+## Condition for resuming
+
+Resume only after the plan's `Decision log` cites a dated written resolution
+naming `RFC-A` and the superseded clause, accepted by the authority identified
+in TOR-OPEN-001. Apply the resolution to the terms of reference and the
+technical design first, then update the affected trace links, then return the
+status to `IN PROGRESS`. If instead the governing policy is changed, record that
+change in the authoritative artefacts before resuming; an RFC owner cannot
+grant it alone.

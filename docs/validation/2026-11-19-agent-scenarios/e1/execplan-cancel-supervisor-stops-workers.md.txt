@@ -1,0 +1,633 @@
+# Cancelling a supervisor stops its workers (deviation hold)
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: BLOCKED (implementation falsifies the approved cancellation promise;
+resolution requires explicit decision-authority acceptance, see D1)
+
+Branch: none supplied. The plan records no branch and must not assume one.
+
+Roadmap item: none supplied. No repository-relative roadmap path was
+available, so no roadmap identifier is invented.
+
+## Purpose / big picture
+
+A supervisor process starts one or more worker processes. An approved Terms of
+Reference (ToR) and an Architecture Decision Record (ADR) both promise that
+cancelling the supervisor stops its workers. An integration probe observed
+workers still alive after the supervisor exited.
+
+This plan exists to resolve that contradiction in one of two ways: either the
+implementation is changed to honour the promise, or the promise is explicitly
+and authoritatively changed. It does not authorise either yet. Its immediate
+purpose is to record the contradiction accurately, preserve the approved intent,
+and hold execution until the decision authority chooses a resolution.
+
+Define terms as used here:
+
+- **Supervisor**: the process that starts and manages worker processes.
+- **Worker**: a process started by the supervisor, directly or through a
+  process group.
+- **Cancel**: the operator action, command, signal, or API call that asks the
+  supervisor to stop.
+- **Supervisor exit**: the supervisor process is no longer alive.
+- **Alive**: a process exists that a process-table check can find, including a
+  zombie or orphan. The precise check is part of the open question in
+  `Decision log` D2.
+
+Observable example, using `kill -0` as a liveness check:
+
+```plaintext
+Current observed behaviour (probe result supplied with the task):
+  1. Start a supervisor with at least one worker.
+  2. Cancel the supervisor.
+  3. The supervisor exits.
+  4. kill -0 <worker-pid> succeeds -> the worker is still alive.
+
+Target behaviour under option O1 (honour the promise):
+  1-3. As above.
+  4. kill -0 <worker-pid> fails -> no worker started by that supervisor lives.
+```
+
+The plan preserves normal cancellation, normal worker shutdown, and existing
+supervisor exit semantics other than the point at issue. It deliberately does
+not preserve any observed orphan behaviour as a requirement.
+
+## Constraints
+
+Hard invariants that must hold throughout implementation. Violation requires
+escalation, not a workaround.
+
+- The approved ToR promise and ADR decision must remain stated as approved
+  intent until the decision authority accepts a revision. Observed code
+  behaviour is not approval to rewrite them.
+- No source-API compatibility layer, alias, facade, shim, or dual
+  implementation is authorised. This is a behavioural and lifecycle change,
+  not an API migration. If the change is made atomically, callers change with
+  it.
+- The promise must be operationally defined before it is tested: what counts
+  as "stops", over what grace period, and for which workers. See D2.
+- Verification must be designed with the fix, not appended afterwards. The
+  supplied integration probe is the candidate counterexample and the seed of
+  the regression test.
+- No production-code, test, configuration, or documentation edit may start
+  until the plan is approved and the deviation in D1 is accepted.
+- Before `COMPLETE`, the accepted resolution must appear in the authoritative
+  ToR, ADR, and any technical design, and every affected trace link must be
+  updated.
+- Historical completed plans are not rewritten. This plan is the current
+  record of this task.
+- The repository paths, symbols, test framework, and gate commands were not
+  supplied and could not be inspected under the read restriction for this
+  task. They remain `[OPEN]`; do not invent them.
+
+## Tolerances (exception triggers)
+
+Thresholds that end autonomous action and trigger escalation. They are
+provisional because the repository could not be surveyed under this task's read
+restriction. Re-derive them from the actual tree before approval; do not
+silently raise them during execution.
+
+Comparison base: the revision recorded in `Conformance basis` at approval time.
+Counting command and category paths must be filled from the repository's own
+survey. ExecPlan files, including this one, are excluded from every size count.
+
+- Files: more than 8 non-ExecPlan files changed. Stop and escalate.
+- Code: more than 400 net lines (additions minus deletions) of production
+  source, tests, and executable automation. Stop and escalate.
+- Configuration: more than 50 net lines of declarative settings, manifests,
+  lockfiles, deployment descriptors, or CI configuration. Stop and escalate.
+- Documentation: more than 200 net lines of prose and guides, excluding
+  ExecPlan files. Stop and escalate.
+- Interface: any public or externally visible interface change not named in
+  `Constraints`. Stop and escalate.
+- Dependencies: any new dependency, version change, or tool installation.
+  Stop and escalate.
+- Architecture: any change to the cancellation protocol, process-group model,
+  or termination mechanism beyond the smallest fix that discharges
+  `INV-CANCEL-TERMINATES`. Stop and escalate; the technical design or ADR may
+  need revision.
+- Iterations: tests still failing after 3 focused attempts. Stop and escalate.
+- Time: a milestone exceeding 4 hours of agent work. Stop and escalate.
+- Ambiguity: the promise's wording, grace period, or probe validity remains
+  unresolved. Stop and present the options in D1.
+
+No comparable historical plan or budget history was available for inspection.
+State that explicitly at approval; the values above are defaults, not evidence
+of prior scope.
+
+## Risks
+
+- Risk: the probe's observation window or worker census does not match the
+  promise (for example, it sampled during an allowed grace period, or missed a
+  subset). Severity: high Likelihood: medium Mitigation: reproduce the probe
+  with the promise's exact wording, record PIDs and timestamps, and treat the
+  result as a counterexample only within the conditions exercised.
+- Risk: "stops" is undefined, so the probe and the documents disagree about
+  what is being measured. Severity: high Likelihood: high Mitigation: resolve
+  D2 before writing the regression test.
+- Risk: workers use a process-group or signal model the fix must respect.
+  Severity: medium Likelihood: medium Mitigation: inspect the actual
+  cancellation path before proposing code; model the lifecycle explicitly.
+- Risk: a worker ignores the first termination signal, so a naive fix still
+  fails the promise. Severity: medium Likelihood: medium Mitigation: include
+  the uncooperative-worker boundary case in the verification plan and design
+  decision.
+- Risk: the decision authority is unnamed, so the plan stalls in `BLOCKED`.
+  Severity: high Likelihood: high Mitigation: report the exact question to the
+  user; do not invent an approver.
+- Risk: a fix introduces an unapproved public interface or persistent-format
+  change. Severity: low Likelihood: low Mitigation: keep the change internal;
+  stop if a surface change is needed.
+
+## Progress
+
+Every stopping point is recorded here.
+
+- [x] (2026-11-19 00:17Z) Reconnaissance from the supplied scenario completed.
+  No repository path, revision, symbol, or gate command could be inspected
+  under the task's read restriction.
+- [x] (2026-11-19 00:17Z) Promise and probe recorded as separate evidence
+  classes in `tor-cancel-stops-workers-reconciliation.md`.
+- [x] (2026-11-19 00:17Z) Deviation D1 recorded; status set to `BLOCKED`.
+- [ ] Plan approved by the user.
+- [ ] Decision authority accepts O1, O2, or O3 (D1).
+- [ ] Promise operationally defined: target of "stops", grace period, worker
+  census (D2).
+- [ ] `EP-M0` feasibility probe reproduced and transcript recorded.
+- [ ] `EP-M1` red regression test fails for the intended reason.
+- [ ] `EP-M2` smallest fix (O1) or upstream revision (O2/O3) implemented.
+- [ ] `EP-M3` ToR, ADR, design, roadmap links reconciled; full gates run.
+
+## Surprises & discoveries
+
+- Observation: workers remain alive after the supervisor exits.
+  Evidence: integration probe result supplied with the task. The exact
+  command, full output, worker PIDs, observation timestamps, and observation
+  window were not supplied. Impact: contradicts the approved promise; the
+  plan is blocked at D1.
+- Observation: neither document supplies an operational definition of "stops"
+  or a grace period. Evidence: the scenario states the promise but not its
+  measurement conditions. Impact: the probe is a counterexample only if its
+  observation is at or beyond the point the promise governs; resolve D2.
+- Observation: the promise was replaced in practice by what the tests
+  happened to check. Evidence: an integration probe, not the existing suite,
+  found the discrepancy. Impact: amend `Verification plan` so the lifecycle
+  property is a first-class obligation, not an inferred default.
+
+## Decision log
+
+- D1. Decision: halt and set status `BLOCKED`; do not silently amend the ToR,
+  ADR, or design to match the probe.
+  Affected identifiers: `LOCAL-TOR-PROMISE-CANCEL-STOPS-WORKERS`,
+  `LOCAL-ADR-DECISION-CANCEL-STOPS-WORKERS`,
+  `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`,
+  `GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT`, `INV-CANCEL-TERMINATES`, `EP-M0` to
+  `EP-M3`.
+  Impacts: the supervisor cancellation path; the design's lifecycle and
+  failure-mode sections; the ADR's decision statement; the ToR's approved
+  outcome and success criterion; the roadmap's acceptance evidence; this
+  plan's milestones and verification obligations.
+  Options:
+  - O1 honour the promise: change the implementation so no worker started by
+    the supervisor remains alive when it exits. Impacts: code, tests, and
+    design failure-mode detail; the ADR decision stands. Preferred only if the
+    decision authority confirms the promise remains wanted.
+  - O2 amend the promise: for example, "cancellation asks workers to stop; the
+    supervisor may exit before they do." Impacts: ToR revision, ADR amendment
+    or supersession, design and roadmap reconciliation. This is a requirement
+    change, not an implementation detail, and it discards the current
+    guarantee.
+  - O3 qualify the promise: retain it for a defined grace period, a defined
+    worker set, or cooperative workers only. Impacts: ToR revision, ADR
+    amendment, design update, and a clarified measurement. It must be explicit,
+    not implied by the probe.
+  Required upstream-document changes: O1 requires a design update only if the
+  termination mechanism must change; O2 and O3 require ToR and ADR revision,
+  followed by design and roadmap reconciliation.
+  Approving authority: `[OPEN]`; the scenario names none. The owner of the ToR
+  acceptance and ADR decision must choose. Do not infer authority from the
+  implementing agent, a reviewer, or this plan.
+  Rationale: the probe establishes what the implementation does, not what the
+  product should promise. Accepting observed behaviour as the requirement
+  would reverse-engineer approval and violate the ToR and design contracts.
+  Date/Author: 2026-11-19 00:17Z, authoring agent.
+
+- D2. Decision: treat "cancelling a supervisor stops its workers" as an
+  operational property to be defined before testing, not as a slogan.
+  Rationale: the statement is universal over workers but silent on timing,
+  signal escalation, zombie reaping, and process-group membership. A probe
+  cannot falsify an undefined predicate, and a test cannot discharge it.
+  Date/Author: 2026-11-19 00:17Z, authoring agent.
+
+- D3. Decision: use `LOCAL-` identifiers for the promise, ADR decision, and
+  design requirement because no upstream identifiers or revisions were
+  supplied.
+  Rationale: stable handles are needed for traceability, but inventing
+  upstream-looking IDs would falsely imply provenance. Replace each `LOCAL-`
+  handle with the authoritative ID at approval, preserving meaning.
+  Date/Author: 2026-11-19 00:17Z, authoring agent.
+
+- D4. Decision: no compatibility machinery. Rationale: the change is
+  behavioural and lifecycle-only; if the promise is honoured, internal callers
+  and tests change together in one plateau. No external consumer, deployed
+  peer, or wire format is named.
+  Date/Author: 2026-11-19 00:17Z, authoring agent.
+
+## Outcomes & retrospective
+
+No implementation outcome exists. The plan stopped at reconnaissance because
+the supplied probe contradicts an approved promise and the resolution requires
+authority the agent does not hold.
+
+Lessons so far: a promise about termination must name its observer, timing,
+worker set, and liveness test; otherwise the design, the tests, and the
+operator can each satisfy a different claim. The verification plan below is
+written to close that gap. The plan cannot reach `COMPLETE` until the accepted
+resolution is recorded upstream and all affected links are updated.
+
+## Context and orientation
+
+The control flow at issue is: operator cancels supervisor; supervisor handles
+cancellation; supervisor and workers exit. The approved documents assert the
+last step. The integration probe observed the supervisor exit while at least
+one worker remained alive.
+
+No repository was inspected for this plan. The owning module, entrypoint,
+signal or API used for cancellation, worker-spawn mechanism, process-group
+handling, and test framework are all `[OPEN]`. The base revision is `[OPEN]`.
+Line numbers and symbol names cannot be given without inventing them. Before
+approval, the implementer must fill this section from the actual tree with
+full repository-relative paths, exact symbol names, and the gate commands.
+
+Budget survey: not possible under the read restriction. No comparable
+historical ExecPlan was available. The tolerances above are provisional
+defaults and must be re-derived at approval. The repository's framing, lint,
+typecheck, and test gates are likewise unrecorded; use the project's Makefile
+targets in preference to direct commands when they are identified.
+
+## Conformance basis
+
+Upstream artefacts and the revisions inspected:
+
+- `~/.claude/skills/execplans/SKILL.md` and
+  `~/.claude/skills/execplans/references/execplan-template.md`: inspected
+  2026-11-19. This plan follows that template.
+- `skills/tech-design-doc/SKILL.md` and
+  `skills/tech-design-doc/references/architecture-contract.md`: inspected
+  2026-11-19. The deviation and reconciliation rules come from there.
+- `skills/terms-of-reference-doc/SKILL.md` and
+  `skills/terms-of-reference-doc/references/problem-contract.md`: inspected
+  2026-11-19. The evidence and promise-preservation rules come from there.
+- Terms of Reference asserting the cancellation promise: referenced by the
+  scenario. Path, revision, acceptance record, and ID `[OPEN]`; not supplied
+  and not inspected.
+- Architecture Decision Record asserting the same promise: referenced by the
+  scenario. Path, revision, status, and ID `[OPEN]`; not supplied and not
+  inspected.
+- Technical design document: not supplied. Its existence is `[OPEN]`.
+
+Local requirements and gaps, kept separate from the documents that justify
+them. Replace `LOCAL-` identifiers with authoritative IDs when known.
+
+```plaintext
+LOCAL-TOR-PROMISE-CANCEL-STOPS-WORKERS
+  Statement: cancelling a supervisor stops its workers.
+  Kind: accepted requirement (intent), not a behavioural observation.
+  Approval evidence: `[OPEN]`; the scenario states the promise.
+
+LOCAL-ADR-DECISION-CANCEL-STOPS-WORKERS
+  Statement: the supervisor's cancellation decision guarantees that its
+  workers stop.
+  Kind: accepted durable decision, not a behavioural observation.
+  Status/revision: `[OPEN]`.
+
+LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS
+  Statement: the implementation must ensure no worker started by a cancelled
+  supervisor remains alive after the supervisor exits.
+  Kind: proposed design requirement derived from the ToR and ADR; needs a
+  named design artefact and revision.
+
+GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT
+  Requirement: `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`.
+  Baseline evidence: integration probe observed live workers after supervisor
+  exit, with the scope limits recorded in `Surprises & discoveries`.
+  Target state: no such worker is alive after exit.
+  Disposition: blocked pending D1 acceptance.
+  Owner: `[OPEN]`. Unblock condition: decision authority accepts O1, O2, or O3.
+  Verification: `INV-CANCEL-TERMINATES` below.
+```
+
+Trace chain, to be completed with real identifiers at approval:
+
+```plaintext
+LOCAL-TOR-PROMISE-CANCEL-STOPS-WORKERS
+  -> LOCAL-ADR-DECISION-CANCEL-STOPS-WORKERS
+  -> LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS
+  -> GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT
+  -> EP-M1, EP-M2
+  -> INV-CANCEL-TERMINATES
+  -> integration regression test (path `[OPEN]`)
+```
+
+## Verification plan
+
+### Abstract model
+
+Model only what the promise needs. A supervisor `S` has lifecycle states
+`starting`, `running`, `cancelling`, and `exited`. It owns a finite set of
+workers `W(S) = {w1 ... wn}` that it started. `alive(w, t)` is true when a
+process-table liveness check finds `w` at time `t`.
+
+`cancel(S)` is an operator action. `exit(S)` is the event that `S` is no longer
+alive. Under the promise as literally stated, with no grace period:
+
+```plaintext
+INV-CANCEL-TERMINATES:
+  for every w in W(S):
+    after exit(S), not alive(w, t) for every t >= exit_time(S)
+```
+
+Malformed or ambiguous inputs: an undefined grace period, an unknown worker
+census, or a liveness check that counts or ignores zombies are not handled by
+guessing. They are open questions (D2) that block verification.
+
+### Invariants and lemmas
+
+- `INV-CANCEL-TERMINATES` (above): the required liveness/safety property.
+  Established by `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`.
+- `INV-CANCEL-REACHES-WORKERS`: during cancellation, every worker in `W(S)`
+  receives a termination request, or is already not alive. This is a necessary
+  condition for the promise; it does not by itself establish termination.
+- `INV-SUPERVISOR-WAITS`: if the design requires the supervisor to wait, `S`
+  does not reach `exited` while any worker in `W(S)` is alive. This is a
+  candidate design invariant, not assumed without reading the design.
+- `L-SIGNAL-SUFFICES`: a delivered termination request causes a cooperative
+  worker to exit. This is an external/worker assumption, not repository logic.
+- `L-NO-LOSS`: the worker census used by the check equals the set the
+  supervisor actually started. Without this lemma the probe could pass or fail
+  vacuously by looking at the wrong processes.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-PROBE-OBSERVATION`: the supplied probe accurately observed the
+  workers it reports. Source: the scenario's integration probe. Boundary: the
+  probe harness and process-table check. Scope limit: command, output,
+  timestamps, and census are not supplied.
+- `AXIOM-PROBE-GOVERNS-PROMISE`: the probe observes at a time and over a
+  worker set that the promise governs. Source: none yet; this is unverified,
+  and resolving D2 is the test. If false, the probe is not a counterexample.
+- `AXIOM-OS-PROCESS-SEMANTICS`: the platform delivers signals, reparents
+  orphans, and reports liveness as documented. Source: platform contract.
+  Boundary: the supervisor's use of process groups and reaping. Not proved
+  here; exercised against the real platform in the integration test.
+
+### Methods per obligation
+
+- Obligation: `INV-CANCEL-TERMINATES`.
+  Method: integration/behavioural test that starts a supervisor and a known
+  worker census, cancels, waits for supervisor exit, then checks every worker
+  with a process-table liveness check. Combine with a parameterized test over
+  worker counts and worker states.
+  Rationale: the property is about real process lifetime and exit ordering,
+  which unit tests with mocks cannot establish. The supplied probe is the
+  same shape, so the method is known to reach the defect.
+  Domain: 0, 1, and N workers; workers already exited; a worker slow to exit;
+  a worker that ignores the first termination request.
+  Artefact: `[OPEN]`; use the repository's existing integration-test path.
+  Evidence: red command fails with a live-worker assertion while the defect
+  exists; green command passes after the fix. Discharge: every generated case
+  observes no live worker after supervisor exit, within the D2 definition.
+  Non-vacuity: the supplied probe is the negative witness that the assertion
+  can fail. Add a seeded fault (skip termination or skip waiting) and require
+  the test to fail for the intended reason; revert it afterwards. Include a
+  positive control with a worker that exits normally.
+
+- Obligation: `INV-CANCEL-REACHES-WORKERS`.
+  Method: parameterized test or instrumentation of the cancellation path.
+  Rationale: separates "the request was never sent" from "the worker did not
+  exit", which have different fixes.
+  Domain: each worker spawn mode the supervisor supports.
+  Artefact: `[OPEN]`.
+  Evidence: each worker receives the request or is already dead.
+  Non-vacuity: at least one worker is alive at cancellation; assert the
+  observation is non-empty.
+
+- Obligation: `L-NO-LOSS`.
+  Method: the test harness records the supervisor's own worker list before
+  cancellation and checks exactly that list afterwards.
+  Rationale: prevents a passing test that checks an empty or unrelated set.
+  Artefact: `[OPEN]`.
+  Evidence: the recorded set is non-empty and matches the started workers.
+  Non-vacuity: require `|W(S)| >= 1` in every case that claims the invariant;
+  a zero-worker case is a separate boundary, not evidence for the promise.
+
+- Obligation: `INV-SUPERVISOR-WAITS` (only if the design adopts a wait
+  requirement).
+  Method: bounded state-machine model check of the cancellation protocol,
+  cross-checked against the shared transition function.
+  Rationale: exit ordering and signal escalation are temporal properties that
+  example tests cover poorly.
+  Domain: states `running`, `cancelling`, `draining`, `exited`; transitions for
+  signal, worker exit, timeout, and escalation.
+  Artefact: `[OPEN]`; model and transition function path.
+  Evidence: model checker reports no reachable state where `exited` holds and
+  a worker is alive; bounds admit the shortest cancellation.
+  Non-vacuity: show the `exited` state is reachable and the bad state would be
+  reachable without the wait transition (mutation).
+  Residual gap: the model abstracts real process timing; the integration test
+  remains the boundary check.
+
+### Formal verification decision
+
+No formal proof is planned for the initial fix. The obligation is a
+finite-process lifecycle property best established by integration tests over a
+parameterized partition, with a state-machine model only if the design adds a
+multi-step cancellation protocol. The supplied probe already demonstrates that
+the integration method reaches the defect. A model or proof would add strength
+for ordering under concurrency but would not remove the need to test the real
+process boundary. Record the final choice in `Decision log` at approval.
+
+### Suggested BDD features
+
+Proposed, not adopted. If the repository has no BDD runner, exercise these
+through the integration test and manual check instead.
+
+```gherkin
+Feature: Supervisor cancellation stops its workers
+  Scenario: Cancelling a supervisor terminates every worker
+    Given a supervisor with 3 running workers
+    When the operator cancels the supervisor
+    Then the supervisor exits
+    And no worker started by that supervisor is alive
+
+  Scenario: A worker does not exit on the first request
+    Given a supervisor with a worker that ignores the first termination request
+    When the operator cancels the supervisor
+    Then the supervisor exits
+    And no worker started by that supervisor is alive
+
+  Scenario: A supervisor with no workers
+    Given a supervisor with no workers
+    When the operator cancels the supervisor
+    Then the supervisor exits successfully
+```
+
+## Plan of work
+
+All milestones are blocked at the D1 gate. Do not start `EP-M0` until the user
+approves the plan and the decision authority accepts a resolution.
+
+### `EP-M0` feasibility probe (reproduce the supplied observation)
+
+Resolve one uncertainty: does the supplied probe reproduce, and under exactly
+what conditions? Record the promise's wording, the cancellation action, the
+worker census, the observation window, and the liveness check. Promote the
+probe to a retained test harness only if it is deterministic; otherwise keep
+it as a recorded reproducer and state why. Expected go/no-go: a reproducible
+live-worker observation that a test can assert. If it does not reproduce, the
+falsification is inconclusive and the plan returns to D2 rather than to code.
+
+Proposed shape, to be adapted to the real supervisor entrypoint; this was not
+run and is not a substitute for the repository's harness:
+
+```plaintext
+1. Launch the supervisor and record the worker PIDs it reports or spawns.
+2. Cancel it.
+3. Wait for the supervisor process to exit.
+4. For each recorded PID, run: kill -0 <pid>
+   - exit 0 -> alive (counterexample)
+   - non-zero -> not alive
+5. Repeat with an observation window beyond any grace period agreed in D2.
+```
+
+### `EP-M1` red regression test
+
+Add the smallest integration test that expresses `INV-CANCEL-TERMINATES` and
+fails against the current implementation for the intended reason (a live
+worker after supervisor exit). Run it before any production change. If the
+repository supports strict expected-failure markers, use one to prove the red
+stage, then remove it in `EP-M2`. Record the exact command, expected failure,
+and actual output.
+
+### `EP-M2` resolve the contradiction
+
+Under O1, make the smallest production change that makes the red test pass and
+run the focused test again. Under O2 or O3, the change is upstream: revise the
+ToR and ADR first, then revise the test to express the accepted promise and
+update the design. Do not mix an upstream revision with a code fix in one
+unreviewed step. Refactor only after green, rerunning the focused test and the
+relevant wider gates.
+
+### `EP-M3` documentation and delivery closure
+
+Record the accepted resolution in the ToR, ADR, technical design (if one
+exists), and roadmap acceptance evidence. Search for stale claims that still
+promise unconditional termination, excluding historical completed plans.
+Update the changelog if the repository keeps one. Run the full gate sequence
+and reconcile every trace link before marking the plan `COMPLETE`.
+
+## Milestones and plateaus
+
+Every milestone is currently blocked by D1.
+
+- `EP-M0` reproduce probe. Requirements: none discharged; evidence gathering.
+  Acceptance: a recorded transcript showing the observation and its scope.
+  Conformance check: promise unchanged; no public interface or dependency
+  change; trace links current. Recovery: delete the scratch harness or retain
+  it as the regression seed. Remaining gap: D1 unresolved. Compatibility:
+  none.
+- `EP-M1` red test. Requirements: advances
+  `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`. Acceptance: the test fails for the
+  intended reason and the command/transcript is recorded. Conformance check:
+  design unchanged; no API change. Recovery: revert the test commit. Remaining
+  gap: production fix. Compatibility: none.
+- `EP-M2` fix or revise. Requirements: discharges
+  `GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT` under the accepted option. Acceptance:
+  focused test passes, including the uncooperative-worker boundary.
+  Conformance check: design still followed; if not, D1 updated and re-approved.
+  Recovery: revert to the green `EP-M1` state or to the pre-change commit.
+  Remaining gap: documentation reconciliation. Compatibility: none.
+- `EP-M3` closure. Requirements: all upstream links reconciled. Acceptance:
+  gates pass and no stale promise remains. Conformance check: ToR, ADR,
+  design, roadmap, and plan agree. Recovery: none needed; documentation only.
+  Remaining gap: none. Compatibility: none.
+
+## Concrete steps
+
+Working directory: repository root, path `[OPEN]` until supplied.
+
+Planned, not executed:
+
+```plaintext
+Red:    <focused integration test command> -> live-worker assertion failure
+Green:  <same command> -> pass, with the worker census reported
+Gates:  <project format, lint, typecheck, test targets in the required order>
+```
+
+When running gates with `tee`, enable `pipefail` so a failed gate cannot appear
+to pass. Record log paths. Do not run full repository gates from this
+authoring task; the repository's designated gate runner owns that.
+
+## Validation and acceptance
+
+Acceptance under O1 is observable: start a supervisor with a known non-empty
+worker set, cancel it, wait for it to exit, and observe that every recorded
+worker is gone. The regression test must fail before the change and pass after
+it, including a worker that ignores the first termination request. Under O2 or
+O3, acceptance is the revised promise, exercised by a test that matches the
+revised measurement conditions, plus upstream documents that state the weaker
+or qualified guarantee without ambiguity.
+
+Quality criteria:
+
+- Tests: the focused regression test fails for the intended reason and passes
+  after the change; relevant wider gates pass.
+- Verification: `INV-CANCEL-TERMINATES` discharged under the D2 definition;
+  `L-NO-LOSS` demonstrated; the negative control is rejected.
+- Lint and typecheck: repository targets pass.
+- Performance: no claim and no benchmark planned.
+- Security: no new surface; no scan required beyond the normal gates.
+
+Quality method: the repository's gate sequence, run sequentially, plus the
+integration test transcript.
+
+## Idempotence and recovery
+
+The probe and the regression test are re-runnable; each run starts its own
+supervisor and records its own worker set. A failed probe leaves no lasting
+state beyond its log. A failed fix is reverted to the last green commit; do
+not disable the test to obtain a green result. A seeded fault for the negative
+control is reverted and its generated artefacts removed. Documentation edits
+are safe to re-apply.
+
+## Artefacts and notes
+
+- `tor-cancel-stops-workers-reconciliation.md`: the promise and probe records,
+  their evidence classes, and the proposed upstream resolutions.
+- `adr-design-deviation-proposal.md`: the ADR/design deviation proposal and gap
+  register entry.
+- This plan.
+
+Evidence supplied with the task is marked as such. No command transcript,
+revision, or gate result is presented as observed by the author.
+
+## Interfaces and dependencies
+
+No interface is authorised to change. The fix belongs inside the supervisor's
+cancellation path; the exact module, function, and signal or API surface are
+`[OPEN]` until the tree is inspected. No new dependency, framework, or tool is
+authorised. Reuse the repository's existing process-spawn and test helpers;
+state any deliberate non-reuse at implementation. If the design requires a new
+lifecycle abstraction, that is an architecture change and triggers escalation
+under `Tolerances`.
+
+## Revision note
+
+- 2026-11-19: Initial draft created from the supplied scenario. Status set to
+  `BLOCKED` because the integration probe contradicts the approved ToR and ADR
+  promise. No implementation, revision, or gate was performed. Remaining work
+  is gated on user approval and decision-authority acceptance of O1, O2, or O3.

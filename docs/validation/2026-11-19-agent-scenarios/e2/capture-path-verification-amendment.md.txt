@@ -1,0 +1,225 @@
+# Capture-path evidence correction – technical design amendment
+
+Status: Draft – two verification claims withdrawn pending evidence.
+
+Audience: Design reviewers, the implementation lead, and the author of the
+receiving ExecPlan.
+
+Companion documents: `capture-path-evidence-execplan.md`, the execution
+contract that discharges this amendment. No terms of reference, architecture
+decision record (ADR), roadmap, or technical design revision was available in
+the authoring environment; see Conformance basis.
+
+Date and version: 2026-11-19, version 0.1.
+
+Authority and evidence basis: The findings below come from the task report
+supplied for this review. They were not reproduced by running the repository,
+because the authoring environment had no access to the affected code, tests, or
+benchmark. The report is evidence that the described conditions were observed.
+The mechanistic explanations in this amendment are claims the ExecPlan must
+verify; they are not established by the report.
+
+## Scope and decision boundary
+
+This amendment corrects two verification claims in the capture-path design.
+It does not change problem-space intent, user-facing behaviour, or the agreed
+performance target. No upstream intent document was available, so no
+problem-space claim is altered and none is invented.
+
+The amendment is deliberately narrow:
+
+1. It records that the multi-chunk test passes while exercising one iteration
+   at the larger chunk size, so the pass does not establish multi-chunk
+   coverage.
+2. It records that the benchmark measures an echo path while the design claims
+   a capture-only gain, so the measurement does not establish that claim.
+
+It does not assert that the capture-only gain is false, and it does not assert
+that multi-chunk behaviour is broken. Both propositions are unverified. The
+evidence is insufficient, not contradictory.
+
+## Baseline evidence
+
+E1 – Multi-chunk test. The test named for multi-chunk behaviour passes after
+the chunk size was increased. Under the reported configuration the capture loop
+executes one iteration. The test therefore passes without exercising the
+behaviour in its name. Status: reported observation, not rerun here.
+
+E2 – Performance benchmark. The benchmark measures an echo workload. This
+amendment uses "echo" to mean the path that captures input and then replays or
+returns it; the ExecPlan must confirm the actual composition against the code.
+The design attributes the measured result to a capture-only change. The
+measured execution path is not the claimed path. Status: reported observation,
+not rerun here.
+
+Both findings are about evidence scope. Neither is a new functional defect
+report.
+
+## Claim register
+
+| ID                    | Claim                                                                                 | Evidence state                                                       |
+| --------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `TDD-PERF-001`        | The capture-only path yields a measurable performance gain against its own baseline.   | Unsupported. No capture-only measurement is recorded.                |
+| `TDD-VER-001`         | The multi-chunk test exercises at least two capture iterations at the configured size. | Unsupported at the larger size. The test passes with one iteration.  |
+| `TDD-DOC-001`         | The design's reported gain is attributable to capture alone.                          | Unverified. The cited benchmark exercises capture plus echo replay.  |
+
+A passing check demonstrates only the property and scope it actually
+exercises. `TDD-PERF-001` remains a legitimate target; it is not discharged and
+must not be described as demonstrated.
+
+## Gap register
+
+| ID             | Upstream claim   | Baseline evidence                                                        | Target state                                                              | Disposition   | Unblock condition                                      | Verification obligation |
+| -------------- | ---------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ------------- | ------------------------------------------------------ | ----------------------- |
+| `GAP-VER-001`  | `TDD-VER-001`    | Test passes with one observed iteration at the larger chunk size.        | Every multi-chunk case observes at least two iterations and crosses a boundary. | Proposed work | ExecPlan `EP-M1` accepted and executed.                | `OBL-VER-001`           |
+| `GAP-EVID-001` | `TDD-PERF-001`   | Benchmark exercises the echo path, not capture-only.                     | Capture-only samples record zero echo invocations and positive captured bytes. | Proposed work | ExecPlan `EP-M2` accepted and executed.                | `OBL-EVID-001`          |
+| `GAP-EVID-002` | `TDD-PERF-001`   | No workload, control, environment, protocol, uncertainty, or threshold record. | A complete performance claim record exists before measurement.            | Proposed work | `OBL-EVID-002` discharged.                             | `OBL-EVID-002`          |
+| `GAP-DOC-001`  | `TDD-DOC-001`    | Design prose attributes an echo measurement to capture alone.            | Prose states the measured path and the evidence state without overclaiming. | Proposed work | `OBL-DOC-001` discharged and the revised text accepted. | `OBL-DOC-001`           |
+
+`GAP-DOC-001` is a documentation defect caused by the other two gaps. Fixing
+the measurement does not by itself fix the prose; both must be reconciled
+before the design claim is restored.
+
+## Performance claim record
+
+The design must retain every field below for `TDD-PERF-001`. Missing fields
+are open questions, not defaults.
+
+| Field                 | Required content                                                        | Current state |
+| --------------------- | ----------------------------------------------------------------------- | ------------- |
+| Claim                 | Capture-only path improves throughput against the named baseline.       | Stated.       |
+| Selected path         | Capture-only entrypoint; echo and replay stages not invoked.            | Not measured. |
+| Workload              | Input size, chunk size, input content, and repetition count.            | Open.         |
+| Control               | Pre-change build or baseline path under the same workload.              | Open.         |
+| Environment           | Hardware, operating system, compiler or runtime, and cache state.       | Open.         |
+| Measurement protocol  | Warm-up, sample count, statistic, and run order.                        | Open.         |
+| Uncertainty           | Spread, confidence interval, or equivalent for each statistic.          | Open.         |
+| Acceptance threshold  | Pre-registered numeric improvement and the comparison it applies to.    | Open.         |
+| Evidence state        | Supported, unverified, or withdrawn, with the revision that decided it. | Unverified.   |
+
+The threshold is fixed before measurement and is not lowered after results are
+seen. If the measured gain is smaller than the threshold, the claim is not
+discharged; the decision returns to the claim owner.
+
+## Multi-chunk coverage model
+
+Let `C` be the chunk size in bytes and `L` the payload length in bytes. For a
+reader that fills a buffer and then processes it, the number of loop entries
+`n` is at least `ceil(L / C)` when reads are full, and may be greater when
+short reads occur. A test is non-vacuous for multi-chunk behaviour only if the
+observed `n` is at least two and at least one chunk boundary is crossed.
+
+In the reported case, increasing `C` without increasing `L` moved the test into
+the region where `L <= C`, so `n = 1`. The test still passed, which means its
+assertions do not require more than one iteration, or are satisfied vacuously.
+The corrective assertion must use a harness-owned observation of loop entries
+or reads, not a count derived inside the code under test. A count derived from
+the same loop it is meant to audit would be circular.
+
+Residual uncertainty: short reads, buffering above the reader, and an extra
+end-of-file read can change `n`. The tests therefore assert a lower bound of
+two for a payload strictly larger than two chunks, and assert the exact
+observed count only where the harness controls the read pattern.
+
+## Verification obligations
+
+| ID              | Obligation                                                                                                     | Method                                                                                         | Discharge condition                                                                                         | Non-vacuity and negative control                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `OBL-VER-001`   | Every multi-chunk test case observes at least two iterations and crosses at least one chunk boundary.           | Parameterized test over boundary classes: `L <= C`, `C < L <= 2C`, `L = kC + 1`, and `L >> C`. | The new assertion fails at the current fixture and chunk size, then passes after the fixture or size is corrected. | Witness at `L = 2C + 1` observes at least three reads. A case with `C >= L` must be rejected by the multi-chunk assertion. |
+| `OBL-EVID-001`  | Every sample contributing to the capture-only statistic records zero echo invocations and positive captured bytes. | Instrumented benchmark with a path assertion and a separate echo control.                       | The current echo benchmark fails the capture-only path assertion for the intended reason; the capture-only run passes. | Witness sample records `capture_bytes > 0` and `echo_invocations = 0`. The echo control must fail the same assertion. |
+| `OBL-EVID-002`  | The performance claim record is complete and its threshold is frozen before measurement.                      | Record review against the table above, pinned to a revision.                                    | All fields are populated, and the reporting revision uses the same threshold it declared earlier.             | The current record fails on the missing workload, control, environment, and protocol fields.                        |
+| `OBL-DOC-001`   | Design prose states the measured path and evidence state consistently with the discharge state of the above.   | Trace review from each design sentence to its evidence.                                        | Every performance sentence names its path and links to a discharged obligation or marks itself unverified.    | The current sentence attributing echo results to capture alone is the negative control and must be rejected.         |
+
+### Lemmas and axioms
+
+`L-VER-001`: if the harness observes at least two loop entries, then at least
+one iteration processed a chunk after the first read, so the multi-chunk path
+was exercised. This depends on the reader structure recorded in ExecPlan
+`EP-M0`.
+
+`L-EVID-001`: if the path selector is capture-only, the echo invocation count
+is zero, and captured bytes are positive, then the measured sample did not
+execute the echo stage. This depends on instrumentation accuracy.
+
+`L-EVID-002`: a difference measured between echo and baseline is not evidence
+of a capture-only difference, because the two paths differ by the echo stage.
+This is established by path construction, not by measurement.
+
+`AXIOM-INSTR`: the harness counters record actual invocations and bytes.
+
+`AXIOM-TIMER`: the benchmark's timer measures the stated resource with
+documented resolution.
+
+`AXIOM-ENV`: the recorded environment is stable within the reported bounds.
+
+`AXIOM-READER`: one loop body execution corresponds to one successful read.
+`EP-M0` must confirm this against the code, or the model above is revised
+before `EP-M1` proceeds.
+
+## Decision record
+
+`DR-1`: Do not accept passing results as discharge. The multi-chunk test pass
+and the benchmark result are real observations, but they do not exercise the
+claimed properties. Accepting them would make verification vacuous.
+
+`DR-2`: Record `TDD-PERF-001` as unverified, not falsified. The benchmark is
+out of scope for the claim; it does not contradict a capture-only gain.
+
+`DR-3`: Do not lower the acceptance threshold. If the capture-only measurement
+falls short, the claim is revised or abandoned by its owner.
+
+`DR-4`: Withdraw `TDD-DOC-001` from the design until `OBL-EVID-001` and
+`OBL-EVID-002` are discharged and `OBL-DOC-001` is reconciled.
+
+`DR-5`: No formal proof or model checking is proportionate. The obligations are
+finite boundary coverage and instrumented measurement, not protocol or
+arithmetic theorems.
+
+## Handoff to the ExecPlan
+
+The receiving plan is `capture-path-evidence-execplan.md`. It inherits:
+
+- requirements `TDD-VER-001`, `TDD-PERF-001`, and `TDD-DOC-001`;
+- gaps `GAP-VER-001`, `GAP-EVID-001`, `GAP-EVID-002`, and `GAP-DOC-001`;
+- obligations `OBL-VER-001`, `OBL-EVID-001`, `OBL-EVID-002`, and
+  `OBL-DOC-001`;
+- axioms `AXIOM-INSTR`, `AXIOM-TIMER`, `AXIOM-ENV`, and `AXIOM-READER`;
+- acceptance boundaries: observed iteration count and instrumented path, not
+  inferred counts;
+- unresolved decisions: the numeric threshold, the benchmark workload, and the
+  environment record, all of which `EP-M0` must surface for approval.
+
+Readiness: blocked for claim acceptance. The implementation work is ready for
+approval as bounded discovery and correction, but `TDD-PERF-001` must not be
+described as supported until the capture-only evidence exists.
+
+## Compatibility assessment
+
+No public interface, persisted format, or wire format changes are involved.
+The instrumentation is a test-only surface and creates no source-API
+compatibility obligation. No compatibility layer is authorised.
+
+## Freshness and evidence expiry
+
+The evidence in this amendment expires on any of the following:
+
+1. A change to the chunk size, fixture length, or read loop.
+2. A change to the benchmark entrypoint, input generation, or timing
+   protocol.
+3. A rebase or upstream merge that moves the test, benchmark, or capture code.
+4. A release or deployment change that alters the measured environment.
+
+Re-run `OBL-VER-001` and `OBL-EVID-001` after any of these, and record the new
+revision. A green result from an earlier tree is not current evidence.
+
+## Diagrams
+
+No diagrams are included. The correction concerns evidence scope and
+measurement, not architecture; a diagram would add no information that the
+model above does not carry.
+
+## Revision note
+
+- 2026-11-19: Initial amendment. Records the two evidence-scope findings,
+  withdraws `TDD-PERF-001` and `TDD-DOC-001` to unverified, and hands the
+  discharge obligations to the ExecPlan. No implementation has been performed.

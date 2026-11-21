@@ -1,0 +1,134 @@
+# Decision request: dependency contract revision B
+
+To: `<decision authority>`, not yet named.
+
+From: authoring agent preparing the plan revision for `<plan owner>`.
+
+Date: 2026-11-21 08:12Z.
+
+Plan status: BLOCKED. Requested response: an explicit decision. Silence is not
+approval.
+
+## 1. What happened
+
+The live ExecPlan cites source symbol `<SYM>` and dependency contract `<DEP>` at
+revision A. Revision B changes the contract and makes the planned failure path
+`<F>` unreachable. The plan intended `<F>`, implemented in `<branch>` and
+verified by `<test-old>`, to discharge verification obligation `<VO-FAIL>` and
+to contribute to milestone `<EP-Mn>` acceptance.
+
+## 2. Why work stopped
+
+1. The revision-A acceptance evidence is stale. A green result at revision A is
+   not current evidence at revision B.
+2. `<test-old>` can no longer enter the failure branch. Continuing to count it
+   would produce a vacuous pass. Forcing the old failure through a mock or shim
+   would assert a guarantee the dependency no longer provides.
+3. `<DEP>` revision B is a dependency change from the plan's cited revision A.
+   The plan does not record an authorization for B. If revision A was
+   authorized, adopting B is a tolerance trigger; either way, it is not an
+   implementation detail.
+4. The change may falsify a technical-design requirement and, if the failure
+   mode is recorded upstream, a terms-of-reference dependency record or
+   assumption. Those need explicit revision before the plan can claim
+   conformance.
+5. The governing plan rules require the deviation to be recorded, the plan to
+   enter `BLOCKED`, and implementation to wait for acceptance.
+
+## 3. Decisions requested
+
+1. Dependency authorization. Authorize `<DEP>` at the exact revision B
+   identifier, superseding revision A, or retain revision A. If revision A is
+   retained, record why it remains supported, secure, and permitted, and name
+   the expiry owner and re-review date.
+2. Failure-path disposition. Choose one:
+   - Option A: adopt revision B, retire `<F>`, and withdraw `<VO-FAIL>` and
+     `<test-old>` as acceptance evidence, replacing them with total-outcome
+     mapping.
+   - Option B: adopt revision B and re-source the requirement at a reachable
+     boundary, with new acceptance evidence.
+   - Option C: pin revision A and retain the failure path, accepting the
+     support, security, and evidence-expiry risk.
+   - Option D, preserving the old test through a mock, shim, ignored test, or
+     expected failure, is rejected and is not offered.
+3. Upstream revisions. Accept the proposed technical-design revision. Accept
+   the proposed terms-of-reference dependency-record revision, and any
+   assumption revision, if the trace check finds a load-bearing item. If the
+   check finds none, record that finding explicitly.
+4. Resumption. Accept the revised plan acceptance evidence and authorize
+   resumption at `<EP-Mn>`. Design acceptance alone does not authorize
+   implementation.
+
+| Choice   | Effect on `<F>`                         | Evidence required before resuming                          | Principal risk                                      |
+| -------- | --------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------- |
+| Option A | Retired with an accepted rationale      | Revision-B contract, trace showing no independent need, `VO-ERRMAP` | A user-visible guarantee is lost with the mechanism |
+| Option B | Re-sourced at `<reachable boundary>`    | Revision-B contract, upstream requirement, new witness and negative control | Larger design and verification change               |
+| Option C | Retained at revision A                  | Evidence that A remains supportable and permitted; expiry owner | Support, security, and stale-evidence exposure      |
+
+Decision rule supplied for discussion: choose Option A when the failure
+requirement was derived solely from revision A's contract; choose Option B when
+it traces to an upstream goal, constraint, or success criterion that survives
+the change; choose Option C only with positive supportability evidence.
+
+## 4. What is not claimed or verified
+
+- The exact revision-B identifier, contract diff, and provider record have not
+  been reproduced in this authoring workspace. They are required evidence, not
+  established facts.
+- The unreachability claim has not been classified as type-impossible,
+  contract-impossible, precondition-impossible, or unverified. It must be
+  classified before any coverage is deleted.
+- The affected design and terms-of-reference identifiers, paths, and revisions
+  have not been read here. They must be copied from the authoritative
+  documents.
+- No approval, owner, external consumer, migration requirement, or acceptance
+  date has been invented.
+- No code, test, manifest, lockfile, design, ToR, ADR, or roadmap file has been
+  edited.
+
+## 5. State left
+
+The ExecPlan is BLOCKED at `<EP-Mn>`. Revision-A evidence is retained as
+historical, `<test-old>` is withdrawn as current acceptance evidence but has
+not been deleted, and no replacement test has been created. The proposed plan
+revision, impact assessment, and upstream feedback are recorded in the
+companion files. The repository is unchanged by this work. If no decision is
+given, the plan remains paused and does not progress to `COMPLETE`.
+
+## 6. Suggested acceptance record
+
+Fill this only after the decisions are actually made. The quoted text is a form,
+not an accepted record.
+
+```plaintext
+Decision record <id>:
+  Dependency: <DEP>@<immutable revision B identifier> is authorized,
+    superseding <DEP>@A.
+  Failure path: Option <A|B|C> is accepted for <F>.
+  Requirement: <TDD-REQ> is <retired|re-sourced at <boundary>>.
+  Verification: <VO-FAIL> is withdrawn; <VO-ERRMAP> and any <VO-FAIL-B>
+    are accepted as replacement obligations.
+  Upstream: technical-design revision <id>, terms-of-reference record
+    <id or none>, and ADR <id or none> are approved.
+  Plan: the revised acceptance evidence is approved and work may resume at
+    <EP-Mn> under the stated tolerances.
+  Decision authority: <name and role>
+  Date and evidence: <date, link to decision record>
+```
+
+If the plan is still an unapproved draft and no implementation has begun, apply
+the same reconciliation as a draft revision and retain `DRAFT (revision B
+applied; awaiting approval)` instead of `BLOCKED`. If the live plan is already
+`COMPLETE` and its implementation has merged, do not rewrite it; create a
+successor ExecPlan that cites it as historical evidence, and apply the
+`BLOCKED` status and revised acceptance evidence to the successor. Do not use
+either alternative to bypass the dependency authorization or the upstream
+revision decisions.
+
+## 7. Companion records
+
+- `00-contract-revision-impact.md`: evidence register, reachability classes,
+  impact map, options, and unexecuted checks.
+- `01-execplan-revision.md`: proposed replacement text for the blocked plan.
+- `02-upstream-change-feedback.md`: proposed design and terms-of-reference
+  revisions, explicitly unaccepted.

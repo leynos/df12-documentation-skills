@@ -1,0 +1,550 @@
+# ExecPlan revision: dependency contract revision B
+
+This file is proposed replacement text for the live ExecPlan identified as
+`<plan path>` at `<plan revision>`. It is a revision pack, not the live plan,
+and it has not been applied. Apply every section below together; do not
+cherry-pick a subset. Replace every angle-bracket label with the exact value
+copied from the live plan or the authoritative dependency record. If a required
+value cannot be established, leave the plan BLOCKED and record the gap rather
+than guessing. The live plan remains authoritative for every fact not replaced
+here, and must remain self-contained after the patch is applied.
+
+If the live plan is already `COMPLETE` and its implementation has merged, do
+not rewrite it. A completed plan is a historical document reflecting the
+repository state at the time of implementation. Apply this reconciliation to a
+successor ExecPlan that cites the completed plan as historical evidence; the
+successor, not the historical plan, carries the `BLOCKED` status and the new
+acceptance evidence.
+
+Status: BLOCKED (dependency contract revision B; proposed deviation awaiting
+explicit acceptance)
+
+Branch: `<branch-name>` (unchanged)
+
+Roadmap item: `<identifier>` in `<repository-relative roadmap path>`, or none.
+
+## Purpose / big picture (affected qualification)
+
+The plan's original purpose is retained. Append this qualification to the
+paragraph that describes observable failure behaviour:
+
+> At revision A, the plan promised that `<FAILURE>` from `<SYM>` was handled.
+> Revision B removes or excludes `<FAILURE>`, so that promise cannot be observed
+> as written. Pending acceptance, the plan makes no claim that `<FAILURE>` is
+> handled. The replacement observable promise is `<mapping of every permitted
+> revision-B outcome>`, or, if the upstream need remains, `<the re-sourced
+> behaviour at a reachable boundary>`.
+
+Do not delete the original purpose. A reader must be able to compare the old
+and new promises and see why the acceptance evidence changed.
+
+## Constraints (additions)
+
+The existing constraints remain in force. Add the following hard invariants:
+
+- Implementation is stopped until the dependency revision and the disposition
+  of `<F>` are explicitly accepted. Silence is not approval.
+- `<DEP>` revision B is not the dependency revision the plan cites. Check the
+  live `Constraints` authorization. Do not edit a manifest, lockfile, vendored
+  copy, or call site to adopt B until the authorization for B is recorded; if
+  revision A was never authorized either, record that gap instead of assuming
+  it.
+- Do not retain `<F>` through a mock, adapter, shim, alias, facade, dual
+  implementation, temporary wrapper, expected-failure marker, ignored test,
+  filtered property, or lint allowance. An unreachable branch is not made
+  verifiable by preventing the compiler or linter from reporting it.
+- Do not add source-compatibility machinery for a private API, a test-only API,
+  a pre-1.0 API, or an unreleased API change. Update the interface and every
+  caller together. If the removed `<FAILURE>` is exposed by a released 1.0+
+  repository API, assess that separate contract and any named external consumer
+  before changing it; do not assume either compatibility or its absence.
+- Preserve revision-A findings as historical evidence. Do not relabel them as
+  current results and do not use them to discharge a revision-B obligation.
+- Do not mark the plan COMPLETE while the deviation, the dependency
+  authorization, or a required upstream revision remains unaccepted.
+- Keep this revision pack, and the plan after applying it, free of invented
+  owners, approvals, revision identifiers, or evidence.
+
+## Tolerances (exception triggers)
+
+The existing budgets and thresholds remain in force. This event engages two of
+them:
+
+- Dependencies: adopting `<DEP>` at revision B is a dependency change from the
+  plan's cited revision A. If the live `Constraints` authorize A as the
+  baseline, this is a breach of that authorization and must be escalated; if A
+  was never authorized, record that gap. Either way, stop. This entry does not
+  authorize raising the limit after the fact.
+- Ambiguity: retiring `<F>` and re-sourcing it at another boundary lead to
+  materially different designs. Stop and present both options with trade-offs;
+  do not choose without the decision authority.
+
+Apply the existing category limits when an option is accepted. A manifest or
+lockfile edit is configuration. Production source and tests are code. Prose and
+guides are documentation. ExecPlan files, including this revision pack, are
+excluded from every size count. Spare capacity in one category cannot offset
+another category exceeding its limit.
+
+The live plan's comparison base and counting commands remain authoritative;
+this revision redefines no budget. The dependency question is separate from the
+size budgets. If a budget is exceeded after an option is accepted, read the
+plan's recorded survey and revision history rather than raising the limit;
+record whether the cause is missed scope, a repository constraint, or approved
+scope growth.
+
+## Risks
+
+- Risk: unreachability is inferred from a provider's documentation while the
+  type system can still represent `<FAILURE>`. Severity: high. Likelihood:
+  medium. Mitigation: classify the claim as R2 and record `AXIOM-DEP-B` with the
+  exact contract text, scope, and repository boundary; prefer a compile-time
+  proof when revision B's types permit one.
+- Risk: the plan retires a user-visible, security, safety, or data-integrity
+  guarantee that was merely implemented through `<SYM>`. Severity: high.
+  Likelihood: medium. Mitigation: trace `<F>` to the design requirement and the
+  terms of reference before accepting retirement; re-source the requirement if
+  it survives the dependency change.
+- Risk: revision B introduces failure modes that the revision-A plan never
+  enumerated. Severity: high. Likelihood: medium. Mitigation: enumerate the
+  total outcome set at B and add `VO-ERRMAP` plus any reachable
+  `VO-FAIL-B` before resuming.
+- Risk: stale call sites, tests, alerts, runbooks, or retry policy still assume
+  `<FAILURE>`. Severity: medium. Likelihood: high. Mitigation: run a
+  repository-wide search at revision B, not only in the owning module, and
+  update the affected artefacts atomically.
+- Risk: pinning revision A preserves the path but creates support, security, or
+  availability exposure. Severity: medium. Likelihood: medium. Mitigation:
+  choose Option C only with evidence that revision A remains supportable and
+  with a named expiry owner and re-review date.
+- Risk: a fake injected to reproduce `<FAILURE>` passes while proving nothing
+  about the real dependency. Severity: high. Likelihood: medium. Mitigation:
+  forbid the fake; a mock must not assert the disputed guarantee.
+
+## Progress
+
+- [x] (2026-11-21 08:12Z) Detected the revision-B contract change during
+  `<EP-Mn>`; stopped before further implementation edits.
+- [x] (2026-11-21 08:12Z) Recorded the evidence expiry, the required
+  reachability classification, and the proposed deviation.
+- [ ] Dependency revision B explicitly authorized or rejected by
+  `<decision authority>`.
+- [ ] Disposition of `<F>` explicitly accepted: retire (Option A), re-source
+  (Option B), or pin revision A (Option C).
+- [ ] Proposed technical-design revision accepted; terms-of-reference
+  dependency record and any load-bearing assumption checked and, if needed,
+  revised.
+- [ ] Plan revision re-approved with revised acceptance evidence.
+- [ ] `<EP-Mn>` resumed only after the decisions above.
+- [ ] `<VO-ERRMAP>` and any reachable `<VO-FAIL-B>` discharged with
+  non-vacuity evidence.
+- [ ] Focused and wider gates pass; upstream reconciliation complete; plan
+  eligible for `COMPLETE`.
+
+Implementation is paused at the first unchecked item that affects code. The
+plan is not complete, and no completion claim may be inferred from the
+investigation recorded here.
+
+## Surprises & discoveries
+
+- Observation: revision B changes the `<DEP>` contract so that the planned
+  failure path `<F>` is no longer reachable.
+  Evidence: the change event, with the revision-B contract to be recorded at
+  `<immutable revision identifier>`; the exact contract diff and reachability
+  classification still belong under `EV-03` and `EV-05` in the impact
+  assessment.
+  Impact: `<VO-FAIL>` cannot be discharged by `<test-old>`; the milestone
+  acceptance evidence is invalid as written; the plan enters `BLOCKED` pending
+  an accepted deviation.
+- Observation: the plan's revision-A citation of `<SYM>` is stale.
+  Evidence: revision B is the asserted current revision; path, line, and
+  signature at B are not yet recorded.
+  Impact: every command and line reference in `Context and orientation` must be
+  re-cited at B before implementation resumes.
+
+## Decision log
+
+- D-R1. Decision: stop implementation and set the plan to `BLOCKED`.
+  Rationale: a planned failure path and its acceptance evidence are invalidated,
+  and adopting revision B requires a dependency authorization that the plan does
+  not record. Continuing would either implement unapproved behaviour or preserve
+  a vacuous test.
+  Status: applied as a procedural stop; no implementation authority implied.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+- D-R2. Decision: propose a deviation for explicit acceptance rather than
+  silently rewriting the plan or the implementation.
+  Affected identifiers: `<TDD-REQ>`, `<TDD-COMP>`, `<VO-FAIL>`, `<EP-Mn>`,
+  `<test-old>`, and the plan's `Conformance basis` entry for `<DEP>`.
+  Impacts: the revision-A failure model, the milestone acceptance evidence, the
+  verification plan, the dependency authorization, and any upstream claim that
+  depended on `<FAILURE>`.
+  Options: Option A, adopt B and retire `<F>`; Option B, adopt B and re-source
+  the requirement at a reachable boundary; Option C, pin revision A with a
+  recorded support and expiry risk. Option D, forcing the old failure through a
+  fake or shim, is rejected.
+  Required upstream changes: a technical-design revision if the design records
+  `<FAILURE>` as a supported failure mode or assigns `<VO-FAIL>`; a
+  terms-of-reference dependency-record revision if the dependency condition
+  changes, and an assumption revision if a load-bearing ToR assumption is
+  falsified. A mechanical, untraced branch requires only this log.
+  Approving authority: `<decision authority>`, not yet known.
+  Status: proposed, not accepted.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+- D-R3. Decision: withdraw `<test-old>` as acceptance evidence for `<VO-FAIL>`
+  and do not replace it with a forced failure.
+  Rationale: a test that cannot enter the failure branch is vacuous; a test
+  that injects the removed failure through a fake asserts the disputed
+  guarantee and does not verify repository behaviour against revision B.
+  Status: proposed for the plan record; no test has been edited or deleted.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+- D-R4. Decision: re-pin the plan's evidence citations to revision B while
+  retaining revision A as historical.
+  Rationale: a changed external contract is an evidence-expiry trigger. A green
+  revision-A result is not current evidence, and the source symbol must be
+  relocated and re-read at B.
+  Status: applied as a record-keeping action; exact revision identifier and
+  symbol location remain open.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+- D-R5. Decision: do not add compatibility machinery or synthesize the old
+  failure mode.
+  Rationale: the change is an atomic update to the dependency contract and its
+  callers. A shim or injected failure would preserve an obsolete source
+  interface and produce false evidence. If the removed `<FAILURE>` is exposed
+  by a released 1.0+ API, that separate contract must be assessed on its own
+  evidence.
+  Status: proposed as a plan constraint; no code change has been made.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+## Outcomes & retrospective
+
+The plan is not complete. The investigation has established that the revision-A
+failure-path evidence is stale and that the plan cannot close `<EP-Mn>` as
+written. Compared with the original purpose, the promised failure handling is
+not currently observable, and the plan makes no completion claim. The
+investigation has not established the reachability class, the full revision-B
+outcome set, or the correct upstream disposition. No code, test, manifest,
+lockfile, design, ToR, or roadmap file was edited while producing this record.
+
+Lesson for future milestones: cite a dependency contract with an immutable
+revision and re-check the total outcome set at each milestone boundary, not only
+at plan authoring. Record the reachability witness with the failure-path test so
+that a contract change is visible as an evidence expiry rather than discovered
+as a failing or vacuous test.
+
+## Context and orientation (affected entries)
+
+At revision A, the plan described the following path:
+
+```plaintext
+<caller> -> <SYM>@A -> <Outcome including FAILURE>
+  -> <EP-Mn> branch <branch>
+  -> <test-old> asserts <observable failure behaviour>
+```
+
+At revision B, the event asserts the following path:
+
+```plaintext
+<caller> -> <SYM>@B -> <Outcome' excluding or not producing FAILURE>
+  -> <branch> is unreachable
+  -> <test-old> cannot execute its assertion
+```
+
+Record at revision B: the repository-relative path of `<SYM>`, its exact
+signature or contract, the line number if useful, and a search command that
+relocates it. For example:
+
+```plaintext
+Working directory: <repository root>
+rg -n '<SYM>' <crate-or-source-path>
+```
+
+Do not carry revision-A line numbers forward without the revision qualifier.
+The exact repository paths, symbol names, revision identifiers, test framework,
+and gate commands were not available in this isolated authoring workspace; copy
+them from the live plan and the revision-B tree before applying this patch. The
+plan must not rely on chat memory for any of them.
+
+## Conformance basis (replacement)
+
+Record each upstream artefact with its repository-relative path, exact
+revision, acceptance state, and identifiers. If an artefact does not exist, say
+so; do not invent one.
+
+- ExecPlan: `<plan path>@<plan revision>`.
+- Terms of reference: `<path>@<revision>`, acceptance state `<state>`; proposed
+  revision only if the trace check in `EV-08` finds a load-bearing dependency,
+  assumption, or success claim.
+- Technical design: `<path>@<revision>`, acceptance state `<state>`; proposed
+  revision required if it records `<FAILURE>` or `<VO-FAIL>`.
+- ADRs: `<path>@<revision>` or explicitly none.
+- Governing standards: `<standard and revision>` or explicitly none relevant.
+- Dependency: proposed `<DEP>@<immutable revision B identifier>`, superseding
+  `<DEP>@A`; status pending authorization and inspection. The revision
+  identifier, provider, and inspection date must be recorded; a moving branch
+  name is not a revision pin.
+- Requirements and design elements: `<TDD-REQ>`, `<TDD-COMP>`, `<VO-FAIL>`,
+  `<EP-Mn>`.
+- Historical evidence: `<test-old>@A`, retained as historical and marked
+  superseded for acceptance purposes.
+
+Trace chains:
+
+```plaintext
+Revision A, expired:
+  <upstream ID> -> <TDD-REQ> -> <TDD-COMP> -> <EP-Mn> -> <test-old>
+
+Revision B, proposed and not yet accepted:
+  <upstream ID, retained or re-sourced> -> <TDD-REQ, retired or re-sourced>
+    -> <TDD-COMP> -> <EP-Mn> -> <VO-ERRMAP> / <VO-FAIL-B>
+    -> <new evidence identifier>
+```
+
+The proposed chain is not evidence that any obligation has been discharged. Do
+not create the new evidence identifier until the corresponding test or check
+exists and has been run. If a requirement is retired, record the accepting
+decision and revision; do not silently renumber or reuse the identifier.
+
+## Verification plan (replacement)
+
+### Abstract model
+
+Let `O` be the total set of outcomes that `<SYM>@B` permits at the repository
+boundary: returned values, returned failures, documented exclusions, and
+documented panics or termination. Let `R` be the repository's mapping from each
+`o` in `O` to an observable repository outcome. The preconditions are those
+that `<SYM>@B` documents for its callers. The expected result is that every
+`o` in `O` maps to exactly one documented `R(o)`, with no panic, unwrap, silent
+discard, or unreachable branch introduced by repository code. A malformed input
+that revision B rejects before `<SYM>` is outside `O`; verify the rejection at
+the boundary that owns it.
+
+The old model assumed an outcome `<FAILURE>` in `O_A`. Revision B removes it or
+makes it unreachable, so `O_B` is the model of record.
+
+### Invariants and lemmas
+
+- `INV-ERRMAP`: for every outcome permitted by `<SYM>@B`, repository logic
+  produces exactly one documented outcome and never panics, unwraps, or
+  discards the result silently. Linked requirement: `<TDD-REQ>`.
+- `INV-NO-DEAD`: no production branch, test, or acceptance claim targets a
+  state that `<SYM>@B` cannot produce. Linked obligation: `<VO-FAIL>`
+  disposition.
+- `INV-ATOMIC`: every caller of `<SYM>` is updated to the revision-B contract in
+  the same coherent change; no old and new outcome interfaces coexist. Linked
+  requirement: `<TDD-REQ>`.
+- `L-FAIL-REACH`: if `O_B` contains any failure outcome, or if the requirement
+  is re-sourced at another boundary, at least one permitted witness reaches the
+  corresponding failure handling. If neither case applies, the failure
+  obligation is absent, not discharged by a vacuous test.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-DEP-B`: the documented contract of `<SYM>@B` is the total outcome set
+  `O_B`, including any guarantee that `<FAILURE>` cannot be produced. Source:
+  `<provider document or contract path>@<immutable revision B>`, inspected
+  `<date>`. Boundary: `<repository call site or adapter>`. The plan does not
+  verify the provider's internals. Repository-owned mapping and error handling
+  are verified against the real interface or a faithful contract-level
+  boundary. A mock must not assume the disputed guarantee.
+- `AXIOM-TOOLCHAIN`: the repository's compiler and lint configuration reports
+  unreachable patterns or dead code when configured to do so. Source:
+  `<configuration path>@<revision>`. If this axiom does not hold, compensate
+  with an explicit enumeration or search and record the residual gap.
+
+### Methods per obligation
+
+- Obligation: `VO-ERRMAP`, discharge `INV-ERRMAP`.
+  Method: exhaustive type match or enumeration where the language supports it;
+  otherwise a parameterized contract-table test over every permitted outcome
+  class.
+  Rationale: the outcome set is finite and explicitly enumerated, so a
+  parameterized check covers the partition directly.
+  Domain: every `o` in `O_B`, including the no-failure case and any new
+  revision-B failure class.
+  Artefact: `<repository-relative test path>`.
+  Evidence: focused command `<command>`; expected initial failure `<specific
+  missing or wrong mapping>`; discharge condition `<all classes pass>`.
+  Non-vacuity: exhibit one witness per class; seed a deliberate mis-mapping in a
+  scratch change and show the check rejects it for the intended reason; revert
+  the fault and remove generated artefacts. If a generated test is used, record
+  generator acceptance and classification: a generator that filters out every
+  failure case is a verification failure, not a pass.
+- Obligation: `VO-FAIL-B`, conditional on `O_B` containing a failure outcome.
+  Method: parameterized or property test at the real boundary, or a faithful
+  contract-level boundary that does not assert the disputed guarantee.
+  Rationale: a reachable failure path must be exercised with a permitted input,
+  not with an impossible one.
+  Domain: the permitted failure classes of `O_B`.
+  Artefact: `<repository-relative test path>`.
+  Evidence: focused command `<command>`; expected red before implementation and
+  green after; discharge condition `<every permitted failure class handled>`.
+  Non-vacuity: a witness that reaches the branch, plus a negative control that
+  the check rejects when the branch is removed or mis-mapped. If a generator is
+  used, record acceptance and classification evidence for every permitted
+  failure class.
+- Obligation: `VO-NO-DEAD`, discharge `INV-NO-DEAD`.
+  Method: compiler or linter check with unreachable-pattern and dead-code
+  reporting enabled for the affected crate, plus a review of every removed or
+  retained branch.
+  Rationale: the compiler proves the branch cannot execute only when the type
+  system enforces the exclusion; a search alone does not.
+  Domain: the affected crate and every caller.
+  Artefact: `<gate command or lint configuration>`.
+  Evidence: gate output shows no unreachable branch and no suppression
+  attribute; a seeded unreachable arm is rejected as the negative control, then
+  reverted.
+  Non-vacuity: the seeded control demonstrates that the gate can detect the
+  condition.
+- Obligation: `VO-ATOMIC`, discharge `INV-ATOMIC`.
+  Method: repository-wide search plus compile of the workspace.
+  Rationale: a successful compile of the owning crate does not prove that an
+  out-of-tree caller or feature-gated path was updated.
+  Domain: all callers, examples, tests, benches, and feature combinations.
+  Artefact: `<search command and workspace test command>`.
+  Evidence: no revision-A outcome usage remains; all targets compile.
+  Non-vacuity: the search must find at least one known caller before the change
+  and none after; record the pre-change witness.
+- Obligation: `<VO-FAIL>`, the revision-A failure obligation.
+  Status: WITHDRAWN as acceptance evidence, not passed.
+  Reason: `<FAILURE>` is unreachable under revision B by classification
+  `<R1–R4>`; `<test-old>` cannot enter the branch.
+  Replacement: `VO-ERRMAP`, plus `VO-FAIL-B` if a permitted failure remains, or
+  the re-sourced obligation if Option B is accepted. Acceptance to retire or
+  re-source: `<decision reference>`, pending.
+
+### Formal verification decision
+
+The supplied event does not by itself justify a new formal proof or model
+checker. The proportionate methods are exhaustive type checking and
+parameterized contract tests over a finite outcome set. Revisit this decision
+if the retired failure path backs a safety-critical or security-critical
+guarantee, or if revision B's permitted state space is too large to enumerate;
+in that case record the stronger-method decision and its bounds in the
+`Decision log`.
+
+### Suggested BDD features
+
+These scenarios are proposed, not adopted. A proposed path is
+`<features/dependency-contract.feature>`. Link both scenarios to `<TDD-REQ>`,
+`<EP-Mn>`, and `<VO-ERRMAP>` in the feature file once adopted. If the repository
+has no BDD runner, state which existing tests or manual checks exercise them;
+adding a framework requires separate authorization.
+
+```gherkin
+Feature: Dependency outcomes are handled at the supported contract revision
+  Scenario: A permitted outcome is mapped without panic
+    Given the dependency is at revision B
+    And the source symbol can produce a permitted outcome
+    When the repository handles that outcome
+    Then the observable repository result is the documented result
+    And no panic or silent discard occurs
+
+  Scenario: An impossible failure is not claimed as covered
+    Given the dependency contract at revision B excludes the old failure
+    When the verification plan is reviewed
+    Then no test claims to exercise the excluded failure
+    And the total permitted outcome set is covered by a reachable check
+```
+
+Do not write a scenario that requires the excluded failure. A scenario for an
+impossible state cannot fail for the intended reason and is not acceptance
+evidence.
+
+## Interfaces and dependencies (replacement)
+
+- Dependency: `<DEP>@<revision B identifier>`, scope `<runtime or development>`,
+  requirement syntax `<...>`. Status: proposed, pending authorization.
+- Cited symbol: `<exact signature at B>`, defined at
+  `<repository-relative path>:<line at B>`.
+- Callers: `<exhaustive list of callers at B>`.
+- Outcome contract: `<O_B>`.
+- Reuse policy: `<which layer owns the mapping>`; do not create a parallel
+  parser, error type, or compatibility facade.
+- Authorized dependency changes: read the live `Constraints`; do not treat
+  revision A as authorized by default. No revision beyond the recorded
+  authorization is permitted until accepted. After acceptance, revision B is
+  the only authorized revision; no dual-version support is introduced.
+- If the repository exposes `<FAILURE>` through its own released API, record
+  the exact consumer, commitment, and compatibility or migration decision
+  separately. Do not infer a shim from the dependency change alone.
+
+## Milestones and plateaus (affected milestone)
+
+- Identifier and outcome: `<EP-Mn>` cannot reach its stated plateau. The
+  intended outcome is retained, but its acceptance evidence is withdrawn.
+- Requirements and gaps: `<TDD-REQ>` is proposed for retirement or re-sourcing;
+  `<TDD-COMP>`'s failure model is revised; `<VO-FAIL>` is withdrawn pending
+  acceptance; the dependency authorization gap is open.
+- Acceptance evidence: `<test-old>` is historical only. Proposed replacements
+  are `<VO-ERRMAP>`, `<VO-FAIL-B>` if applicable, and `<VO-NO-DEAD>`. No new
+  evidence identifier exists yet.
+- Conformance check:
+  - Requirements satisfied: no; the failure-path requirement is unresolved.
+  - Design still followed: no; a deviation is proposed and awaiting acceptance.
+  - Upstream assumptions still valid: no; the revision-A contract is
+    superseded.
+  - No unapproved public interface or dependency change: failed; revision B is
+    not yet authorized.
+  - No unapproved trust boundary or persisted-format change: no such change
+    identified; re-check after the option is selected.
+  - Trace links current: no; the revision-A chain is marked expired and the
+    revision-B chain is proposed only.
+- Recovery: remain stopped. Do not revert or partially patch the work until the
+  decision is recorded. Once accepted, apply the chosen option as one coherent
+  change and rerun the focused evidence before the wider gates.
+- Remaining gaps: dependency authorization, reachability classification, total
+  outcome enumeration, caller and documentation sweep, upstream revision
+  acceptance, and replacement evidence.
+- Compatibility decision: none for the dependency interface. If the removed
+  `<FAILURE>` is part of a released 1.0+ repository API, record the named
+  consumer and commitment separately; otherwise no compatibility layer.
+
+## Plan of work (resume conditions)
+
+No implementation step below may begin until the decisions in
+`03-decision-request.md` are accepted.
+
+1. Record the immutable revision-B identifier, the contract diff, the relocated
+   `<SYM>` citation, and the reachability classification R1–R4.
+2. Enumerate `O_B` and identify every new, removed, or changed outcome.
+3. Apply the accepted option:
+   - Option A: retire `<F>` and `<VO-FAIL>`; implement `VO-ERRMAP` and
+     `VO-NO-DEAD`; update all callers atomically.
+   - Option B: re-source the requirement at `<reachable boundary>`; implement
+     its verification and `VO-ERRMAP`; update all callers atomically.
+   - Option C: pin revision A with a recorded support and expiry owner; update
+     the citation without changing the contract; record the residual risk.
+4. Apply the accepted upstream revisions before claiming completion.
+5. Run the focused Red-Green-Refactor evidence, then the repository's wider
+   gates in their required order, capturing output to logs.
+6. Reconcile the conformance basis, trace links, and revision note; only then
+   consider `COMPLETE`.
+
+## Validation and acceptance (affected entries)
+
+- Red: `<focused command>` fails because the revision-B outcome mapping is
+  missing or the old branch is unreachable, for the intended reason.
+- Green: `<same focused command>` passes with `<N>` cases covering every
+  permitted outcome class.
+- Refactor: `<focused command and wider gates>` pass after cleanup; no
+  unreachable branch, suppression attribute, mock-forced failure, or stale
+  revision-A citation remains.
+- Acceptance is behaviour a human can verify: `<observable mapping for each
+  permitted outcome>`. A plan that merely deletes the old test does not satisfy
+  acceptance.
+- The plan is not accepted while the deviation is unaccepted, even if every
+  unaffected test passes.
+
+## Revision note
+
+- 2026-11-21: Recorded the dependency contract revision B, stopped
+  implementation, withdrew the unreachable failure-path test as acceptance
+  evidence, proposed retirement or re-sourcing of its requirement, and set the
+  plan to `BLOCKED`. The dependency interface, obligations, and milestone
+  acceptance changed pending approval; no milestone order changed. Remaining work is gated on the
+  decisions in `03-decision-request.md` and the upstream reconciliation in
+  `02-upstream-change-feedback.md`. No implementation or upstream edit was made
+  while preparing this revision.

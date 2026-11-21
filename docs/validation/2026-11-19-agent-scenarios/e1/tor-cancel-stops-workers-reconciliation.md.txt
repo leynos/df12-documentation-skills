@@ -1,0 +1,196 @@
+# Supervisor cancellation promise – reconciliation record
+
+This record applies the terms-of-reference evidence rules to a promise that an
+integration probe contradicts. It is a **proposed reconciliation**, not an
+accepted revision of the Terms of Reference (ToR) and not evidence that anyone
+has approved a change. The approved promise remains in force until its owner
+says otherwise.
+
+Status: proposed; upstream revision not accepted.
+
+Audience: the ToR owner, the Architecture Decision Record (ADR) owner, the
+technical design owner, and the engineer executing the related ExecPlan.
+
+Companion documents: the ToR, the ADR, and
+`execplan-cancel-supervisor-stops-workers.md` in this directory. Exact paths
+and revisions are `[OPEN]`; the scenario did not supply them and they were not
+readable under this task's isolation rule.
+
+Date and version: 2026-11-19, draft 1.
+
+Authority and evidence basis: no approval or approval evidence was supplied.
+The promise is recorded as accepted intent because the scenario presents it as
+what the ToR and ADR promise. The probe is recorded as an observed baseline
+because the scenario presents it as an integration result. Neither claim was
+independently verified here.
+
+## 1. The promise
+
+| Field | Record |
+| --- | --- |
+| ID | `LOCAL-TOR-PROMISE-CANCEL-STOPS-WORKERS` (local handle; upstream ID `[OPEN]`) |
+| Statement | Cancelling a supervisor stops its workers. |
+| Kind | Accepted requirement and product intent. |
+| Source | ToR, and the same promise in an ADR. Paths and revisions `[OPEN]`. |
+| Evidence label | `[KNOWN]` as a statement of intent; it is not an empirical claim about the current build. |
+| Approval state | Stated by the scenario as promised. Approval record and decision authority `[OPEN]`. |
+| Downstream links | `LOCAL-ADR-DECISION-CANCEL-STOPS-WORKERS`, `LOCAL-TDD-REQ-CANCEL-STOPS-WORKERS`, `GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT`. |
+| Failure consequence if unmet | Operators cannot reclaim worker capacity or trust cancellation; orphaned workers keep running after the supervisor is gone. |
+| Expiry or review trigger | The probe result recorded below. |
+
+The promise is a universal lifecycle claim: for every worker the supervisor
+started, the worker is not alive after the supervisor exits. It is not a claim
+about the cancellation signal alone, and it is not satisfied by the supervisor
+exiting.
+
+The statement does not define:
+
+- the observation time after exit at which liveness is checked;
+- whether a grace period is allowed;
+- whether workers that existed before the supervisor started are covered;
+- what counts as alive (running, sleeping, zombie, orphan);
+- whether every worker starting mode is included.
+
+These are gaps in the requirement, not concessions to be inferred from the
+implementation.
+
+## 2. The probe result
+
+| Field | Record |
+| --- | --- |
+| ID | `LOCAL-PROBE-WORKERS-ALIVE-AFTER-EXIT` (local handle) |
+| Statement | An integration probe observed workers remain alive after the supervisor exits. |
+| Kind | Observed baseline behaviour of the current implementation. |
+| Source | The scenario's integration probe. |
+| Evidence label | `[KNOWN]` within the scope the probe exercises; wider scope `[OPEN]`. |
+| Scope stated | Supervisor cancelled; supervisor exits; at least one worker remains alive. |
+| Scope limits | Exact command, output, worker count, PIDs, cancellation action, observation window, and liveness check were not supplied. |
+| What it does not establish | That the promise is unwanted, infeasible, or approved for revision. It establishes only that this run contradicted the promise under the conditions exercised. |
+
+The probe is a candidate counterexample to a universal claim. One genuine
+counterexample is sufficient to falsify the promise as written. Its force
+therefore depends on two conditions: that the observation is accurate
+(`AXIOM-PROBE-OBSERVATION`), and that the observation time and worker set fall
+under the promise (`AXIOM-PROBE-GOVERNS-PROMISE`). The second condition is
+currently unverified because the requirement is silent on timing and worker
+scope. Until it is settled, the correct label for the overall situation is
+"approved intent contradicted by observed baseline, with measurement
+ambiguity", not "requirement disproved".
+
+## 3. Why the promise is not rewritten
+
+Documented intent and observed behaviour are different evidence classes. The
+ToR rules require both to be recorded, and forbid replacing an approved outcome
+with whatever the implementation happens to achieve. A probe that shows live
+workers does not by itself decide whether:
+
+1. the implementation is defective and the promise stands; or
+2. the promise is wrong, infeasible, or over-broad and should change.
+
+Option 1 keeps the promise and changes the code. Option 2 changes the product
+contract and requires the ToR owner plus the ADR owner, with downstream design
+and roadmap reconciliation. Choosing option 2 because the probe exists would
+let the implementation approve its own requirement change. That is exactly the
+failure this record prevents.
+
+The contradiction is therefore recorded as a gap, and the related ExecPlan is
+`BLOCKED` pending an explicit choice.
+
+## 4. Proposed resolutions (none accepted)
+
+- **O1 – honour the promise.** Keep the ToR and ADR as written; change the
+  implementation so that no worker started by the supervisor remains alive
+  when it exits. Upstream ToR change: none. ADR change: none, unless the
+  cancellation mechanism must change. Design change: failure-mode and
+  lifecycle detail, if the existing design cannot deliver it. Risk: the fix
+  may be larger than expected for workers that ignore the first termination
+  request.
+- **O2 – amend the promise.** Replace it with an explicit weaker guarantee,
+  such as "cancellation requests that workers stop; the supervisor may exit
+  before they do." Upstream ToR and ADR revision required. Design and roadmap
+  acceptance evidence must follow. This deliberately removes a safety
+  guarantee and needs a stated rationale from the owner; it is not an
+  implementation detail.
+- **O3 – qualify the promise.** Keep it for a defined grace period, a defined
+  worker set, or cooperative workers only. Upstream ToR and ADR revision
+  required, plus a precise measurement. This is the likely outcome if the
+  documents intended a bounded grace period but never said so.
+
+Recommendation: settle the operational definition first. If the documents
+intended unconditional termination, choose O1. If they intended a bounded or
+cooperative guarantee, choose O3 and state the bound explicitly. O2 should be
+chosen only with an explicit decision to stop promising termination, not as a
+convenience.
+
+## 5. Open questions
+
+Each question gates work; none is resolved by this record.
+
+- **OPEN-1. What does "stops" require?** Precise liveness statement: no
+  worker alive at any time after exit, or no worker alive after a grace period
+  `G`, or termination requested but not confirmed? Gates the regression test
+  and the design requirement. Resolution: the ToR owner states the intended
+  guarantee. Owner: `[OPEN]`.
+- **OPEN-2. Is the probe a valid counterexample under that definition?** Gates
+  whether the promise is actually falsified. Resolution: reproduce the probe
+  and record the observation window, worker census, cancellation action, and
+  liveness check. Owner: the implementing engineer, once a repository is
+  available.
+- **OPEN-3. Which workers are covered?** Direct children only, or the whole
+  process group including grandchildren and daemonized workers? Gates the
+  implementation and its boundary cases. Resolution: the design or ADR states
+  the worker set, or the owner classifies it. Owner: `[OPEN]`.
+- **OPEN-4. Who may accept a change?** The scenario names no authority. Gates
+  O1, O2, and O3. Resolution: name the ToR owner and ADR owner, or their
+  delegate, and record their decision. Owner: `[OPEN]`.
+- **OPEN-5. Do the ToR and ADR state the same thing?** The scenario says both
+  promise termination, but not in identical words. Gates which document to
+  revise first. Resolution: compare the exact texts and record any difference.
+  Owner: `[OPEN]`.
+- **OPEN-6. What design and roadmap links depend on the promise?** Gates the
+  impact assessment and the completion condition. Resolution: name the design
+  revision, roadmap acceptance criterion, and release or deployment claim that
+  cite it. Owner: `[OPEN]`.
+
+## 6. Downstream impact
+
+- **Technical design.** If one exists, its lifecycle and failure-mode sections
+  now have a gap: `GAP-WORKERS-SURVIVE-SUPERVISOR-EXIT`. The design must either
+  record the mechanism that enforces the promise or record the accepted weaker
+  guarantee. It must not silently inherit a passing test as proof.
+- **ADR.** If O1 is accepted, the decision stands and the implementation is
+  corrected; add an implementation note only if useful. If O2 or O3 is
+  accepted, amend or supersede the ADR with the new decision, rationale, and
+  consequences, and preserve the old decision as history.
+- **Roadmap.** Any acceptance criterion that assumes cancellation reclaims
+  workers is currently unproven. Do not mark it satisfied. Update it to match
+  the accepted resolution.
+- **ExecPlan.** The plan is `BLOCKED` at D1. Its milestones, verification
+  obligations, and trace links depend on the answer to OPEN-1 and OPEN-4.
+- **Release and deployment.** No claim is made here about any release. A
+  merged change would not by itself establish the promise, and this record does
+  not establish that any release occurred.
+
+## 7. Handoff and feedback route
+
+Readiness: blocked for completion and ready only for bounded discovery
+(reproduce the probe and settle OPEN-1). The ToR is not superseded, and no
+revision is accepted.
+
+Feedback route if implementation later falsifies an assumption: return to
+this record, update the probe entry with the new evidence and its revision,
+reassess the design and roadmap impacts, and record the proposed revision here
+before any upstream edit. The decision authority for a promise change is the
+ToR owner together with the ADR owner; the implementing agent may recommend but
+may not accept.
+
+## Appendix – evidence labels
+
+- `[KNOWN]`: stated by a source the scenario presents as authoritative, within
+  the scope that source supports.
+- `[ASSUMED]`: implied but not stated; needs confirmation.
+- `[OPEN]`: not answered by the available material.
+
+The promise is `[KNOWN]` as intent. The probe is `[KNOWN]` as a scoped
+observation. The operational definition, the probe's fidelity to the promise,
+and the approving authority are `[OPEN]`.

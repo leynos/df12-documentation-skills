@@ -1,0 +1,321 @@
+# 0.8 library API rename – terms of reference
+
+Status: Draft v0.1 (compatibility conflict open; not accepted)
+
+Audience: the library maintainers, the downstream consumer's maintainers, the
+decision authority for the old RFC, and the release authority.
+
+Companion documents: the executing ExecPlan for the rename (identifier and
+revision not supplied), the old RFC (identifier and revision not supplied), and
+the governing df12 compatibility policy. No technical design was supplied and
+none is reconstructed here.
+
+Date and version: 2026-11-19, v0.1.
+
+Authority and evidence basis: this draft is reconstructed from the supplied
+scenario. Prior-art discovery was limited to that scenario; the repository and
+its existing documents were not inspected. No approval, named owner, RFC
+revision, consumer identity, repository revision, or plan identifier was
+supplied. `[KNOWN]` means supported only within that scenario's scope. The
+governing df12 policy is treated as an imposed constraint, not as a design
+preference. Document acceptance is separate from implementation, release, and
+outcome state.
+
+Evidence labels used below:
+
+- `[KNOWN]` – stated by the supplied scenario or by the governing policy as
+  supplied.
+- `[ASSUMED]` – implied but unverified; paired with a failure consequence.
+- `[OPEN]` – unresolved; listed in §9 with a resolution route.
+
+## 1. Background and motivation
+
+`[KNOWN]` The library is published at version 0.8 and has one downstream
+consumer. `[KNOWN]` An API rename is the current milestone of an ExecPlan that
+is already executing. `[KNOWN]` An old RFC requires an alias while the API
+changes. `[KNOWN]` The governing df12 policy prohibits source-API compatibility
+machinery for pre-1.0 APIs.
+
+The compatibility question must be settled now because the rename is already in
+progress. Deciding it after the interface changes would force either a rushed
+compatibility layer or a silent violation of an inherited commitment. Neither
+is acceptable.
+
+`[OPEN]` The RFC's identifier, revision, and current authority; the identity and
+contractual status of the consumer; the repository revision; the ExecPlan's
+identifier and approval evidence. These are recorded in §9.
+
+## 2. Domain
+
+The field is pre-1.0 library API evolution. Before a 1.0 release, a library may
+change its source interface and its known callers together; consumers who need
+the old interface can pin the earlier release. The governing df12 policy makes
+that convention a hard constraint for this case.
+
+`[KNOWN]` Version 0.8 is below 1.0. `[ASSUMED]` The project uses a conventional
+versioning scheme in which 0.8 denotes a pre-1.0 release. If the scheme differs,
+the compatibility classification must be re-evaluated.
+
+Persisted data and wire formats are a separate obligation. `[OPEN]` No evidence
+was supplied that the old name appears in stored records or in a deployed
+protocol. If it does, that state needs its own migration assessment; it does
+not justify an unrelated source-API alias.
+
+## 3. Market context
+
+Not material to this decision. The question is governed by an internal policy
+and one known consumer, not by competition or market positioning. No market
+claim is made, and no competitor evidence is invented.
+
+## 4. Users and stakeholders
+
+The stakeholder table records concerns and decision rights, not assumed names
+or approvals.
+
+| Role | Relationship | Concern | Question the work must answer | Evidence needed | Decision right |
+| ---- | ------------ | ------- | ----------------------------- | --------------- | -------------- |
+| Downstream consumer maintainer | Primary external user of the old interface | The rename may break their build; they need a clear migration path | Which symbol changes, in which release, and what replaces it? | Consumer build against the renamed release, or an accepted migration note | Whether and when to adopt the new release |
+| Library maintainer | Primary implementer | A coherent API without dead entrypoints | Can the interface and every caller change together? | Build, test, and API-surface evidence | Interface design within the approved rename scope |
+| Old RFC owner or decision authority | Inherited-requirement stakeholder | The RFC's alias requirement is either preserved or properly superseded | Is the RFC still authoritative, and who may retire or supersede it? | Written decision citing the policy conflict | Supersede, retire, or retain the RFC, where that right belongs to the role |
+| df12 policy owner | Governing-policy stakeholder | The prohibition is not eroded by an implicit exception | Does any exception apply to a published pre-1.0 API with a named consumer? | Policy text and an explicit interpretation if needed | Interpret or amend the policy; this document grants no waiver |
+| Release authority | Delivery stakeholder | The breaking change is communicated accurately | Is the release note truthful about the removal and the migration? | Release record and changelog | Approve the release |
+
+`[OPEN]` The roles above are placeholders for real owners. The table does not
+assume that the person funding the work can approve every risk, nor that a
+maintainer may amend the policy.
+
+## 5. Job to be done
+
+When a pre-1.0 library renames part of its API, the downstream consumer wants a
+clearly documented migration to the new name, so they can adopt the new release
+without carrying an obsolete entrypoint.
+
+When a pre-1.0 API rename is proposed, the library maintainer wants to change
+the interface and every affected caller together, so the released code presents
+one coherent API rather than two parallel ones.
+
+The functional outcome is the important dimension here; the emotional and
+social dimensions add no decision-relevant information for a one-consumer
+pre-1.0 rename. A multi-actor scenario probe is unnecessary because the trigger,
+actors, and outcome are already explicit.
+
+## 6. Scope
+
+### 6.1 Goals
+
+- `TOR-GOAL-001` Land the rename as one atomic change: the interface and every
+  in-repository caller use the new name in the same coherent state. A
+  reasonable observer can check this by building and testing the tree and by
+  searching the source for the old name.
+- `TOR-GOAL-002` Give the one known downstream consumer a documented migration
+  to the new name. An observer can check this by seeing the consumer build
+  against the renamed release, or by seeing an accepted migration note where
+  the consumer is updated separately.
+- `TOR-GOAL-003` Record and resolve the inherited RFC conflict explicitly
+  before the rename proceeds. An observer can check this by reading a written
+  decision from the RFC's decision authority and an updated ExecPlan
+  conformance basis.
+
+### 6.2 Non-goals
+
+- `TOR-NONGOAL-001` No alias, deprecated entrypoint, facade, wrapper, shim,
+  dual implementation, or compatibility adapter preserves the old name. This is
+  a policy prohibition for a pre-1.0 source API, not a preference and not a
+  trade-off to be negotiated inside the implementation.
+- `TOR-NONGOAL-002` No removal, deletion, or rewriting of the old RFC's
+  history. Its status may change only through its owner's decision.
+- `TOR-NONGOAL-003` No source-API compatibility machinery for any other
+  pre-1.0 or test-only surface, whether or not a consumer is named.
+- `TOR-NONGOAL-004` No persisted-data or wire-format migration is assumed. If
+  such state exists, it is assessed separately; an alias is not a substitute
+  for that assessment.
+
+Redirect: a consumer that needs the old source name should pin the 0.8 release
+and migrate on their own schedule. The library does not keep the old name
+alive to spare them that choice.
+
+## 7. Success criteria
+
+- `TOR-SUCCESS-001` The new name is the only source API name. Baseline: the old
+  name is present in the source `[ASSUMED]`. Target: zero source occurrences of
+  the old name outside the changelog, migration guide, and untouched historical
+  documents. Measurement: repository search plus a build. Owner: library
+  maintainer. `[OPEN]` Exact command and paths.
+- `TOR-SUCCESS-002` The full repository test suite passes on the renamed API.
+  Measurement: the project's gate log. Owner: library maintainer.
+- `TOR-SUCCESS-003` The downstream consumer either builds against the renamed
+  release or has an accepted migration note. Measurement: consumer CI result or
+  the accepted note. Owner: consumer maintainer. `[OPEN]` Whether the consumer
+  is inside the same change scope.
+- `TOR-SUCCESS-004` The RFC conflict has a written resolution. Measurement: a
+  cited decision naming the alias requirement and the policy basis. Owner: RFC
+  decision authority. `[OPEN]` Identity of that authority.
+- `TOR-SUCCESS-005` No alias symbol exists in the released API surface.
+  Measurement: API-surface inspection plus a repository search. Owner: library
+  maintainer. A seeded temporary alias must be detected by the check before the
+  check is trusted.
+
+These measures distinguish implementation acceptance from adoption. A merged
+rename does not by itself prove that the consumer migrated or that the release
+reached anyone.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` `[KNOWN]` The governing df12 policy forbids source-API
+  compatibility machinery for private APIs, test-only APIs, pre-1.0 APIs, and
+  unreleased API changes ahead of the latest formal release tag. The surface
+  here is 0.8, which is pre-1.0. A published release does not move it into the
+  1.0+ category, and one named consumer does not create an exception. The
+  interface and all affected callers change together.
+- `TOR-CONSTRAINT-002` `[KNOWN]` An inherited compatibility demand is a
+  conflict requiring explicit resolution. It is not permission to add a
+  wrapper, alias, facade, or shim, and it is not permission to delete the
+  inherited document unilaterally.
+- `TOR-CONSTRAINT-003` `[ASSUMED]` The rename affects only the library's own
+  pre-1.0 source surface and does not alter an already released 1.0+ contract.
+  If a 1.0+ contract is involved, stop and reassess; the compatibility
+  conclusion may change.
+- `TOR-CONSTRAINT-004` `[ASSUMED]` No persisted record or wire format encodes
+  the old name. If one does, a separate migration obligation applies; the
+  source-API prohibition still governs the alias question.
+
+### 8.2 Assumptions
+
+- `TOR-ASSUMPTION-001` 0.8 is pre-1.0 under the project's versioning scheme.
+  Failure consequence: the policy category must be re-evaluated and this
+  document's compatibility conclusion may be wrong. Verification: release tag
+  and versioning policy. Expiry: a 1.0 release or a change to the versioning
+  scheme.
+- `TOR-ASSUMPTION-002` The one downstream consumer is the complete known
+  external consumer set. Failure consequence: additional consumers must be
+  found and migrated, although the alias prohibition still applies to each.
+  Verification: consumer registry, contracts, or maintainer survey. Expiry: a
+  new consumer or contract appears.
+- `TOR-ASSUMPTION-003` The old RFC still contains the alias demand but is not an
+  approved exception to the governing policy. Failure consequence if the RFC
+  was already superseded: the conflict may be closed without further
+  escalation, and the plan may resume. Failure consequence if it is an approved
+  exception: the policy analysis is incomplete and must stop. Verification: the
+  RFC's status and its owner's decision. Expiry: any supersession or policy
+  amendment.
+
+### 8.3 Dependencies
+
+- `TOR-DEP-001` RFC resolution. Provider: the old RFC's decision authority.
+  Consumer: the rename milestone. Required capability: a written decision that
+  retires or supersedes the alias requirement, or an explicit amendment of the
+  governing policy. Gating: blocks the milestone and the plan's resumption.
+  Unblock condition: a cited decision with a revision. `[OPEN]` Provider
+  identity.
+- `TOR-DEP-002` Consumer migration. Provider: the downstream consumer's
+  maintainer. Consumer: release and outcome validation. Required capability: a
+  build against the renamed release, or an accepted migration note. Gating:
+  release or outcome validation, not necessarily the design decision. Unblock
+  condition: consumer CI green or the note accepted.
+- `TOR-DEP-003` Release-lineage evidence. Provider: the repository's formal
+  release tags. Consumer: the compatibility assessment. Required capability:
+  the latest applicable formal release tag and confirmation that no 1.0+
+  contract is involved. Gating: the design decision. Unblock condition:
+  inspected tags recorded with the assessment.
+
+A planned or related item is not automatically a blocker; the unblock
+conditions above are the tests.
+
+## 9. Open questions
+
+- `TOR-OPEN-001` What is the old RFC's identifier, revision, and exact alias
+  requirement? Why it matters: the conflict cannot be cited or resolved
+  without it. Resolution: attach or cite the RFC text. Owner: RFC owner.
+- `TOR-OPEN-002` Who may supersede or retire the RFC, and who may interpret or
+  amend the governing policy? Why it matters: only that authority can close
+  `TOR-CONFLICT-001`. Resolution: a written decision or an explicit delegation.
+  Owner: unknown.
+- `TOR-OPEN-003` Is the downstream consumer external or contractual, and does
+  any contract require the old source name? Why it matters: a contract may
+  require a migration plan; it does not create an exception to the pre-1.0
+  source-API prohibition. Resolution: contract and consumer evidence. Owner:
+  library maintainers.
+- `TOR-OPEN-004` Is any already released 1.0+ API, persisted record, or wire
+  format involved? Why it matters: separate compatibility and migration
+  obligations would apply. Resolution: release-tag and data-format inventory.
+  Owner: library maintainers.
+- `TOR-OPEN-005` What are the repository paths, symbols, build and test
+  commands, and the executing plan's milestone identifiers? Why it matters: a
+  self-contained ExecPlan needs them. Resolution: inspection by an authorized
+  agent with repository access. Owner: library maintainers.
+- `TOR-OPEN-006` Who accepts this terms of reference and the corresponding plan
+  deviation? Why it matters: a draft does not authorize implementation.
+  Resolution: explicit acceptance from the named authority. Owner: unknown.
+
+## 10. Compatibility conflict record
+
+| ID | Conflict | Classification | Disposition | Authority | Status |
+| -- | -------- | -------------- | ----------- | --------- | ------ |
+| `TOR-CONFLICT-001` | The old RFC requires an alias while the API changes. | Pre-1.0 source API at 0.8; a published version is not a 1.0+ contract, and one named consumer is not an exception. | Do not implement the alias. Record the conflict and escalate it to the RFC's decision authority. Do not silently omit the RFC requirement either. | RFC decision authority, with the df12 policy owner for any claimed exception. | `[OPEN]`; blocks the rename milestone. |
+
+The disposition is deliberately narrow. The RFC is escalated, not removed and
+not deferred to a later milestone. The conflict is not turned into a follow-up
+task that lets the rename proceed. It is also not resolved by deleting the RFC
+or by declaring it obsolete without its owner's decision. While the conflict is
+open, the ExecPlan is `BLOCKED`.
+
+If the RFC owner supersedes or retires the alias requirement, the rename
+resumes as one atomic change with no alias. If the policy owner amends the
+governing policy, that amendment is a new governing constraint and requires a
+fresh assessment; this terms of reference does not authorize it. If neither
+happens, the conflict remains open and the plan stays blocked.
+
+## 11. Handoff
+
+- Accepted revision: none. This is v0.1 and has not been accepted.
+- Readiness: not ready for implementation. The scope is ready only for bounded
+  discovery on `TOR-OPEN-001` and `TOR-OPEN-002`; the rename milestone is
+  blocked by `TOR-CONFLICT-001`.
+- Downstream receiving artefact: the executing ExecPlan for the rename. It must
+  record the proposed deviation in its `Decision log`, identify the affected
+  requirements and milestones, set its status to `BLOCKED`, and await explicit
+  acceptance. Its milestone identifiers are owned by that plan and are not
+  invented here.
+- ADR candidates: retire or supersede the RFC's alias requirement; record how
+  the df12 pre-1.0 compatibility exclusion applies to a published 0.8 library.
+  These are named for the ADR skill or owner; they are not written here.
+- `docs/context.md` candidates: "pre-1.0 API", "source-API compatibility
+  machinery", "coherent milestone", and "inherited commitment". Definitions
+  should be proposed there rather than left implicit in this document.
+- Feedback route: if implementation evidence reveals a released 1.0+ contract,
+  a persisted format, or an additional consumer, update `TOR-CONSTRAINT-003`,
+  `TOR-CONSTRAINT-004`, or `TOR-ASSUMPTION-002`, then re-run the compatibility
+  assessment and the affected ExecPlan links before claiming completion.
+
+A completed draft does not authorize implementation. `tech-design-doc` owns
+design choices and verification obligations; the ExecPlan owns execution
+tolerances and acceptance evidence. This document hands off intent and an
+unresolved conflict, not an approval.
+
+## Appendix A – References
+
+- Supplied scenario for this exercise, 2026-11-19. No source revision.
+- Governing df12 compatibility policy, as supplied. Exact revision not supplied.
+- Old RFC, as described in the scenario. Identifier and revision not supplied.
+- Executing ExecPlan for the rename. Identifier and revision not supplied.
+- Technical design: none supplied.
+
+## Appendix B – Glossary
+
+- **Alias**: a second source name that preserves the old interface while the
+  new name is introduced. In this document it is a form of compatibility
+  machinery and is prohibited for the 0.8 surface.
+- **Coherent milestone**: a repository state that is internally consistent and
+  validated, without requiring old and new source interfaces to coexist.
+- **Compatibility machinery**: aliases, deprecated entrypoints, facades,
+  wrappers, shims, dual implementations, or adapters whose purpose is to keep
+  an obsolete source interface available.
+- **Inherited commitment**: a requirement or promise carried in from an earlier
+  document, such as the old RFC. It is evidence of what was once required, not
+  an automatic exception to current governing policy.
+- **Pre-1.0 API**: a source interface released below version 1.0. Publishing a
+  0.x release does not turn it into a 1.0+ contract.
+- **RFC**: request for comments; here, an inherited design document that
+  carries the alias demand. Its identifier and revision were not supplied.

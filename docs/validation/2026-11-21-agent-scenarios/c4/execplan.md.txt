@@ -1,0 +1,825 @@
+# Rename an unreleased exported function before the next formal release
+
+This ExecPlan (execution plan) is a living document. The sections
+`Constraints`, `Tolerances`, `Risks`, `Progress`,
+`Surprises & discoveries`, `Decision log`, `Outcomes & retrospective`,
+`Conformance basis`, and `Verification plan` must be kept up to date as work
+proceeds.
+
+Status: DRAFT (plan authored; awaiting explicit user approval and three intake
+facts: the exact symbol names, the latest formal release tag, and the
+repository toolchain)
+
+Branch: not supplied. Record the working branch at `EP-M0`.
+
+Roadmap item: none supplied.
+
+## Purpose / big picture
+
+The library is at major version 2. According to the brief, it exports a
+function that was introduced after its latest formal release tag. The sponsor
+wants that function renamed before the next release, so the release publishes
+the intended name instead of freezing a provisional one.
+
+Before the change, a caller writes:
+
+```plaintext
+value = library.OLD_NAME(input)
+```
+
+After the change, the same caller writes:
+
+```plaintext
+value = library.NEW_NAME(input)
+```
+
+`OLD_NAME` is the current exported name and `NEW_NAME` is the approved final
+name; both are unresolved intake facts (`TOR-OPEN-001`). The function's
+parameters, return type, visibility, errors, and observable behaviour do not
+change. The deliberate observable difference is that `OLD_NAME` no longer
+resolves and `NEW_NAME` does.
+
+The change closes the naming decision before the next formal release. It does
+not close any roadmap item, and no roadmap item was supplied.
+
+## Constraints
+
+- Do not add source-API compatibility machinery for `OLD_NAME`. That includes
+  an alias, deprecated entrypoint, re-export, facade, wrapper, dual
+  implementation, or migration shim. The brief states that the function was
+  introduced after the latest formal release tag; `EP-M0` must verify that
+  lineage before editing. On that premise the function is an unreleased API
+  change and the compatibility prohibition applies. Even a named
+  development-branch consumer does not create an exception.
+- Rename the definition, every re-export, and every in-repository caller in one
+  atomic change. Do not create a milestone in which both names exist.
+- Preserve the function's signature, visibility, error behaviour, and
+  observable behaviour. The only intended public change is the name.
+- Do not modify any other exported symbol, any released contract, or any
+  persisted-data or wire format. If an incidental public change appears, stop.
+- Record the baseline before editing: the latest formal release tag of the
+  applicable package, its commit, and evidence that the function is absent from
+  that tag's exported surface. If the function appears in any formal release
+  tag, stop: the change is then a released-contract change, not an
+  unreleased-surface rename.
+- Do not modify, rewrite, or retag historical release notes, release tags, or
+  published artefacts. Current documentation and the unreleased changelog may
+  change.
+- Do not change the package version or release schedule. The release manager
+  owns both.
+- Do not add or change a dependency.
+- Implementation begins only after the user explicitly approves this plan. Do
+  not interpret silence as approval.
+- Do not perform a production edit while `OLD_NAME`, `NEW_NAME`,
+  `BASELINE_TAG`, or the repository gate commands are unresolved. Read-only
+  reconnaissance at `EP-M0` may resolve them. Guessing any of them violates
+  this constraint.
+
+## Tolerances (exception triggers)
+
+No library source, comments, documentation, or historical ExecPlan was
+available in the authoring environment, so these budgets are provisional. No
+comparable historical plan was inspected. `EP-M0` must record the actual
+survey: affected files and lines, gate commands, and any generated artefacts.
+If the survey implies a budget below is too small, stop and request an approved
+revision; do not silently raise it. ExecPlan files are excluded from every
+size count, including this file when it is added or updated.
+
+The comparison base is the parent commit of the change under review. Counts are
+net lines: additions minus deletions. Classify production source, tests, and
+executable build or automation logic as code; declarative settings, manifests,
+lockfiles, deployment descriptors, and CI configuration as configuration; prose,
+guides, changelogs, and reference material as documentation. A code block
+inside a workflow or configuration file counts as code under hunk-based
+accounting. Generated documentation counts as documentation. Record the exact
+counting commands at `EP-M0` because the language and toolchain are unknown.
+
+- Files: if the change touches more than 25 non-ExecPlan files, stop.
+- Code: if the change exceeds 200 net lines of code, stop.
+- Configuration: if the change exceeds 20 net lines of configuration, stop.
+- Documentation: if the change exceeds 120 net lines of documentation,
+  excluding ExecPlan files, stop.
+- Interface: if any public API change beyond renaming this one symbol is
+  needed, stop.
+- Dependencies: if any dependency addition or change is needed, stop.
+- Architecture: if the work appears to require an alias, facade, wrapper, dual
+  export, or other compatibility layer, stop. That path is prohibited, not a
+  fallback.
+- Lineage: if the function is present in any formal release tag, stop.
+- Release: if a formal release tag is created before the change lands, stop and
+  reassess the change as a released-contract change.
+- Iterations: if a focused check still fails after three fix attempts, stop.
+- Time: if a milestone takes more than two hours, stop.
+- Ambiguity: if the names, the baseline tag, or a claimed consumer commitment
+  remain unclear and the choice materially affects the outcome, stop and
+  present the options.
+
+## Risks
+
+- Risk: a reference in an example, doctest, generated file, or feature-gated
+  export is missed.
+  Severity: medium. Likelihood: medium. Mitigation: whole-repository search
+  over tracked and generated sources, plus the build and API-surface checks.
+- Risk: the tag believed to be the latest formal release is not the latest for
+  the applicable package, or no tag is identifiable.
+  Severity: high. Likelihood: medium. Mitigation: list tags and their commits,
+  identify the applicable package, and record the evidence. If uncertain, stop
+  rather than guess.
+- Risk: the function was in fact published in a formal release, falsifying the
+  brief's lineage claim.
+  Severity: high. Likelihood: low. Mitigation: inspect the tag's exported
+  surface at `EP-M0`; stop and reassess if present.
+- Risk: `NEW_NAME` collides with an existing symbol.
+  Severity: medium. Likelihood: medium. Mitigation: search before editing;
+  escalate for a different name rather than shadow or alias.
+- Risk: a formal release tag is cut before the rename merges.
+  Severity: high. Likelihood: medium. Mitigation: coordinate with the release
+  manager; recheck tag state before merge; stop if already tagged.
+- Risk: a development-branch consumer breaks.
+  Severity: low. Likelihood: medium. Mitigation: communicate if the consumer is
+  known. Do not add an alias.
+- Risk: generated documentation or code reintroduces the old name after the
+  search.
+  Severity: medium. Likelihood: medium. Mitigation: regenerate from updated
+  inputs and repeat the search after generation.
+- Risk: no API-surface extraction tool is available.
+  Severity: low. Likelihood: medium. Mitigation: use a compile-based consumer
+  fixture as the contract-level boundary and record the substitution.
+
+## Progress
+
+- [x] (2026-11-21) Intake from the scenario brief; upstream drafts and this
+  plan written.
+- [ ] User approves this plan.
+- [ ] `TOR-OPEN-001` resolved: exact old and new names supplied.
+- [ ] `TOR-OPEN-002` resolved: latest formal release tag and commit recorded.
+- [ ] `TOR-OPEN-003` resolved: language, build system, API tool, and gate
+  commands recorded.
+- [ ] `EP-M0` Baseline and toolchain reconnaissance complete.
+- [ ] `EP-M1` Function renamed atomically; all references updated.
+- [ ] `EP-M2` Release record updated; full gates pass; evidence reconciled.
+
+## Surprises & discoveries
+
+- Observation: no library checkout, tag, source, changelog, or repository
+  documentation was accessible in the authoring environment.
+  Evidence: the authoring isolation limited reads to installed skill
+  directories and the scenario brief. Impact: the baseline tag, symbol names,
+  toolchain, and gate commands remain open; `EP-M0` must obtain them before any
+  edit.
+- Observation: major version 2 does not imply that this function is released.
+  Evidence: the brief states that the function was introduced after the latest
+  formal release tag. Impact: release lineage is classified per surface, so
+  the unreleased-surface exclusion applies despite the post-1.0 major version.
+- Observation: the brief does not name either the function or the release tag.
+  Evidence: the scenario input contains neither. Impact: this plan is not
+  executable as written; that is an intake gate, not permission to invent
+  identifiers.
+
+## Decision log
+
+- D1. Decision: propose no compatibility alias, deprecated entrypoint, facade,
+  wrapper, dual export, or shim for `OLD_NAME`.
+  Rationale: per the brief, the function is an unreleased API change introduced
+  after the latest formal release tag. `EP-M0` verifies that lineage before any
+  edit. The governing policy prohibits source-API compatibility machinery for
+  that category, and no formal release ever exposed the name. The rejected
+  alternative, a deprecated re-export kept for one release, would create
+  compatibility theatre with no released consumer to protect.
+  Date/Author: 2026-11-21, authoring agent.
+- D2. Decision: perform the rename as one atomic change that updates the
+  definition and every reference together.
+  Rationale: splitting the work into an old-name plateau and a new-name
+  plateau would require the prohibited dual export. One atomic change is the
+  smallest coherent validated state.
+  Date/Author: 2026-11-21, authoring agent.
+- D3. Decision: keep the plan at `DRAFT` rather than `BLOCKED`.
+  Rationale: missing intake facts are not an architecture deviation requiring
+  the deviation procedure. The approval gate and the unresolved-fact constraint
+  already prevent execution. If execution later falsifies the released-surface
+  assumption, the plan moves to `BLOCKED` and awaits explicit acceptance of the
+  deviation.
+  Date/Author: 2026-11-21, authoring agent.
+- D4. Decision: run no repository gates, build, test, API-surface check, or
+  search during authoring; record them as not run.
+  Rationale: no library checkout or code change existed in the authoring
+  environment. Claiming otherwise would fabricate evidence.
+  Date/Author: 2026-11-21, authoring agent.
+- D5. Decision: add no Mermaid diagram and therefore no nixie validation.
+  Rationale: the change is a single-symbol rename with no architecture or
+  interaction view that a diagram would clarify. Adding one would be
+  decoration.
+  Date/Author: 2026-11-21, authoring agent.
+- D6. Decision: record the rename in the unreleased changelog for maintainers,
+  and publish only the final name in the next release notes.
+  Rationale: no released consumer ever saw the old name, so published notes
+  need not describe a migration from it; the unreleased section keeps the
+  internal record.
+  Date/Author: 2026-11-21, authoring agent.
+
+## Outcomes & retrospective
+
+Current outcome: a complete draft plan and its upstream drafts. No
+implementation, verification, or release outcome exists yet. The original
+purpose is not met until the next formal release exports the function only as
+`NEW_NAME`.
+
+Gaps: the exact names, baseline tag, toolchain, gate commands, and release
+timing. The no-alias decision is closed and does not depend on them.
+
+Lessons so far: a small mechanical change still needs its release lineage
+pinned; a post-1.0 major version does not make every symbol a released
+contract; and a plan should leave intake unknowns explicit rather than invent
+plausible identifiers.
+
+Before marking the plan `COMPLETE`, reconcile this plan with the terms of
+reference and technical design in `Conformance basis`. If implementation finds
+the function in a formal release, update `TOR-ASSUMPTION-001`, reassess the
+design's compatibility classification, and do not complete the plan on the old
+premise.
+
+## Context and orientation
+
+No library repository was available. The inspected base revision is none. The
+implementation language, build system, test framework, package layout, and
+repository conventions are unknown (`TOR-OPEN-003`). They must be discovered at
+`EP-M0` from the library's `AGENTS.md`, Makefile, and manifest, and recorded
+here before execution. The brief's lineage statement is a sponsor claim, not
+inspected evidence; `EP-M0` must record the tag's export surface before any
+edit.
+
+The expected control flow is:
+
+- A public module defines the exported function `OLD_NAME`.
+- The package root, a prelude, a re-export list, or a feature-gated block may
+  expose it again.
+- Internal callers, tests, fixtures, benchmarks, examples, and doctests call
+  it.
+- Current prose and reference documentation name it.
+- The changelog has an unreleased section for the next release.
+
+Define terms as used here. A **formal release tag** publishes an installable
+or consumable version of the applicable package; it is not a branch point, a
+pre-release artefact, or a changelog heading. **Unreleased** means absent from
+every formal release tag. A **public export surface** is the set of names the
+package exposes to importers, including re-exports. **Compatibility machinery**
+is any alias, deprecated entrypoint, facade, wrapper, dual implementation, or
+shim that preserves an obsolete source interface.
+
+The repository's gate commands are unknown. Prefer its Makefile targets over
+raw commands, and run the sequence sequentially so build caches are reused:
+format check, lint, typecheck, then tests. If the repository defines a required
+order, follow it. Record the exact commands and any baseline failures at
+`EP-M0`.
+
+Budget-setting survey: unavailable. No source, comments, documentation, or
+historical ExecPlan was accessible. No comparable history exists to show
+budgets that required repeated increases. The `Tolerances` values are therefore
+provisional estimates for a single-symbol rename and must be checked at
+`EP-M0`.
+
+The installed `execplans` skill and template were inspected on 2026-11-21; the
+installation exposes no revision identifier. They are guidance, not an
+execution dependency. The plan includes the facts a novice needs.
+
+Placeholders to resolve before execution:
+
+| Placeholder | Meaning | Source |
+| --- | --- | --- |
+| `OLD_NAME` | Current exported function name | `TOR-OPEN-001` |
+| `NEW_NAME` | Approved final function name | `TOR-OPEN-001` |
+| `BASELINE_TAG` | Latest formal release tag of the applicable package | `TOR-OPEN-002` |
+| `<build>`, `<lint>`, `<typecheck>`, `<test>` | Repository gate commands | `TOR-OPEN-003` |
+| `<api-surface>` | API dump, compile-based consumer check, or equivalent | `TOR-OPEN-003` |
+
+## Conformance basis
+
+| Source | Revision | State |
+| --- | --- | --- |
+| Terms of reference, `/tmp/val2-c4/terms-of-reference.md` | v0.1, 2026-11-21 | Draft, not accepted |
+| Technical design, `/tmp/val2-c4/tech-design.md` | v0.1, 2026-11-21 | Draft, not accepted |
+| ADRs | None identified or supplied | Absent |
+| Repository and release tags | None inspected | Absent; baseline identity open |
+
+Release baseline: the latest formal release tag of the applicable package. The
+brief states that the function was introduced after it. The plan treats the
+function as absent from that tag and from every earlier formal release, subject
+to the `EP-M0` evidence. The tag's exact name and commit are `[OPEN]` under
+`TOR-OPEN-002` and must be recorded here at `EP-M0`. Do not guess them.
+
+Named requirements:
+
+- `REQ-rename`: the exported function uses `NEW_NAME`.
+- `REQ-no-alias`: no source-API compatibility machinery preserves `OLD_NAME`.
+- `REQ-preserve`: signature, visibility, and behaviour are unchanged.
+- `REQ-lineage`: the baseline tag and commit are recorded, and `OLD_NAME` is
+  absent from its export surface.
+- `REQ-references`: every in-repository reference uses `NEW_NAME`.
+
+Named gaps:
+
+- `GAP-names`: `OLD_NAME` and `NEW_NAME` are unknown.
+- `GAP-tag`: the latest formal release tag is unknown.
+- `GAP-toolchain`: the language, build system, API tool, and gates are unknown.
+
+Trace links:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-001 -> EP-M1 -> API surface loses OLD_NAME, gains NEW_NAME
+TOR-CONSTRAINT-001 -> TDD-REQ-004 -> EP-M0 -> BASELINE_TAG and commit recorded
+TOR-CONSTRAINT-002 -> TDD-REQ-002 -> EP-M1 -> search and export surface show no alias
+TOR-CONSTRAINT-003 -> TDD-REQ-005 -> EP-M1 -> whole-repository search finds no current reference
+TOR-GOAL-002 -> TDD-REQ-003 -> EP-M1 -> existing tests pass with the same results
+```
+
+## Verification plan
+
+This change introduces no algorithmic, concurrency, or state-machine
+invariant. Its obligations concern the exported name set, signature
+preservation, and reference completeness. The surface is finite and observable,
+so API comparison plus compile-based and search checks are proportionate.
+
+### Abstract model
+
+`S(T)` is the public export set at formal release tag `T`. `S_w` is the export
+set in the working tree before the change, and `S_t` is the export set after
+the change. `sig(f)` is the declared signature of symbol `f`, including
+parameter and return types, generic constraints, defaults, and visibility.
+`beh(f)` is observable behaviour over the existing test corpus.
+
+Precondition: `OLD_NAME` is in `S_w`, `OLD_NAME` is absent from `S(T)` for
+every formal release tag `T`, and `NEW_NAME` is absent from `S_w`. Target:
+`S_t = (S_w \ {OLD_NAME}) ∪ {NEW_NAME}`, with
+`sig(NEW_NAME) = sig(OLD_NAME)` and `beh(NEW_NAME) = beh(OLD_NAME)`.
+
+### Invariants and lemmas
+
+- `INV-API-SWAP`: the public export set loses exactly `OLD_NAME` and gains
+  exactly `NEW_NAME`.
+- `INV-SIGNATURE`: `NEW_NAME` has the same signature as `OLD_NAME` had.
+- `INV-BEHAVIOUR`: the existing test corpus observes the same behaviour
+  through `NEW_NAME` as it did through `OLD_NAME`.
+- `INV-NO-ALIAS`: `OLD_NAME` is absent from the export set, and no alias,
+  deprecated entrypoint, facade, wrapper, or dual export preserves it.
+- `INV-LINEAGE`: `OLD_NAME` is absent from every formal release tag, and the
+  latest tag and commit are recorded.
+- `L-CALLERS`: if a whole-repository search over tracked current sources finds
+  no `OLD_NAME` and the tree builds, every in-repository reference has been
+  updated. This relies on the search covering generated sources and on the
+  build exercising every export path.
+- `L-SURFACE`: if the API comparison shows `NEW_NAME` present, `OLD_NAME`
+  absent, an unchanged signature, and no other delta, then `INV-API-SWAP`,
+  `INV-SIGNATURE`, and `INV-NO-ALIAS` hold for the compared surface.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-API-TOOL`: the selected API dump or compile-based consumer check
+  reflects the package's actual public exports, including re-exports.
+- `AXIOM-SEARCH`: the search covers all tracked text and generated source
+  files, excluding version-control metadata and historical release notes
+  deliberately.
+- `AXIOM-COMPILER`: the compiler or interpreter rejects unknown symbols and
+  reports duplicate or ambiguous exports.
+
+If no API-extraction tool exists, replace `AXIOM-API-TOOL` with a
+compile-based consumer fixture that calls `NEW_NAME` and fails on `OLD_NAME`,
+and record the substitution in `Decision log`.
+
+### Methods per obligation
+
+Each obligation records the method, rationale, domain, artefact, evidence, and
+non-vacuity check. Exact commands are recorded at `EP-M0`; the placeholders are
+intentional.
+
+`INV-API-SWAP`:
+
+- Obligation: the export set loses `OLD_NAME` and gains `NEW_NAME`.
+- Method: API comparison before and after, plus a consumer fixture.
+- Rationale: the export surface is finite and directly observable, so a
+  complete comparison is stronger and cheaper than sampling.
+- Domain: the public export set at the parent commit and at the change.
+- Artefact: `<api-surface>` output and the fixture path recorded at `EP-M0`.
+- Evidence: `<api-surface>` at both revisions shows one removal and one
+  addition, and the fixture compiles. Discharge: both hold.
+- Non-vacuity: the pre-change output contains `OLD_NAME`; the post-change
+  output contains `NEW_NAME`.
+
+`INV-SIGNATURE`:
+
+- Obligation: `NEW_NAME` has the signature `OLD_NAME` had.
+- Method: signature comparison, or parameterized fixture calls covering every
+  parameter and the return type.
+- Rationale: each parameter and the return type form a finite partition, so
+  compile-time calls exercise every class.
+- Domain: all parameters, generic constraints, defaults, and the return type.
+- Artefact: API output or fixture recorded at `EP-M0`.
+- Evidence: signatures compare equal and every call compiles. Discharge: both
+  hold.
+- Non-vacuity: at least one call exercises each parameter and the return
+  value; a fixture that omits a parameter fails the coverage check.
+
+`INV-BEHAVIOUR`:
+
+- Obligation: existing behaviour is unchanged through the new name.
+- Method: existing focused tests, run before and after.
+- Rationale: the existing corpus defines current behaviour, so it is the
+  independent oracle for "nothing else changed".
+- Domain: the existing tests that call the function.
+- Artefact: the existing test files.
+- Evidence: the same pass count and results before and after. Discharge:
+  identical results.
+- Non-vacuity: at least one test calls the function and asserts an output; a
+  zero-test run fails the check.
+
+`INV-NO-ALIAS`:
+
+- Obligation: no compatibility machinery preserves `OLD_NAME`.
+- Method: API output plus whole-repository search.
+- Rationale: an alias can appear as an export name or as a deprecated wrapper,
+  so the export set and the source text both need checking.
+- Domain: the export set and tracked current sources, excluding historical
+  release notes.
+- Artefact: API output and search log.
+- Evidence: `OLD_NAME` is absent from exports and current sources. Discharge:
+  zero current-source hits and no alias export.
+- Non-vacuity: the pre-change search finds at least one `OLD_NAME`; a
+  zero-hit pre-change search fails. The pre-change API output also contains it.
+
+`INV-LINEAGE`:
+
+- Obligation: the function is unreleased, and the baseline is recorded.
+- Method: tag listing, commit resolution, and export inspection at the tag.
+- Rationale: the policy depends on the surface's release lineage, which is a
+  historical fact requiring the tag's actual export set.
+- Domain: every formal release tag, with the latest resolved to a commit;
+  pre-releases are recorded separately.
+- Artefact: the recorded tag list, commit, and export output.
+- Evidence: the latest formal tag is identified and `OLD_NAME` is absent from
+  its export output. Discharge: recorded evidence.
+- Non-vacuity: the tag's export output is non-empty and covers the module
+  that later gained the function.
+
+`L-CALLERS`:
+
+- Obligation: every in-repository reference is updated.
+- Method: whole-repository search plus build.
+- Rationale: the compiler catches reachable references; the search catches
+  non-compiled references such as documentation, examples, and feature-gated
+  code.
+- Domain: tracked text and generated sources, excluding version-control
+  metadata and historical release notes.
+- Artefact: search log and build result.
+- Evidence: zero current-source hits and a passing build. Discharge: both
+  hold.
+- Non-vacuity: seed a scratch reference to `OLD_NAME`, confirm the search
+  finds it, delete it, and record the deletion.
+
+`L-SURFACE`:
+
+- Obligation: the only public delta is the rename.
+- Method: API comparison against the known delta.
+- Rationale: a whole-surface diff proves no unrelated public movement, which a
+  single symbol lookup would miss.
+- Domain: the full public export set at the parent commit and at the change.
+- Artefact: the API diff.
+- Evidence: exactly one removal and one addition, with no other delta.
+  Discharge: the diff matches.
+- Non-vacuity: an unrelated public symbol still appears in the output, proving
+  it is not empty; a diff against an empty dump fails.
+
+### Non-vacuity and negative control
+
+The pre-change API output is a witness that extraction sees the module and the
+old symbol. The post-change output is a witness that it sees the new symbol. The
+search must have a pre-change hit; otherwise its post-change zero is vacuous.
+After the rename, a scratch consumer that calls `OLD_NAME` must fail to
+resolve; that is the negative control. Delete the scratch file afterwards and
+record the deletion. If the language cannot produce a compile-fail check,
+record why and use the API output's absence of `OLD_NAME` plus the search log
+as the independent counterexample.
+
+### Formal verification decision
+
+No model checking or formal proof is needed. The obligations are set equality,
+signature equality, and reference completeness over a finite observable
+surface. Stronger methods would not cover the residual risk, which is a
+consumer outside the repository; the release-lineage classification and
+release timing address that boundary.
+
+### Suggested BDD features
+
+Proposed path: `features/unreleased_function_rename.feature`. The repository's
+BDD runner is unknown, so this is a proposal and does not authorize a new
+dependency.
+
+```gherkin
+Feature: Unreleased exported function rename
+  Scenario: The next release exposes only the final name
+    Given the latest formal release tag does not export OLD_NAME
+    And the development tree exports OLD_NAME
+    When the rename lands before the next formal release
+    Then the public API exports NEW_NAME with the same signature
+    And no compatibility alias for OLD_NAME exists
+    And the library's tests pass
+```
+
+If no BDD runner exists, the consumer fixture and search log exercise the same
+scenario.
+
+## Plan of work
+
+The work has three milestones. Each ends in a coherent, validated state and
+does not create a compatibility plateau.
+
+### `EP-M0` Baseline and toolchain reconnaissance
+
+Outcome: the release baseline and execution environment are pinned; no
+production code changes.
+
+Steps:
+
+1. Identify the applicable package and list its formal release tags in
+   version order. Resolve the latest formal tag to a commit. Record both.
+2. Inspect the exported surface at that tag and record evidence that
+   `OLD_NAME` is absent. If it is present, stop and escalate.
+3. Read the library's `AGENTS.md`, Makefile, and manifest. Record the language,
+   build system, test framework, API-surface tool or fallback, and the exact
+   ordered gate commands.
+4. Search the working tree for `OLD_NAME` and record every hit by file and
+   category: definition, re-export, caller, test, example, documentation,
+   generated source, changelog.
+5. Record the affected-file and line survey, re-baseline the `Tolerances`
+   counts, and record any generated artefacts and their regeneration commands.
+
+Acceptance: `BASELINE_TAG`, its commit, the absence evidence, the gate
+commands, and the reference inventory are recorded in this plan. No source file
+changed. The plan's `Conformance basis` and `Context and orientation` are
+updated.
+
+Requirements and gaps: `REQ-lineage`, `TDD-REQ-004`, `GAP-tag`,
+`GAP-toolchain`.
+
+Conformance check: the baseline is a formal release tag, not a pre-release; the
+export evidence covers the relevant module; no dependency or interface changed.
+
+Recovery: reconnaissance is read-only; if a command is wrong, rerun it. Do not
+edit source to make a check pass.
+
+Remaining gaps: `GAP-names` remains until the sponsor supplies the names.
+
+Compatibility decision: none; no surface changes in this milestone.
+
+### `EP-M1` Atomic rename and reference update
+
+Outcome: the public API exports `NEW_NAME` only, with unchanged signature and
+behaviour, and every in-repository reference uses `NEW_NAME`.
+
+Red stage:
+
+1. Add or update a focused consumer fixture or test that calls `NEW_NAME`.
+2. Run the focused build or test command. It must fail because `NEW_NAME` does
+   not exist. Record the failure.
+3. Run the API-surface check and record that `OLD_NAME` is present and
+   `NEW_NAME` absent.
+
+Green stage:
+
+1. Rename the definition, preserving visibility, parameters, return type, and
+   body.
+2. Update every re-export, prelude, export list, and feature-gated export.
+3. Update every caller, test, fixture, benchmark, example, and doctest.
+4. Update current documentation and generated-documentation inputs, then
+   regenerate output.
+5. Verify `NEW_NAME` does not collide with an existing symbol. If it does,
+   stop and escalate for a different name; do not shadow or alias.
+6. Run the focused test again. It must pass. Run the API-surface check; it must
+   show `NEW_NAME` present, `OLD_NAME` absent, the same signature, and no other
+   delta.
+
+Refactor stage: remove any now-stale comments or transitional wording; rerun
+the focused test, the API check, and the whole-repository search. The search
+must find `OLD_NAME` only in historical release notes, this plan, and the
+upstream drafts that record the decision. Add no alias.
+
+Requirements and gaps: `REQ-rename`, `REQ-no-alias`, `REQ-preserve`,
+`REQ-references`, `TDD-REQ-001`, `TDD-REQ-002`, `TDD-REQ-003`,
+`TDD-REQ-005`, `GAP-names`.
+
+Conformance check: no released symbol changed; no dependency or trust boundary
+changed; no persisted or wire format changed; the trace links and evidence are
+current; the design's compatibility classification still holds.
+
+Recovery: if the change is partial or a check fails irrecoverably, revert to
+the `EP-M0` commit and reapply the rename as one change. Do not leave a
+half-renamed tree and do not introduce an alias as a recovery measure.
+
+Remaining gaps: the release record and full gates are deferred to `EP-M2`.
+
+Compatibility decision: none. The surface is an unreleased API change; no
+external released consumer exists to protect.
+
+### `EP-M2` Release record and gate closure
+
+Outcome: the unreleased changelog records the final name, the full gate
+sequence passes, the API delta is confirmed, and the release manager has
+evidence that the old name was never released.
+
+Steps:
+
+1. Update the unreleased changelog section to name `NEW_NAME`. Do not describe
+   `OLD_NAME` as a supported or deprecated interface.
+2. Search current documentation and generated output for `OLD_NAME`; update and
+   regenerate as needed.
+3. Run the repository's full gate sequence in its required order, sequentially.
+   Capture each gate's output to a log and enable `pipefail` if piping through
+   `tee`.
+4. Rerun the API-surface comparison and whole-repository search.
+5. Confirm no formal release tag was created for this change yet. Record the
+   tag state. If a tag was created, stop and reassess.
+6. Reconcile `Outcomes & retrospective` with the evidence and update the
+   upstream drafts if any discovery changes their claims.
+
+Acceptance: all gates pass; the API delta is exactly one removal and one
+addition; the search finds no current-source reference to `OLD_NAME`; the
+changelog names only `NEW_NAME`; no alias exists; the baseline remains recorded
+and unreleased.
+
+Requirements and gaps: `REQ-lineage`, `REQ-no-alias`, `REQ-references`,
+`TDD-REQ-004`, `TDD-REQ-002`.
+
+Conformance check: all requirements are satisfied; the design is followed; the
+brief's lineage assumption still holds; no unapproved public interface or
+dependency change; trace links current.
+
+Recovery: if a gate fails, fix the cause and rerun from the failed gate in the
+required sequence. If the release tag is already cut, stop and reassess; do not
+retag.
+
+Remaining gaps: none after successful closure, unless a discovery reopens an
+upstream assumption.
+
+Compatibility decision: none; the next release publishes only `NEW_NAME`.
+
+## Milestones and plateaus
+
+Each milestone below ends in a coherent, validated repository state that is
+safe to continue from if later work is postponed. The full record for each is
+in `Plan of work`; this table summarises the assigned work and the compatibility
+decision.
+
+| Milestone | Coherent end state | Requirements and gaps | Acceptance evidence | Compatibility decision |
+| --- | --- | --- | --- | --- |
+| `EP-M0` | Baseline, toolchain, and reference inventory recorded; no source changed. | `REQ-lineage`, `TDD-REQ-004`, `GAP-tag`, `GAP-toolchain`. | Tag and commit recorded; export evidence; gate commands recorded. | None; no surface change. |
+| `EP-M1` | Function renamed atomically; old name absent; no alias. | `REQ-rename`, `REQ-no-alias`, `REQ-preserve`, `REQ-references`; `TDD-REQ-001`, `TDD-REQ-002`, `TDD-REQ-003`, `TDD-REQ-005`; `GAP-names`. | Fixture red then green; API diff; search log; existing tests. | None; the surface is unreleased and no released consumer exists. |
+| `EP-M2` | Release record closed; full gates pass; evidence reconciled. | `REQ-lineage`, `REQ-no-alias`, `REQ-references`; `TDD-REQ-004`, `TDD-REQ-002`. | Gate results; API diff; changelog; tag state. | None; the next release publishes only `NEW_NAME`. |
+
+No plateau keeps the old and new names alive together. Compatibility is not a
+milestone side effect. For each milestone, `Plan of work` records the
+conformance check, recovery path, and remaining gaps. If evidence falsifies an
+upstream assumption, record the proposed deviation in `Decision log`, set the
+status to `BLOCKED`, and wait for explicit acceptance before continuing.
+
+## Concrete steps
+
+Working directory: the library repository root, not supplied to this authoring
+environment. All commands below are placeholders until `EP-M0` records the
+actual commands. If the library does not use Git, substitute its release-tag
+or release-listing equivalent for the `git` commands. The shape is:
+
+```plaintext
+EP-M0:
+  git tag --sort=-v:refname
+  git rev-list -n 1 BASELINE_TAG
+  <api-surface command at BASELINE_TAG> -> module export list without OLD_NAME
+  <search command for OLD_NAME in the working tree> -> inventory of hits
+
+EP-M1 Red:
+  <focused build or test command> -> failure: NEW_NAME is not defined
+  <api-surface command> -> OLD_NAME present, NEW_NAME absent
+
+EP-M1 Green:
+  <same focused command> -> pass
+  <api-surface command> -> NEW_NAME present, OLD_NAME absent, same signature
+  <search command> -> only historical notes, this plan, and upstream drafts
+
+EP-M2:
+  <format-check command>
+  <lint command>
+  <typecheck command>
+  <test command>
+  <api-surface comparison> -> exactly one removal and one addition
+```
+
+Run the repository gate sequence in the order its `AGENTS.md` or Makefile
+requires, sequentially. Prefer Makefile targets. When piping output through
+`tee`, enable `pipefail` in the executing shell so a failed gate cannot appear
+to pass. Use log paths of the form
+`/tmp/<action>-<project>-<branch>.out`. No command in this section has been
+run.
+
+## Validation and acceptance
+
+The change is accepted when all of the following are observable:
+
+- Before the change, a consumer fixture that calls `NEW_NAME` fails to resolve,
+  and the API output contains `OLD_NAME` and not `NEW_NAME`.
+- After the change, the same fixture compiles or runs, and the API output
+  contains `NEW_NAME` and not `OLD_NAME`, with the same signature.
+- The API diff contains exactly one removal and one addition and no other
+  public delta.
+- A scratch consumer calling `OLD_NAME` fails to resolve after the change, then
+  is deleted.
+- The whole-repository search finds no current-source `OLD_NAME`; historical
+  release notes are excluded deliberately and remain untouched.
+- The existing test corpus passes with the same results as before.
+- The full gate sequence passes.
+- `BASELINE_TAG` and its commit are recorded, `OLD_NAME` is absent from that
+  tag's export surface, and no formal release tag containing `OLD_NAME` exists.
+- No alias, deprecated entrypoint, facade, wrapper, dual export, or shim
+  exists.
+
+Quality criteria:
+
+- Tests: the existing corpus and the new consumer fixture pass.
+- Verification: `INV-API-SWAP`, `INV-SIGNATURE`, `INV-BEHAVIOUR`,
+  `INV-NO-ALIAS`, and `INV-LINEAGE` are discharged with recorded evidence;
+  `L-CALLERS` and `L-SURFACE` are supported by the search log and API diff.
+- Lint and typecheck: the repository commands pass.
+- Performance: not applicable; no performance claim.
+- Security: not applicable; no trust boundary or input validation change.
+
+Quality method: run the repository's documented gates and the focused evidence
+commands above, and record the results in `Artefacts and notes`.
+
+Red-Green-Refactor evidence to record:
+
+- Red command and the expected missing-symbol failure.
+- Green command and the expected pass.
+- Refactor command sequence and the expected pass after clean-up.
+
+If the repository has no test framework for the affected language, record why
+in `Decision log`, then use the compile-based consumer fixture and the search
+log as the nearest observable substitutes.
+
+## Idempotence and recovery
+
+Reconnaissance is read-only and safe to repeat. The rename is idempotent when
+applied as one atomic change; rerunning the search and API checks is safe. If a
+step fails halfway, revert to the `EP-M0` commit and reapply the change; do not
+leave a partial rename. No persisted data migration or rollback is needed.
+
+If a formal release tag is created before or during the work, stop. Do not
+retag or delete a published tag. Reassess the change as a released-contract
+change under `TOR-CONSTRAINT-001`, record the deviation, and wait for explicit
+direction.
+
+Keep the working tree clean after completion: delete scratch consumer files,
+temporary search outputs, and any seeded references, and record their deletion.
+
+## Artefacts and notes
+
+| Evidence | State |
+| --- | --- |
+| Scenario brief | Supplied 2026-11-21 |
+| Baseline tag name and commit | Not obtained; `EP-M0` |
+| Function signature at baseline | Not obtained; `EP-M0` |
+| Pre-change API output | Not run |
+| Post-change API output | Not run |
+| Pre-change search inventory | Not run |
+| Post-change search result | Not run |
+| Red-stage failure transcript | Not run |
+| Green-stage pass transcript | Not run |
+| Full gate results | Not run |
+| Mermaid validation | Not applicable; no diagrams |
+| Release tag state at closure | Not checked |
+
+No transcript, diff, or measurement in this plan is presented as obtained
+evidence. Distinguish these expectations from results when updating the plan.
+
+## Interfaces and dependencies
+
+The final interface is the same exported function under the new name:
+
+```plaintext
+Before:  export OLD_NAME(<parameters>) -> <return type>
+After:   export NEW_NAME(<parameters>) -> <return type>
+```
+
+The library's public module owns the definition and its re-exports. Internal
+callers depend on that public surface. Error contracts, visibility, generic
+constraints, defaults, and return types are unchanged.
+
+Reuse policy: use the language's symbol-aware rename or equivalent mechanical
+edit so that definition and references stay consistent. Do not introduce a new
+abstraction, indirection layer, or parallel implementation. Do not hand-edit
+generated output as the sole fix; update the generator input and regenerate.
+
+Authorized dependencies: none. No dependency addition, removal, or version
+change is permitted.
+
+## Revision note
+
+- 2026-11-21: Initial draft. Records the unreleased-surface baseline policy,
+  the no-alias decision, the three milestones, the verification obligations,
+  and the intake facts that block execution. No implementation or check has
+  been performed.

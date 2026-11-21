@@ -1,0 +1,391 @@
+# Test-only helper reshape – technical design
+
+Status: DRAFT. The outline in `/tmp/val2-c2/tech-design-outline.md` is not yet
+agreed, and this design is not accepted. It follows the proposed outline so
+that the approach can be reviewed; neither agreement nor approval is implied.
+
+Audience: the implementer, reviewers, and the decision authority who resolves
+`TOR-CONFLICT-001`.
+
+Companion documents:
+
+- `/tmp/val2-c2/terms-of-reference.md` – draft v0.1, 2026-11-21.
+- `/tmp/val2-c2/tech-design-outline.md` – proposed outline.
+- `/tmp/val2-c2/execplan.md` – draft execution plan.
+
+Date and version: 2026-11-21, draft 0.1.
+
+Conformance basis (summary): the scenario statement is the only upstream
+evidence. The target repository was not inspected, so no symbol, path, or
+gate command is asserted as fact. The full basis and expiry triggers are in
+§9.
+
+## 1. Problem and scope
+
+The repository exposes a helper solely to its tests. The requested outcome is
+a reshaped helper whose exposure matches that consumer, with every affected
+test updated. The design must produce one coherent state, not a new interface
+alongside the old one.
+
+In scope:
+
+- the helper's definition, location, visibility, and signature, limited to
+  the reshape the requester confirms;
+- every test caller of the helper;
+- the observable checks that show no obsolete surface survives.
+
+Out of scope:
+
+- any compatibility shim, alias, deprecated entrypoint, facade, adapter, dual
+  implementation, or temporary wrapper (`TOR-NONGOAL-001`);
+- behaviour changes to the code under test unless separately requested and
+  accepted (`TOR-NONGOAL-002`);
+- new production consumers, dependencies, or public product surfaces
+  (`TOR-NONGOAL-003`).
+
+Design intent: the helper's final surface is the narrowest one the test
+harness can actually use, and all callers move to it in the same change. The
+old surface does not survive in any form.
+
+## 2. Baseline, target, and gaps
+
+### 2.1 Baseline
+
+The baseline revision is unknown and was not inspected. The only baseline
+evidence is the brief's statement that the helper is exposed solely to tests.
+No definition site, caller list, language, test framework, or release tag is
+cited. The design therefore names no concrete symbol and invents no path.
+
+### 2.2 Target
+
+- The helper exists in the location and visibility that its test consumers
+  actually require.
+- Every test caller uses that target surface.
+- The previous general-purpose exposure is absent.
+- No compatibility symbol or parallel path exists.
+- The helper's observable behaviour is unchanged unless the requester
+  separately authorizes a behavioural change.
+
+### 2.3 Element classification
+
+| Element | Baseline | Target | Class |
+| --- | --- | --- | --- |
+| Helper exposure | Reachable by tests; presented as general-purpose | Narrow test-support surface | Changed |
+| Helper behaviour | Existing | Existing, unless separately accepted | Retained |
+| Test call sites | Old surface | Target surface | Changed |
+| Test assertions | Existing | Preserved | Retained |
+| Compatibility alias or wrapper | None | None | Prohibited |
+
+### 2.4 Gap register
+
+| ID | Gap | Baseline evidence | Target state | Disposition | Unblock condition | Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| `GAP-001` | Caller inventory unverified | Brief only | Every caller classified | Proposed discovery (`EP-M0`) | Inventory complete | `INV-002` |
+| `GAP-002` | Target mechanism unknown | Language unknown | Narrowest supported mechanism selected | Proposed work after `EP-M0` | Language and harness known | `INV-001` |
+| `GAP-003` | 'Reshape' intent unconfirmed | Brief uses a fuzzy verb | Confirmed scope of change | Blocked on requester | `TOR-OPEN-001` answered | Design review |
+| `GAP-004` | Release lineage and gates unknown | None inspected | Classification and commands recorded | Proposed discovery (`EP-M0`) | Tags and repository guidance inspected | `TOR-SUCCESS-002` |
+| `GAP-005` | Premise may be falsified | Brief only | Premise confirmed or work blocked | Open | Caller inventory complete | `EP-M0` acceptance |
+
+A gap is not automatically an implementation task. `GAP-003` is a requirement
+clarification; `GAP-001`, `GAP-002`, and `GAP-004` are discovery that informs
+the one implementation milestone.
+
+## 3. Compatibility assessment
+
+### 3.1 Surface classification
+
+The helper is a test-only API or test-support surface: according to the
+brief, its only consumer is the repository's own test suite. Verification of
+that premise is `TOR-ASSUMPTION-001`; the classification is provisional until
+the inventory in `EP-M0` confirms it.
+
+The repository is described as stable. Stability is not a surface category
+and not a compatibility commitment. The classification follows the helper's
+actual consumers and release lineage, not the repository's age or green
+gates.
+
+### 3.2 Release lineage
+
+Unknown (`GAP-004`). If the helper is exported by a formally released package,
+the test-only exclusion still controls: the installed contracts prohibit
+source-API compatibility machinery for test-only APIs independently of release
+status. If evidence shows the helper is not test-only and is part of a
+genuine released external contract, the surface is reclassified and assessed
+separately. That assessment is not a licence to add a shim to a test-only
+surface.
+
+### 3.3 The compatibility question
+
+The required question is: compatible with whom or what?
+
+No external consumer, deployed binary, persisted record, wire peer, or
+compatibility commitment has been named. The only consumer named is the
+repository's test suite, which changes in the same commit. The honest answer
+is "no one and nothing outside this change". Compatibility machinery is
+therefore neither required nor permitted.
+
+### 3.4 The suggested shim
+
+`TOR-CONFLICT-001` records that the prompt suggests preserving the old tests
+through a compatibility shim. The suggestion is a proposal, not an accepted
+requirement. It is declined for four reasons:
+
+1. Test-only APIs are categorically excluded from source-API compatibility
+   machinery by `TOR-CONSTRAINT-001`.
+2. A shim would preserve an obsolete interface solely to avoid editing its
+   only callers. That is compatibility theatre, not a commitment.
+3. It would create two paths for the same behaviour and make the test suite
+   depend on the obsolete one, permanently enlarging the surface the reshape
+   was meant to reduce.
+4. It cannot answer "compatible with whom or what?" without naming the test
+   suite itself, which is not an external consumer.
+
+The explicit upstream resolution point is approval of the downstream
+ExecPlan. If the requester treats the shim as mandatory, the plan enters
+`BLOCKED` until the demand is withdrawn or evidence reclassifies the surface.
+A new test caller, an older plan, or a named in-repository consumer does not
+create an exception.
+
+## 4. Reshape design
+
+### 4.1 Requirements
+
+| ID | Requirement | Traces to |
+| --- | --- | --- |
+| `TDD-REQ-001` | The target surface is the narrowest one the test harness supports, with no general-purpose exposure. | `TOR-GOAL-001` |
+| `TDD-REQ-002` | Every test caller uses the target surface; no old-surface path remains. | `TOR-GOAL-002` |
+| `TDD-REQ-003` | No compatibility shim, alias, deprecated entrypoint, facade, adapter, dual implementation, or temporary wrapper is introduced. | `TOR-NONGOAL-001`, `TOR-CONSTRAINT-001` |
+| `TDD-REQ-004` | Every migrated test preserves its asserted behaviour; assertions are not weakened, deleted, or expected to fail. | `TOR-CONSTRAINT-003` |
+| `TDD-REQ-005` | The helper's observable behaviour is unchanged unless a behavioural change is separately accepted. | `TOR-NONGOAL-002` |
+| `TDD-REQ-006` | A repeatable check demonstrates that the old surface and compatibility symbols are absent. | `TOR-SUCCESS-001` |
+
+### 4.2 One atomic change
+
+The helper definition and every caller change in one commit and one coherent
+plateau. No intermediate commit is required to build or to pass tests while
+only part of the migration has landed. This is necessary because a partial
+migration would either break the build or tempt a compatibility path; both
+outcomes are prohibited.
+
+### 4.3 Candidate mechanisms
+
+The exact mechanism depends on facts not yet inspected (`GAP-002`). The
+design admits three shapes, all of which remove the old general-purpose
+surface:
+
+- **A – Narrow visibility.** Reduce the helper to the smallest scope from
+  which its test callers can reach it.
+- **B – Relocate to test support.** Move the helper into a module or fixture
+  compiled or loaded only for tests, then update the callers.
+- **C – Deliberate test-support export.** If the harness can reach only
+  exported items, expose a documented test-support entry point that exists
+  for tests. This is a target surface, not an alias for the old one.
+
+Selection criteria, in order: minimal reachable surface; no production reach;
+support by the repository's actual harness; no duplicate implementation; no
+change in observable behaviour. Options A and B are preferred. Option C is
+acceptable only when the harness makes A and B impossible, and its
+documentation must state that it is a test-support surface with no
+compatibility promise.
+
+### 4.4 What is not a mechanism
+
+The following do not implement the reshape: an alias for the old name; a
+deprecated wrapper; a facade that forwards to the new helper; a second
+implementation kept for old callers; a feature flag selecting old and new
+paths. Each preserves the obsolete source interface and is rejected by
+`TDD-REQ-003`.
+
+### 4.5 Failure modes
+
+- The harness cannot reach an internal helper. Choose mechanism C, or move
+  the affected tests into the helper's module. Do not add a shim.
+- A production or external caller is discovered. The premise is false; stop
+  implementation, record the discovery, and reassess the classification.
+- The target signature ripples into unrelated code. The inventory was
+  incomplete; expand it and re-plan rather than widening the compatible
+  surface.
+- A test's assertions no longer make sense. Determine whether the reshape was
+  intended to change behaviour. If not, the helper implementation is wrong.
+  If yes, require explicit acceptance before changing expectations.
+- The repository's gates cannot run in the environment. Record the baseline
+  failure separately; do not waive the gate.
+
+## 5. Caller migration and test-intent preservation
+
+The inventory covers unit tests, integration tests, doctests, examples,
+benchmarks, build scripts, fixtures, and documentation snippets. Each
+reference is classified as definition, test caller, production caller, or
+documentation.
+
+For each test caller:
+
+1. Rewrite the call site to the target surface.
+2. Leave the assertion and the exercised behaviour unchanged unless a
+   behavioural change was separately accepted.
+3. If the test existed only to assert the old exposure (for example, a
+   visibility test), record an explicit disposition. Removing a test whose
+   subject no longer exists is legitimate; removing it silently is not.
+4. Ensure at least one migrated test still exercises each behaviour the old
+   tests covered.
+
+The migration produces a per-test review table: caller, assertion change
+(none or accepted change), behaviour covered, and disposition. The table is
+an execution artefact; its contents cannot be invented before the inventory.
+
+Tests are migrated, not preserved verbatim. The requirement is to preserve
+what the tests establish, not the spelling of their calls. A shim that keeps
+the old call sites alive preserves the wrong artefact.
+
+## 6. Verification design
+
+### 6.1 Abstract model
+
+A reference is a use of the helper through either the old surface or the
+target surface in a tracked file. States are: definition, test caller,
+production caller, and documentation reference. The transition migrates every
+test caller and removes the old surface in one change. The precondition is
+that every reference is a test caller; this is assumed, not verified.
+Malformed or unexpected references – production callers, external consumers,
+generated code – violate the precondition and force reassessment.
+
+### 6.2 Invariants, lemma, and axioms
+
+- `INV-001` – After the change, no tracked, non-historical file refers to the
+  old helper surface.
+- `INV-002` – Every baseline test caller exists in the target and reaches the
+  reshaped helper.
+- `INV-003` – The change introduces no alias, deprecated entrypoint, facade,
+  adapter, dual implementation, or temporary wrapper.
+- `INV-004` – Every migrated test preserves its asserted behaviour.
+- `L-001` – If `INV-001` to `INV-004` hold and the gates pass, the change is
+  atomic and no compatibility obligation applies.
+- `AXIOM-001` – The selected language mechanism restricts access as its
+  documentation states. Source: language documentation, to be cited at
+  `EP-M0`. Boundary: the helper's exposure.
+- `AXIOM-002` – The repository's test runner executes the migrated tests and
+  reports them individually. Source: repository test configuration, to be
+  inspected at `EP-M0`. Boundary: acceptance evidence.
+- `AXIOM-003` – The repository's documented gates are the acceptance
+  authority for this change. Source: repository guidance, to be read at
+  `EP-M0`. Boundary: `TOR-SUCCESS-002`.
+
+The premise that the helper is test-only is not an axiom. It is
+`TOR-ASSUMPTION-001`, with an explicit evidence obligation in `EP-M0`.
+
+### 6.3 Methods
+
+| Obligation | Method | Artefact | Evidence and discharge | Non-vacuity and negative control |
+| --- | --- | --- | --- | --- |
+| `INV-001` | Repository-wide symbol search plus diff review | Search transcript, target-symbol list | Pre-change search finds the old symbol; post-change search finds none outside historical records | Reintroduce an alias in a scratch edit and confirm the search reports it; remove the edit |
+| `INV-002` | Baseline-to-target reconciliation | Per-test review table | Every baseline caller has a target counterpart; focused suite passes | Omit one caller migration in a scratch edit and confirm the build or search fails; revert |
+| `INV-003` | Diff review plus targeted search for shim forms | Diff and search output | No added alias, deprecation marker, facade, adapter, or dual path | Seed one alias in a scratch edit and confirm review/search rejects it; revert |
+| `INV-004` | Assertion diff review plus focused suites | Per-test table, test output | No assertion deleted or loosened without recorded acceptance; tests pass | Mutate one expected value in a scratch edit and confirm the test fails; revert |
+| `L-001` | Argument from atomicity plus the four invariants | This design and the ExecPlan | All callers changed together; no consumer remains for the old surface | The witness is the complete caller inventory; no separate control is needed |
+
+Search alone cannot prove the absence of every possible shim shape. The diff
+review is therefore the primary evidence for `INV-003`; the search is a
+backstop and a negative control.
+
+### 6.4 Formal verification decision
+
+No model checking or formal proof is needed. The change introduces no
+algorithmic invariant, protocol, concurrency property, or arithmetic bound.
+Compile-time visibility and the test suite are the proportionate checks. A
+prover would not strengthen the claim that an interface is absent; the
+inventory and search address that claim directly. The residual gap is an
+unknown caller outside the inspected tracked files; `EP-M0` bounds it.
+
+### 6.5 Suggested BDD features
+
+The repository's BDD runner is unknown; these are proposed acceptance
+scenarios, not an authorization to add a framework. If no runner exists, the
+existing test suite and the review table exercise them.
+
+```gherkin
+Feature: Test-only helper reshape
+  Scenario: Tests use only the reshaped helper
+    Given the helper is exposed only to the repository's tests
+    When the helper and every test caller change together
+    Then the repository test suite passes
+    And no reference to the old helper surface remains
+    And no compatibility alias exists
+
+  Scenario: A non-test caller is discovered
+    Given reconnaissance finds a production or external caller
+    When the caller inventory is reviewed
+    Then implementation stops
+    And the compatibility classification is reassessed
+```
+
+## 7. Alternatives considered
+
+- **Compatibility shim or alias.** Rejected. It preserves an obsolete
+  test-only source interface, creates two paths, and is prohibited by
+  `TOR-CONSTRAINT-001`. It cannot name an external consumer.
+- **Deprecated wrapper or facade.** Rejected for the same reasons. Ageing the
+  wrapper does not remove the second path.
+- **Dual implementation behind a flag.** Rejected. It violates the coherent
+  plateau rule and adds permanent branch surface.
+- **Leave the helper as it is.** Rejected. It does not satisfy the request.
+- **Delete the helper and inline its logic into tests.** Possible if
+  reconnaissance shows the helper has no shared value beyond one test. This
+  is a legitimate reshape, not a compatibility measure. It is not assumed
+  because the brief implies more than one caller.
+- **Move all callers into the helper's module.** A viable variant of
+  mechanism B when the harness cannot reach internal items. It changes the
+  test layout, so the requester must accept it; it is not chosen by default.
+
+## 8. Handoff and readiness
+
+- Readiness: bounded discovery only. The outline is not agreed, the design is
+  not accepted, and the helper and its callers are unidentified. The draft
+  ExecPlan is conditional on `EP-M0`.
+- ExecPlan inputs: `TDD-REQ-001` to `TDD-REQ-006`; `GAP-001` to `GAP-005`;
+  `INV-001` to `INV-004`; `L-001`; `AXIOM-001` to `AXIOM-003`;
+  `TOR-CONFLICT-001`; the compatibility decision in §3.
+- Acceptance boundary: implementation acceptance requires the gates,
+  `INV-001` to `INV-004`, and the test-intent review. It does not establish
+  release, deployment, or an outcome claim.
+- Unresolved decisions: `TOR-OPEN-001` to `TOR-OPEN-005`. Each gates the
+  work named in the terms of reference §9.
+- Approval: none. Design acceptance does not bypass the ExecPlan approval
+  gate.
+
+## 9. Conformance basis, evidence, and expiry
+
+| Artefact | Path | Revision or state | Inspected | Use |
+| --- | --- | --- | --- | --- |
+| Scenario statement | Supplied in session | Dated 2026-11-21; verbatim in ToR §1 | Yes | Upstream problem statement |
+| Terms of reference | `/tmp/val2-c2/terms-of-reference.md` | Draft v0.1, 2026-11-21; not accepted | Yes | Goals, constraints, conflict record |
+| Design outline | `/tmp/val2-c2/tech-design-outline.md` | Proposed, 2026-11-21; not agreed | Yes | Section contract |
+| ExecPlans skill | `/home/leynos/.claude/skills/execplans/SKILL.md` | Installed copy, inspected 2026-11-21; no revision metadata present | Yes | Handoff contract and template |
+| Target repository | Not supplied | Unknown; not inspected | No | Baseline, symbols, gates, release lineage |
+
+No external research was performed. The design makes no ecosystem or
+technology selection, so there is no literature review to earn its length.
+
+Evidence expires on any of: a new or changed caller; a new or changed export;
+a release or tag that changes the helper's lineage; a change to the language
+or test harness; a change to the repository's gate commands; or a
+clarification of 'reshape'. Re-check the affected claims before downstream
+work relies on them.
+
+If implementation evidence falsifies an upstream assumption, record the
+evidence, update the terms of reference and this design, and set the
+ExecPlan to `BLOCKED` until the deviation is accepted.
+
+## 10. Open questions and design impact
+
+- `TOR-OPEN-001` – Meaning of 'reshape'. Changes requirements
+  `TDD-REQ-001` and `TDD-REQ-005` and the milestone content.
+- `TOR-OPEN-002` – Helper and caller identity. Blocks §2, §4, and §5.
+- `TOR-OPEN-003` – Release lineage. Determines whether a separate
+  released-contract assessment is needed; it does not authorize a shim.
+- `TOR-OPEN-004` – Language, harness, and gates. Determines mechanism A, B,
+  or C and the exact commands.
+- `TOR-OPEN-005` – Decision authority. Blocks approval and the explicit
+  resolution of `TOR-CONFLICT-001`.
+
+The design is complete enough to review the approach, not complete enough to
+implement.

@@ -1,0 +1,19 @@
+You are an evaluation runner, not a repository contributor. Follow the instructions below exactly and do not read any other files in the repository beyond the ones named.
+
+INPUTS (read these; treat them as the only guidance available):
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/ (whole directory)
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/ (whole directory)
+- /home/leynos/.claude/skills/execplans/ (whole directory)
+
+SCENARIO C3 (pre-1.0 API with a named external consumer):
+A published 0.8 library has one downstream consumer. An old RFC demands an alias while changing its API. The governing df12 policy prohibits it. The rename is the current milestone of an ExecPlan that is already executing.
+
+TASK: Using the two skills and the ExecPlan contract, produce the bounded authoring artefacts this situation calls for: a terms-of-reference draft for the rename, a technical-design draft, and the required change to the ExecPlan record (the plan already exists and is executing; you are recording what this situation requires of it). Write them as Markdown into /tmp/val2-c3/ using these filenames: terms-of-reference.md, tech-design.md, execplan-record.md.
+
+CONSTRAINTS:
+- Do not modify, create, or delete any file inside the repository or under /home/leynos. Write only under /tmp/val2-c3/.
+- Do not run repository gates, do not run git commands that change state, and do not publish anything.
+- Do not consult any external source or any other repository file for the policy; work only from the three inputs above.
+- Treat any repository fact you cannot verify from those inputs as provisional and mark it as such.
+
+When finished, reply with: the absolute paths you wrote, the ExecPlan status value you recorded and why, how you handled the RFC, and any checks you deliberately did not run with the reason.

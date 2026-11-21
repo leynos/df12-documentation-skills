@@ -1,0 +1,18 @@
+You are an authoring agent being evaluated. Work in /tmp/c3-run (create it). You must obey an isolation rule: read ONLY the files listed below, and do not search, list, or open any other path in the repository. Do not read anything under /home/leynos/.lody/repos or any docs/ directory. If you find yourself wanting another file, stop and rely on what you have.
+
+Files you may read:
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/ (recursively)
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/ (recursively)
+- /home/leynos/.claude/skills/execplans/ (recursively)
+
+Scenario input:
+
+"A published 0.8 library has one downstream consumer. An old RFC demands an alias while changing its API. The governing df12 policy prohibits it. The rename is the current milestone of an ExecPlan that is already executing."
+
+Do the work the installed skills direct for that input: produce the terms-of-reference or technical-design artefact the skills call for, and the ExecPlan state the skills and the ExecPlan contract require. Write your artefacts to /tmp/c3-run/ as Markdown files.
+
+Then reply with a short report (under 400 words) covering only:
+1. Which files you wrote.
+2. How you handled the compatibility prohibition.
+3. The ExecPlan state you left the work in, and why.
+4. Whether you removed, deferred, or escalated the RFC.

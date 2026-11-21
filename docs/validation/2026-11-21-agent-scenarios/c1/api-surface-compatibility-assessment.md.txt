@@ -1,0 +1,177 @@
+# API surface compatibility assessment: internal method signature replacement
+
+Status: Draft decision record, awaiting user approval. This record proposes a
+compatibility approach; it does not approve implementation.
+
+Date: 2026-11-21.
+
+Companion: `execplan-replace-internal-method-signature.md`, in the same
+directory as this record.
+
+## 1. Scope
+
+The change request is: a released version 2 application has an internal public
+method used only by three modules. Replace its signature and update the
+modules.
+
+This record classifies the method's API surface and release lineage, names the
+consumers, and settles whether any source-API compatibility obligation applies.
+It does not choose the new signature, which the method owner approves, and it
+does not design a persisted-data or wire-format migration, because the supplied
+scenario names none.
+
+## 2. Classification
+
+| Question | Answer |
+| --- | --- |
+| Surface kind | Application-internal interface declared `public` |
+| Release lineage of the surface | Not a published 1.0+ API contract |
+| Consumers | Three internal modules |
+| Persisted or wire-format encoding | None identified |
+| Applicable exclusion | Private APIs, including application-internal public declarations |
+
+Basis for each row. The scenario says the method is internal and used only by
+three modules of the same application. Release 2 is the application's release
+number; the method is not described as published outside the application, and
+the release number of the enclosing application does not convert an internal
+declaration into an external contract. The consumer count and the absence of a
+persisted or wire-format encoding are stated by the scenario and must be
+verified by repository-wide audit at reconnaissance. The applicable exclusion
+is quoted in §7.
+
+The four policy exclusions are independent. This surface falls in the first
+category, so the assessment does not need to rely on the test-only, pre-1.0, or
+unreleased-API categories. The governing instruction is to evaluate the surface
+and its release lineage, not merely whether the branch sits ahead of a tag.
+Here the surface is application-internal at every release of the application.
+
+## 3. Compatibility approach
+
+Decision: none.
+
+The signature is replaced and all three calling modules are updated within one
+coherent change. No alias, deprecated entrypoint, overload, facade type,
+adapter, wrapper, dual implementation, or temporary shim is added. The
+prohibited constructs are not merely unnecessary here; the governing policy
+directs that they must not be prescribed for this class of surface.
+
+The compatibility question, "compatible with whom or what?", has no external
+answer. The only consumers are three modules of the same application, and this
+change updates them together. No deployed peer, persisted record, or wire
+format encodes the signature. Compatibility would not be required if the work
+landed as one atomic change, so it is not introduced to manufacture an
+intermediate plateau.
+
+## 4. Persisted data and wire formats
+
+This is a separate obligation from source-API compatibility, and the supplied
+scenario identifies none. If reconnaissance finds that the signature
+participates in serialization, remote invocation, stored callbacks, or any
+other deployed encoding, that is a real migration question. Model the deployed
+state and the outcome to preserve explicitly; do not use it to justify keeping
+the obsolete source interface. Escalate before proceeding.
+
+## 5. Conditions that require reclassification
+
+The classification must be revisited if any of the following appears:
+
+- an external consumer, such as a published SDK, plugin interface, or
+  documented extension point used by third parties;
+- membership of the method in a separately released package's formal API
+  contract;
+- a deployed peer or persisted record that encodes the signature;
+- a project policy that explicitly commits to the method's current form.
+
+If one appears, stop, record the evidence, and assess the surface against the
+released 1.0+ rules: name the real external consumer and the existing
+commitment, then choose a deliberate compatibility or migration approach. Do
+not keep the internal label once the evidence contradicts it.
+
+## 6. Conflicts
+
+No inherited conflict exists: no terms of reference, technical design, ADR, or
+other artefact supplied with this request demands source compatibility. If one
+is later found to demand a shim, record the conflict for explicit upstream
+resolution rather than implementing the shim or silently rewriting history.
+
+## 7. Provenance
+
+The rules quoted below were inspected on 2026-11-21 at these revisions.
+
+Terms of reference skill, `skills/terms-of-reference-doc/SKILL.md`:
+
+```plaintext
+SHA-256 105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4
+```
+
+Problem-space contract,
+`skills/terms-of-reference-doc/references/problem-contract.md`:
+
+```plaintext
+SHA-256 e8c6d8c6c7d552dea5a241f125f34d25d617840affb009e830305fbb29be5ef1
+```
+
+Technical design skill, `skills/tech-design-doc/SKILL.md`:
+
+```plaintext
+SHA-256 ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6
+```
+
+Architecture contract,
+`skills/tech-design-doc/references/architecture-contract.md`:
+
+```plaintext
+SHA-256 06f9ab2fdc0ff0d89cfede567d1d505396fb8a0e2d0b62c272f9abfeb006f1de
+```
+
+ExecPlans skill, `~/.claude/skills/execplans/SKILL.md`:
+
+```plaintext
+SHA-256 78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15
+```
+
+ExecPlan template, `~/.claude/skills/execplans/references/execplan-template.md`:
+
+```plaintext
+SHA-256 71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a
+```
+
+The applicable language:
+
+- `terms-of-reference-doc/SKILL.md`: "Terms of reference MUST NOT create
+  source-API compatibility requirements for private APIs (including
+  application-internal public surfaces), test-only APIs, pre-1.0 APIs, or
+  unreleased API changes ahead of the latest formal release tag. Update those
+  interfaces and their callers together."
+- `problem-contract.md`: "Terms of reference MUST NOT impose source-API
+  compatibility machinery on: private APIs, including public declarations used
+  only within an application; test-only APIs and support surfaces; pre-1.0
+  APIs; or unreleased API changes ahead of the latest applicable formal release
+  tag." It adds: "These exclusions are independent. A named consumer does not
+  create an exception", and "Evaluate the surface and its release lineage, not
+  just whether the branch is ahead of a tag." For released 1.0+ surfaces it
+  requires "real external consumers and an existing commitment", adding that
+  "No known consumers normally means no compatibility machinery, subject to an
+  explicit applicable policy."
+- `tech-design-doc/SKILL.md`: "Designs MUST NOT prescribe source-API
+  compatibility machinery for private APIs (including application-internal
+  public surfaces), test-only APIs, pre-1.0 APIs, or unreleased API changes
+  ahead of the latest formal release tag. Change the interface and all affected
+  callers together. A plateau requires a coherent validated state, not parallel
+  old and new interfaces."
+- `architecture-contract.md`: "A coherent milestone may change an interface and
+  every caller atomically. It need not keep old and new architectures alive
+  together." It also records: "Reject gratuitous aliases, deprecated
+  entrypoints, facade types, dual implementations, compatibility adapters, and
+  temporary wrappers."
+- `execplans/SKILL.md`: "Plans MUST NOT prescribe source-API compatibility
+  machinery for any of the following surfaces: private APIs, including
+  application-internal interfaces declared `public`; test-only APIs and support
+  surfaces; pre-1.0 public APIs; and APIs introduced after the latest formal
+  release tag." It also rejects "compatibility theatre" and instructs: "Never
+  introduce compatibility machinery solely to make a milestone independently
+  viable."
+
+The persisted-data and wire-format separation is stated in `problem-contract.md`
+("Persisted data and wire formats are separate") and repeated in
+`architecture-contract.md` and `execplans/SKILL.md`.

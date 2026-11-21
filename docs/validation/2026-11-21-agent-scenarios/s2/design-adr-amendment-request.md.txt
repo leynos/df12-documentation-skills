@@ -1,0 +1,113 @@
+# Design and ADR amendment request: record an approved architectural change
+
+Status: Open request – not an approval
+
+Date: 2026-11-21
+
+To: Technical design owner and ADR approver
+
+From: Change control record, Item B (`change-control-record.md`)
+
+## 1. Request
+
+Amend the technical design and/or ADR to record the approved architectural
+change that implementation has found unrecorded. This request asks the design
+authority to bring the authoritative architecture record into line with an
+approved decision and to re-establish traceability. It does not itself approve
+the change, and it does not authorize resumed implementation.
+
+## 2. Why this is required
+
+The architecture contract requires an implementation change to the architecture
+to be reflected in the technical design or ADR, with every affected requirement
+and trace link re-checked, before the executing plan can claim completion.
+According to the implementation report, the current design revision no longer
+describes the approved architecture, so the plan's `Conformance basis` is
+invalid pending confirmation against the design record.
+
+## 3. Required inputs
+
+The design owner cannot complete the amendment from the implementation report
+alone. Obtain:
+
+1. Approval evidence: authority, date, scope, and revision.
+2. Change description: components, interfaces, trust boundaries, data flows,
+   dependencies, failure modes, and operational effects.
+3. Alternatives considered and the reason the approved option was chosen.
+4. Compatibility classification: private, test-only, pre-1.0, or unreleased
+   surface; released 1.0+ contract; persisted data or wire format. Name any real
+   consumer or deployed state.
+5. Verification impact: invariants, lemmas, axioms, test boundaries, and
+   residual gaps.
+6. Migration, rollout, and rollback implications, if any.
+
+## 4. Required design edits
+
+Apply the applicable sections. Do not invent content for sections the change
+does not touch.
+
+| Design section | Required edit |
+| --- | --- |
+| Front matter | New status, revision, date, and companion ADR link. |
+| Design context and motivation | Why the approved change exists, and which approved intent it serves. |
+| Scope, goals, and non-goals | Any changed boundary, stated explicitly. |
+| Architectural summary and diagram | Updated structure and boundaries. Validate every diagram with nixie. |
+| Component specifications | Responsibility, contracts, behaviour, failure modes, and configuration for each affected component. |
+| Interfaces and contracts | Updated CLI, API, on-disk, or wire contract. Retain and validate the external artefact. |
+| Data model and storage | Schema, migration, lifecycle, and consistency effects. |
+| Operations and security | Deployment, observability, threat model, trust boundaries, and secrets effects. |
+| Testing and verification | Reopened invariants and obligations, method, scope, and residual gaps. |
+| Traceability record | Updated requirement, design element, gap, verification, and consumer links. |
+| Deferred decisions | Any decision the change leaves open, with resolution criteria. |
+
+## 5. Required ADR content, if an ADR is the chosen record
+
+- Title, status, date, and decision owner.
+- Context and the approved intent the decision serves.
+- Decision statement, precise enough to implement.
+- Alternatives considered and why they were rejected.
+- Consequences: positive, negative, risks, and follow-up work.
+- Affected requirement and design identifiers.
+- Links to the design revision and any superseded ADR.
+
+Create or amend an ADR when the decision is hard to reverse, or changes
+architecture, a trust boundary, a public contract, or a persisted format. A
+design revision alone is sufficient for a reversible local design choice.
+
+## 6. Traceability worksheet
+
+Populate from the receiving plan and design. Do not invent identifiers.
+
+| Upstream item | Current response | Change required | Verification obligation | Disposition | Consumers |
+| --- | --- | --- | --- | --- | --- |
+| To be supplied | To be supplied | To be supplied | To be supplied | To be supplied | To be supplied |
+
+## 7. Acceptance criteria for the amendment
+
+1. Approval evidence is cited.
+2. The decision, alternatives, rationale, and consequences are recorded.
+3. Every affected upstream item has a design response or an explicit gap.
+4. Verification obligations are assigned, with scope and bounds.
+5. Compatibility is classified, and any real consumer or deployed state is
+   named.
+6. Trace links are updated in both directions.
+7. Status separates design acceptance from implementation and verification
+   state.
+8. No approval, owner, revision, or evidence is invented.
+
+## 8. Explicit non-goals
+
+- Approving the hardening recommendation.
+- Justifying the implementation after the fact.
+- Adding aliases, facades, deprecated entrypoints, dual implementations, or
+  wrappers.
+- Replacing ToR intent with what the implementation happens to do.
+- Authorizing resumed execution; that requires the ExecPlan reconciliation
+  gate.
+
+## 9. Completion signal
+
+The design owner publishes the amended revision; the executing plan cites it in
+`Conformance basis`; the plan owner records acceptance of the reconciled
+deviation; only then may execution resume. The ToR impact check may be recorded
+as not applicable only with a stated reason.

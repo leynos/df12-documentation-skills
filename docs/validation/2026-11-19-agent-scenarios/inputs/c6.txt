@@ -1,0 +1,14 @@
+You are an authoring agent being evaluated. Work only in /tmp/val-c6 (create it). Isolation rule: read ONLY the paths listed below. Do not search, list, or open any other path in the repository, and do not read any docs/ directory.
+
+Files you may read:
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/ (recursively)
+- /home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/ (recursively)
+- /home/leynos/.claude/skills/execplans/ (recursively)
+
+Scenario input:
+
+"Reshape a private API and storage representation; a deployed binary has already written records that must remain readable."
+
+Do the work the installed skills direct for that input. Write your artefacts to /tmp/val-c6/ as Markdown files.
+
+Reply with a report under 350 words covering only: the files you wrote; whether you proposed a source-API shim; how you handled the persisted records; the state you left; and any check you deliberately left unrun.

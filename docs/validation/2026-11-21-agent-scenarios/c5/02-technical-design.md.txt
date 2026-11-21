@@ -1,0 +1,297 @@
+# Compatibility-preserving change to a released 2.1 function – technical design
+
+Status: Draft v0.1. Not accepted. Implementation is not authorised.
+
+Date: 2026-11-21.
+
+Audience: implementers, technical reviewers, and the release authority.
+
+Companion documents: `00-intake-and-elicitation.md`,
+`01-terms-of-reference-constraint-record.md`, and `03-execplan.md` in this
+directory. The target repository's ADRs, design documents, roadmap, release
+notes, and source were not inspected; the invoking session's isolation rule
+prohibits reading them.
+
+Conformance basis: the terms-of-reference constraint record cited above (draft
+v0.1, unaccepted, sha256
+`892ff9765556f8459270cd9b31aaaa99c4de350bf61d679e2adcccdbf8ca6cf2`); the
+installed `execplans` skill and
+`references/execplan-template.md`, inspected on 2026-11-21; df12 policy in
+`tech-design-doc/references/architecture-contract.md` and
+`terms-of-reference-doc/references/problem-contract.md`, inspected on
+2026-11-21. No accepted upstream design or ADR was available.
+
+## 1. Problem and context
+
+A function was shipped in version 2.1 and is therefore part of a released
+contract. An explicit compatibility commitment covers it, and at least one
+external consumer is deployed against it. The current branch is ahead of the
+release tag and contains unreleased work. The change request does not state
+what the new behaviour is, which part of the contract changes, or the exact
+terms of the commitment; those remain open (TOR-OPEN-001 and TOR-OPEN-002).
+
+The design question is consequently twofold. First, what compatibility
+obligation attaches to this function, given the branch position. Second, what
+approach satisfies that obligation for each class of change. The specific
+change, once supplied, selects a row in the decision table in §3.6; it does not
+alter the classification itself.
+
+## 2. Scope
+
+In scope: the released function's public source contract, its in-repository
+callers, its documentation, its deprecation or migration path, and the release
+gate for removing the old entry point.
+
+Out of scope: unrelated public surfaces; package-wide compatibility policy; the
+choice of new behaviour (an intake input); and persisted-data or wire-format
+migration except as a separate assessment required by §5.5.
+
+Goals and non-goals: TOR-GOAL-001, TOR-GOAL-002, TOR-NONGOAL-001, and
+TOR-NONGOAL-002 in the constraint record.
+
+## 3. Surface classification and compatibility assessment
+
+### 3.1 Classification
+
+| Question                                             | Finding                                                                                                                                                 | Source                                  | Consequence                                                                                                          |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Has the surface been released?                       | Yes. The function shipped in 2.1, and 2.1 is a formal release version at or above 1.0.                                                                  | EV-001; TOR-ASSUMPTION-003              | The "unreleased API changes ahead of the latest formal release tag" exemption does not apply to this function.        |
+| Is there an external consumer?                       | Yes, one is deployed. Its identity and usage are unknown.                                                                                               | EV-003; TOR-OPEN-003                    | Compatibility cannot rely on a lockstep upgrade of the consumer.                                                     |
+| Is there an explicit commitment?                     | Yes. Its exact terms are unknown.                                                                                                                       | EV-002; TOR-OPEN-002                    | The commitment binds the approach; the design must satisfy even its strictest plausible reading until the text is read. |
+| Is a persisted or wire format implicated?            | Not established. The function may or may not serialise data or cross a process boundary.                                                                | TOR-OPEN-001                            | A separate format assessment is required if it does; format migration neither creates nor removes source compatibility. |
+| Would compatibility be required for one atomic change? | Yes. The consumer is deployed outside the repository, so no single commit can update the function and the consumer's deployment together.              | EV-003; deployment boundary             | Compatibility or a deliberate migration is required even without milestone decomposition. It is not compatibility theatre. |
+
+### 3.2 Verdict
+
+The function is a released 1.0-or-later source contract with a known deployed
+external consumer and an explicit compatibility commitment. It falls outside
+every prohibited category in the governing policy: it is not a private or
+application-internal interface, not a test-only surface, not pre-1.0, and not
+an unreleased change ahead of the latest tag. Compatibility or a deliberate
+migration is therefore both required and permitted. The design must name the
+consumer, the obligation, and the approach, as the architecture contract
+requires.
+
+### 3.3 Why the branch position does not change the classification
+
+Release lineage is a property of the symbol, not of the branch tip. The branch
+being ahead of the tag means that edits made on the branch have not yet been
+released. It does not withdraw the 2.1 contract from consumers who already have
+it, and it does not convert the shipped function into an unreleased API. The
+policy is explicit: evaluate the surface and its release lineage, not just
+whether the branch is ahead of a tag, and an edit to an already released 1.0+
+API does not make that existing contract unreleased.
+
+The rule cuts both ways. Symbols introduced on the branch after the tag, and
+present in no release, are unreleased. They may be changed atomically with all
+callers and must not acquire a source compatibility layer. The design therefore
+classifies per surface rather than per branch.
+
+### 3.4 The atomicity test and the named obligation
+
+The ExecPlan rules ask whether compatibility would be required if the work were
+made as one atomic change. Here it would: the deployed consumer is outside the
+repository's release control, so an atomic commit still cannot deploy the
+consumer. The compatibility path answers "compatible with whom or what?" – with
+the external consumer deployed against the 2.1 contract, under the explicit
+commitment recorded in TOR-CONSTRAINT-001 and TOR-CONSTRAINT-002.
+
+Two boundaries follow. First, the obligation covers the committed public
+surface, not every declaration that happens to be exported. It does not require
+compatibility paths for in-repository callers, which adopt the new entry point
+in the same change. Second, it does not require a permanent dual
+implementation: the commitment's own removal terms bound the deprecation
+window.
+
+### 3.5 Compatibility decision
+
+The default approach, pending the change contract and the commitment text, is:
+
+1. Freeze the existing entry point's observable contract for the commitment's
+   lifetime. Capture that contract as executable characterization evidence at
+   the 2.1 baseline before changing anything.
+2. Deliver the new behaviour through a new entry point whose addition does not
+   change the meaning or resolution of any existing call.
+3. Deprecate the old entry point with documentation and, where the language and
+   consumer build policy permit, a machine-readable marker. If a new warning
+   would break a consumer that treats warnings as errors, use documentation-only
+   deprecation and record the choice.
+4. Publish a migration guide and, where practical, an automated migration aid.
+5. Remove the old entry point only in a release that the commitment permits,
+   with the notice it requires, supported by exported-symbol and release
+   evidence.
+6. If the intended change is an internal refactor with an unchanged observable
+   contract, no new entry point is needed; the change lands atomically behind
+   the existing contract and is discharged by equivalence evidence alone.
+
+### 3.6 Decision table by change class
+
+| Change class                                                        | Effect on the 2.1 contract          | Approach                                                                                                                                     |
+| ------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Internal refactor; observable contract identical                    | None                                | Change in place; update all in-repository callers atomically; discharge equivalence evidence.                                                |
+| Additive capability; existing semantics unchanged                   | None                                | Add the new entry point or optional surface; leave the old contract untouched; deprecation unnecessary unless the old path is superseded.   |
+| In-place behavioural or signature change at the old entry point     | Breaking                            | Do not change in place. Add the new entry point, freeze and deprecate the old one, publish the migration, remove at the commitment-permitted release. |
+| Mandatory fix that cannot preserve the old observable behaviour     | Breaking but obligatory             | Escalate to the commitment owner. Options are an advisory with a coordinated consumer update, or a commitment deviation. Record the decision; do not ship silently. |
+| Change to a symbol that exists only on the branch, in no release    | None; surface is unreleased         | Change the interface and every caller together; no compatibility layer.                                                                     |
+
+### 3.7 Rejected alternatives
+
+- Changing the function in place and asking the consumer to update in the same
+  window: rejected as the default because deployment lag prevents an atomic
+  switch, and the explicit commitment forbids relying on one. It remains
+  permissible only if the commitment explicitly allows it and the consumer
+  confirms a coordinated upgrade.
+- A permanent dual implementation: rejected. The commitment bounds the
+  deprecation window; an indefinite second path is maintenance cost without a
+  named obligation.
+- Declaring the function unreleased because the branch is ahead of the tag:
+  rejected. It misclassifies the surface and would convert a committed external
+  contract into an in-place break.
+- Adding compatibility machinery for in-repository callers or branch-only
+  symbols: rejected as compatibility theatre. The obligation is per surface and
+  is answered by the deployed consumer and the commitment.
+- A package-wide compatibility policy: rejected as scope expansion
+  (TOR-NONGOAL-001).
+
+## 4. Baseline, target, and gaps
+
+The baseline is the function as published in 2.1. The target is the function's
+new contract delivered under the approach selected in §3.6, with the 2.1
+contract preserved for the committed surface and the old entry point removed
+only when the commitment permits. Both are described at the level the supplied
+facts allow; the concrete symbols are gaps.
+
+| ID      | Upstream requirement                    | Baseline evidence                                       | Target state                                                        | Gap or mismatch                                                                 | Disposition      | Resolution owner        | Unblock condition                    | Verification obligation |
+| ------- | --------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------- | ----------------------- | ------------------------------------ | ----------------------- |
+| GAP-001 | TOR-CONSTRAINT-001, TOR-CONSTRAINT-003  | Statement only; exact tag and commitment text unread.    | Classification evidenced from the release record and commitment.    | No documentary evidence inspected.                                               | Blocked          | Release authority       | TOR-OPEN-002 and TOR-OPEN-004 closed. | Documentary re-check    |
+| GAP-002 | TOR-GOAL-001, TOR-SUCCESS-001           | No characterization suite known.                         | Executable 2.1 contract evidence captured before the change.        | Baseline behaviour is not yet pinned.                                            | Proposed work    | Maintainers             | Baseline tests authored.             | TDD-OBL-001             |
+| GAP-003 | TOR-CONSTRAINT-002, TOR-SUCCESS-002     | Consumer existence only.                                 | Consumer workload and upgrade path evidenced.                       | Identity, version, and usage profile unknown.                                    | Blocked          | Consumer operator       | TOR-OPEN-003 closed.                 | TDD-OBL-004             |
+| GAP-004 | TOR-GOAL-002                            | No migration material known.                             | Migration guide and, if practical, automated aid.                   | Documentation not yet written.                                                   | Proposed work    | Maintainers             | New entry point designed.            | TDD-OBL-003, TDD-OBL-004 |
+| GAP-005 | TOR-CONSTRAINT-001, TOR-ASSUMPTION-002  | Removal terms unread.                                    | Removal gate tied to a commitment-permitted release.                | Removal release and notice period unknown.                                       | Blocked          | Release authority       | TOR-OPEN-002 closed.                 | TDD-OBL-005             |
+| GAP-006 | TOR-OPEN-001                            | Intended change unstated.                                | Concrete new contract and change class selected in §3.6.            | Design cannot name the new signature or semantics.                               | Blocked          | Sponsor or maintainers  | TOR-OPEN-001 closed.                 | TDD-OBL-002             |
+
+## 5. Design
+
+### 5.1 Capturing the 2.1 contract
+
+Before any edit, the maintainers enumerate the observable contract elements of
+the released function. At minimum: symbol and signature; argument and return
+types; accepted and rejected input classes; error or exception types and the
+conditions that raise them; side effects and their ordering; idempotence;
+resource ownership; concurrency guarantees; documented performance bounds; and
+any serialised or wire representation. Each element becomes a characterization
+obligation in TDD-OBL-001. Elements that cannot be established from the 2.1
+artefact and its documentation are recorded as gaps, not assumed.
+
+### 5.2 Structure
+
+The design uses two paths where the change is not presentationally transparent:
+
+- The existing entry point remains, with its 2.1 semantics. Leaving the old
+  implementation untouched gives the simplest equivalence argument at the cost
+  of duplication. Delegating both entry points to a shared core removes the
+  duplication but requires a compatibility adapter and the adapter lemma
+  L-ADAPTER: the adapter maps every input in the documented 2.1 domain to the
+  frozen 2.1 behaviour, and the characterization suite exercises that mapping.
+  Choose the frozen implementation unless duplication is material; record the
+  choice and its equivalence evidence.
+- A new entry point exposes the new contract. Its addition must not change the
+  resolution or meaning of existing calls. In languages with overloading,
+  default arguments, or implicit conversions, adding an overload can silently
+  capture existing call sites; where that risk exists, use a distinct name.
+
+### 5.3 Deprecation and migration
+
+Deprecation communicates direction without withdrawing the contract.
+Documentation is mandatory. A machine-readable marker is preferred where it
+does not change build outcomes for the consumer. A consumer that compiles with
+warnings treated as errors would otherwise be broken by the announcement
+itself, which defeats the commitment; in that case the marker is omitted and
+the migration guide becomes the notice channel.
+
+The migration guide names the old entry point, the new entry point, the mapping
+between them, the behavioural differences, and the removal release. Where the
+mapping is mechanical, an automated aid reduces consumer effort and the risk of
+a mistranslated call. The deployed consumer is invited to run its
+representative workload against the new entry point before the removal release.
+
+### 5.4 Failure modes
+
+- Wrapper drift: the old path gradually adopts new semantics. Detected by the
+   characterization suite, which runs against the old path on every change and
+   must fail on a seeded mutation.
+- Undocumented consumer reliance: the consumer breaks although the documented
+  contract is preserved. This is residual risk under TOR-ASSUMPTION-001; only
+  consumer acceptance evidence reduces it.
+- Deprecation-induced build failure: a new warning breaks a warning-as-error
+  consumer. Mitigated by the marker policy in §5.3.
+- Overload capture: a new overload changes which function an existing call
+  resolves to. Mitigated by a distinct new symbol or a resolution test.
+- Partial release: the new entry point ships without the migration guide, or
+  the guide describes a symbol that is not yet released. Mitigated by a release
+  checklist that treats them as one deliverable.
+- Early removal: a later maintainer removes the old path before the commitment
+  permits. Mitigated by TDD-OBL-005 and its release gate, not by memory.
+- Permanent dual path: the deprecation is never concluded. Mitigated by naming
+  the removal release when the commitment is read.
+
+### 5.5 Persisted and wire formats
+
+Source compatibility does not cover data written by earlier deployed versions
+or communication with a deployed peer. If the function produces or consumes
+persisted data or a wire format, the design requires a separate assessment of
+existing records, deployed peers, conversion and rollback, and acceptance
+evidence. That assessment neither authorises nor forbids a source-level
+compatibility path; the two obligations are independent. Whether the function
+does so is `[OPEN]`.
+
+## 6. Verification obligations
+
+Ordinary unit and behavioural test implementation belongs in the ExecPlan. The
+obligations below are design-level because they establish the compatibility
+boundary itself. Each carries its own non-vacuity condition; a passing suite
+that never exercises the boundary is not evidence.
+
+| ID          | Property                                                                                                                                                              | Linked requirements                    | Method and evidence state                                                                                                                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TDD-OBL-001 | Equivalence: for every input in the documented 2.1 domain, the old entry point's observable result, including errors and side effects, equals the 2.1 baseline.        | TOR-GOAL-001, TOR-SUCCESS-001          | Characterization tests captured at the 2.1 tag plus a property-based differential over generated inputs; parameterized boundary classes. Planned, not obtained. Non-vacuity: at least one witness per documented class; negative control mutates the old path and must fail for the intended reason. |
+| TDD-OBL-002 | New-contract conformance: the new entry point satisfies the behaviour supplied under TOR-OPEN-001.                                                                    | TOR-GOAL-001                           | Parameterized and property tests over the new contract. Blocked on TOR-OPEN-001. Non-vacuity: each new behaviour class has a witness and at least one rejection case.                                                                         |
+| TDD-OBL-003 | Additive surface: the release adds only the new symbol and changes no existing signature, resolution, or documented meaning.                                          | TOR-GOAL-002                           | Exported-symbol and documentation diff between releases; compile-resolution fixture. Planned. Non-vacuity: the diff must show the new symbol and must fail if an existing signature is altered.                                               |
+| TDD-OBL-004 | Deprecation is non-breaking: a representative consumer build with warnings treated as errors still succeeds under the chosen marker policy.                           | TOR-GOAL-002, TOR-SUCCESS-002          | Consumer-style fixture build. Planned. Non-vacuity: the fixture must fail if deliberately given a breaking warning policy, proving the check is live.                                                                                         |
+| TDD-OBL-005 | Removal gate: the old entry point is present in every release that the commitment does not permit it to be removed from.                                             | TOR-CONSTRAINT-001, TOR-ASSUMPTION-002 | Release checklist plus inspection of the release artefact's exported symbols; a version-and-symbol check. Blocked on TOR-OPEN-002. Non-vacuity: the check is exercised against a deliberately incomplete fixture release.                     |
+| TDD-OBL-006 | Consumer migration: the consumer's representative workload passes on the new entry point before removal.                                                              | TOR-SUCCESS-002                        | Consumer acceptance run. Blocked on TOR-OPEN-003. Non-vacuity: the workload must include at least one call that exercises the changed behaviour.                                                                                               |
+| TDD-OBL-007 | In-repository convergence: no in-repository caller remains on the old path where an atomic update is possible.                                                        | TOR-NONGOAL-003                        | Static call-site search at the selected revision. Planned. Non-vacuity: the search must surface the old symbol where it is still referenced.                                                                                                   |
+
+TDD-OBL-001 discharges L-ADAPTER when the delegated-adapter structure is
+chosen; where the frozen implementation is chosen, L-ADAPTER is vacuous because
+the old code is unchanged. The ExecPlan records which structure was chosen.
+
+Trusted axioms: AXIOM-COMMITMENT (the exact commitment terms, TOR-OPEN-002);
+AXIOM-CONSUMER (the consumer's usage profile, TOR-OPEN-003); AXIOM-TOOLCHAIN
+(the language's deprecation, warning, and overload-resolution behaviour). The
+design does not verify the consumer's internals or the toolchain; it verifies
+repository-owned behaviour against those boundaries.
+
+## 7. Handoff
+
+Selected IDs: TOR-CONSTRAINT-001 to TOR-CONSTRAINT-003, TOR-GOAL-001,
+TOR-GOAL-002, TOR-ASSUMPTION-001 to TOR-ASSUMPTION-003; GAP-001 to GAP-006;
+TDD-OBL-001 to TDD-OBL-007.
+
+Compatibility assessment: released 1.0-or-later committed source contract with
+a deployed external consumer; compatibility or deliberate migration required;
+not exempt as an unreleased change.
+
+Acceptance boundaries: equivalence evidence covers the documented 2.1 domain,
+not undocumented consumer reliance; the release gate covers exported symbols at
+release time, not the consumer's runtime deployment; consumer acceptance must be
+obtained separately.
+
+Unresolved decisions: the change class and new contract (TOR-OPEN-001); the
+commitment terms and removal schedule (TOR-OPEN-002); the consumer profile
+(TOR-OPEN-003); the function's identity (TOR-OPEN-004); the deviation authority
+(TOR-OPEN-005).
+
+Readiness: ready for implementation planning only after TOR-OPEN-001 to
+TOR-OPEN-004 are closed. The ExecPlan at `03-execplan.md` is a draft that
+records these blockers; design acceptance would not bypass its approval gate.

@@ -1,0 +1,379 @@
+# Version 2 library function rename – technical design
+
+Status: Draft v0.1 (design review pending; not accepted)
+
+Audience: the implementing maintainer and the reviewer of the change.
+
+Companion documents: `/tmp/val2-c4/terms-of-reference.md` (upstream) and
+`/tmp/val2-c4/execplan.md` (downstream execution contract).
+
+Date and version: 2026-11-21, v0.1.
+
+## Conformance basis
+
+| Source | Revision | State |
+| --- | --- | --- |
+| Terms of reference, `/tmp/val2-c4/terms-of-reference.md` | v0.1, 2026-11-21 | Draft, not accepted |
+| ADRs | None identified or supplied | Absent |
+| Repository, release tags, source | None inspected in the authoring environment | Absent |
+| Installed `execplans` skill and template | Inspected 2026-11-21; the installation exposes no revision identifier | Present |
+
+The design inherits `TOR-GOAL-001` and `TOR-GOAL-002`, hard constraints
+`TOR-CONSTRAINT-001` through `TOR-CONSTRAINT-006`, success criteria
+`TOR-SUCCESS-001` through `TOR-SUCCESS-005`, assumptions
+`TOR-ASSUMPTION-001` and `TOR-ASSUMPTION-002`, and open questions
+`TOR-OPEN-001` through `TOR-OPEN-006`. It adds the design requirements and gaps
+below. Approval, evidence, and delivery state are independent: this document
+is proposed, not approved, and no implementation is claimed.
+
+## 1. Problem and design context
+
+The library is at major version 2. According to the brief, it exports a
+function introduced after its latest formal release tag, and the sponsor wants
+that function renamed before the next release. The change is mechanical in
+intent but has a release-lineage precondition: the rename is only a direct
+change while no formal release has published the old name. The design therefore
+makes the lineage check an explicit gate rather than an assumption buried in
+implementation.
+
+The function is the only symbol in scope. The library's other exported symbols
+are untouched. No persisted data or wire format is involved.
+
+## 2. Baseline, target, and gaps
+
+Let `S(T)` be the set of exported symbols published by formal release tag `T`,
+`S_w` the exported set in the working tree before the change, and `S_t` the
+exported set after the change. Let `f_old` be the current name and `f_new` the
+proposed name. The brief states:
+
+- `f_old` is absent from the latest formal release tag, and from every earlier
+  formal release tag, because it was introduced afterwards. `[ASSUMED]` until
+  `EP-M0` records the tag's export surface.
+- `f_new` is a name not yet present in the working tree. `[ASSUMED]` until the
+  proposed name is supplied; a collision would violate the design.
+
+The lineage is a sponsor claim about the repository, not inspected evidence.
+`TDD-REQ-004` and `INV-LINEAGE` discharge it before any edit.
+
+**Requirements.**
+
+`TDD-REQ-001`: The exported function uses the final name.
+- Upstream: `TOR-GOAL-001`.
+- Baseline: `f_old` in `S_w`.
+- Target: `f_new` in `S_t`.
+- Verification: `INV-API-SWAP`.
+- Disposition: proposed work.
+
+`TDD-REQ-002`: No source-API compatibility machinery exists for the old name.
+- Upstream: `TOR-CONSTRAINT-002`, `TOR-NONGOAL-001`.
+- Baseline: no alias; confirm at `EP-M0`.
+- Target: no alias, deprecated entrypoint, facade, wrapper, or dual export.
+- Verification: `INV-NO-ALIAS`.
+- Disposition: proposed work and review check.
+
+`TDD-REQ-003`: Signature, visibility, and behaviour are preserved.
+- Upstream: `TOR-GOAL-002`.
+- Baseline: `f_old` has signature and behaviour `B`.
+- Target: `f_new` has the same signature and `B`.
+- Verification: `INV-SIGNATURE`, `INV-BEHAVIOUR`.
+- Disposition: proposed work.
+
+`TDD-REQ-004`: The release baseline is recorded and the function is confirmed
+unreleased.
+- Upstream: `TOR-CONSTRAINT-001`, `TOR-SUCCESS-004`.
+- Baseline: tag identity `[OPEN]`.
+- Target: exact tag and commit recorded; `f_old` absent from its export
+  surface.
+- Verification: `INV-LINEAGE`.
+- Disposition: bounded discovery in `EP-M0`.
+
+`TDD-REQ-005`: Every in-repository reference uses the final name.
+- Upstream: `TOR-SUCCESS-002`.
+- Baseline: references to `f_old` in definition, re-exports, callers, tests,
+  examples, and current docs.
+- Target: no current-source reference to `f_old`; historical notes unchanged.
+- Verification: `L-CALLERS`, `L-SURFACE`.
+- Disposition: proposed work.
+
+**Gaps.**
+
+`TDD-GAP-001`: The exact names are unknown.
+- Upstream: `TOR-OPEN-001`.
+- Baseline: the brief gives no names.
+- Target: both names supplied with their rationale.
+- Missing capability: intake fact.
+- Disposition: blocking discovery.
+- Owner: sponsor.
+- Unblock condition: `TOR-OPEN-001` resolved.
+- Verification: every trace link uses the exact names.
+
+`TDD-GAP-002`: The latest formal release tag is unknown.
+- Upstream: `TOR-OPEN-002`, `TOR-CONSTRAINT-001`.
+- Baseline: no tag inspected.
+- Target: exact tag name and commit.
+- Missing capability: repository access.
+- Disposition: blocking discovery for `EP-M0`.
+- Owner: maintainer or release manager.
+- Unblock condition: the repository and its tags are accessible.
+- Verification: `INV-LINEAGE`.
+
+`TDD-GAP-003`: Language, toolchain, and gates are unknown.
+- Upstream: `TOR-OPEN-003`.
+- Baseline: no repository inspected.
+- Target: language, API tool or fallback, and exact gate commands recorded.
+- Missing capability: repository access.
+- Disposition: blocking for execution detail.
+- Owner: maintainer.
+- Unblock condition: `AGENTS.md`, Makefile, and manifest inspected.
+- Verification: commands run in `EP-M0` and `EP-M2`.
+
+`TDD-GAP-001` through `TDD-GAP-003` are intake gaps, not architectural
+alternatives. No design option is waiting on them; only the identifiers and
+commands are.
+
+## 3. Scope, non-goals, and design intent
+
+The design renames one exported function and updates every reference in one
+coherent change. It adds no abstraction, indirection, or migration state. The
+design intent is:
+
+> The next formal release publishes one name for this function, and that name
+> is the only name the repository knows.
+
+Non-goals mirror the terms of reference: no alias or deprecation path, no
+behaviour or signature change, no unrelated naming clean-up, no released-symbol
+change, and no historical release-note rewrite. Release version selection and
+tag timing remain the release manager's decisions.
+
+## 4. Approach
+
+One change performs the whole rename:
+
+1. Rename the definition and update its visibility-preserving declaration.
+2. Update every re-export, module root, prelude, or feature-gated export that
+   exposes the function.
+3. Update internal callers, tests, fixtures, benchmarks, examples, and doctests.
+4. Update current documentation and generated documentation inputs, then
+   regenerate any generated output.
+5. Record the final name in the unreleased changelog section. Published release
+   notes for the next release name only the final symbol, because no released
+   consumer ever saw the old one.
+
+The old name is removed in the same change. There is no intermediate plateau in
+which both names exist. If the change cannot land atomically, it does not land;
+splitting it into a compatibility stage is prohibited by `TDD-REQ-002` and
+`TOR-CONSTRAINT-002`.
+
+The proposed name is not chosen here. It is supplied under `TOR-OPEN-001`. The
+implementer must first search for an existing symbol with that name. A
+collision is an ambiguity escalation, not an invitation to shadow the existing
+symbol or to qualify the new name with a module alias.
+
+## 5. Compatibility assessment
+
+- Exported function `f_old`. Lineage: introduced after the latest formal
+  release tag, and absent from every formal release. Classification:
+  unreleased API change ahead of the latest formal release tag. Decision:
+  rename directly; no alias, deprecated entrypoint, facade, wrapper, dual
+  export, or shim.
+- Other exported symbols. Lineage: released 1.0-or-later surfaces, to be
+  confirmed at `EP-M0`. Classification: released, out of scope. Decision:
+  untouched; any incidental change stops the work.
+- Persisted data and wire formats. Classification: separate obligation, not
+  applicable to a source-symbol rename. Decision: no change.
+- Development-branch consumers. Lineage: an untagged build is not a formal
+  release. Classification: not a released contract. Decision: communicate if
+  known; do not add compatibility machinery.
+
+The compatibility decision is **none**. On the brief's stated lineage, the
+function is unreleased, so the policy prohibition on source-API compatibility
+machinery applies directly. Version 2 does not change that classification: the
+surface, not the major version, determines lineage. A named development-branch
+consumer does not create an exception. If `EP-M0` finds the function in a
+formal release tag, this assessment is falsified: stop, record the conflict,
+and reassess as a released-contract change under `TOR-CONSTRAINT-001`.
+
+## 6. Affected surfaces and failure modes
+
+The rename must cover, where present: the definition site; package or module
+re-exports; preludes and public export lists; internal callers; tests and
+fixtures; benchmarks; examples and doctests; current prose and reference
+documentation; generated documentation; the unreleased changelog; feature flags
+or conditional export blocks; and code-generation inputs or templates that
+emit the symbol.
+
+Failure modes and responses:
+
+- **Missed reference.** The build, import, lint, or test gate fails. A
+  whole-repository search provides the completeness check independently of the
+  compiler.
+- **Name collision.** Import or compilation resolves to the wrong symbol, or
+  fails as ambiguous. Search before editing; escalate rather than shadow.
+- **Function found in a formal release tag.** The unreleased classification is
+  false. Stop and reassess; do not add an alias to paper over the conflict.
+- **Release tag cut before the change lands.** The old name ships. The release
+  manager must not tag until the change is merged, or the work must be
+  reassessed against the newly released contract.
+- **Development-branch consumer breaks.** Notify the consumer if known. Do not
+  add an alias; the break is outside any formal contract.
+- **Generated output reintroduces the old name.** Regenerate from updated
+  inputs and repeat the search; do not hand-edit generated output as the sole
+  fix.
+- **Partial rename committed.** The atomic milestone and the search gate
+  prevent it. Recover by reverting the partial commit and reapplying the
+  rename, not by layering a temporary alias.
+
+## 7. Verification design
+
+The change introduces no algorithmic or state-machine invariant. Its
+correctness surface is the exported API set and the completeness of the
+mechanical update. That surface is finite and observable, so parameterized and
+compile-based checks plus an API-surface comparison provide proportionate
+rigour.
+
+### Abstract model
+
+`S(T)` is the set of names in the package's public export surface at formal
+release tag `T`, including re-exports. `S_w` and `S_t` are the working-tree
+sets before and after the change. `sig(f)` is the declared signature of symbol
+`f`, including parameter and return types, generic constraints, defaults, and
+visibility. `beh(f)` is the observable behaviour of `f` over the existing test
+corpus.
+
+Precondition: `f_old ∈ S_w`, `f_old ∉ S(T)` for every formal release tag `T`,
+and `f_new ∉ S_w`. Target: `S_t = (S_w \ {f_old}) ∪ {f_new}`, with
+`sig(f_new) = sig(f_old)` and `beh(f_new) = beh(f_old)`.
+
+### Invariants and lemmas
+
+- `INV-API-SWAP`: `S_t = (S_w \ {f_old}) ∪ {f_new}`. The public surface loses
+  exactly the old name and gains exactly the new one.
+- `INV-SIGNATURE`: `sig(f_new) = sig(f_old)`.
+- `INV-BEHAVIOUR`: `beh(f_new) = beh(f_old)` on the existing corpus.
+- `INV-NO-ALIAS`: `f_old ∉ S_t`, and no exported alias, deprecated entrypoint,
+  facade, wrapper, or dual export preserves the old name under any spelling.
+- `INV-LINEAGE`: `f_old ∉ S(T)` for every formal release tag `T`, and the
+  latest tag and commit are recorded.
+- `L-CALLERS`: if a whole-repository search over tracked current sources finds
+  no `f_old` and the tree builds, then every in-repository reference has been
+  updated. This depends on the search covering generated sources and on the
+  build exercising every export path.
+- `L-SURFACE`: if API extraction reports `f_new` present, `f_old` absent, an
+  unchanged signature, and no other delta, then `INV-API-SWAP`,
+  `INV-SIGNATURE`, and `INV-NO-ALIAS` hold for the extracted surface.
+
+### Axioms
+
+- `AXIOM-API-TOOL`: the selected API-surface tool or compile-based consumer
+  check reflects the package's actual public exports, including re-exports.
+- `AXIOM-SEARCH`: the search covers all tracked text and generated source
+  files, excluding version-control metadata and historical release notes
+  deliberately.
+- `AXIOM-COMPILER`: the compiler or interpreter rejects unknown symbols and
+  reports duplicate or ambiguous exports.
+
+These are documented tool contracts, not claims about their internal
+correctness. If no API-extraction tool exists, `AXIOM-API-TOOL` is replaced by
+a compile-based consumer fixture that calls `f_new` and fails on `f_old`.
+
+### Methods per obligation
+
+| Obligation | Method | Artefact | Evidence and discharge | Non-vacuity |
+| --- | --- | --- | --- | --- |
+| `INV-API-SWAP` | API-surface comparison at baseline and change, plus compile-based consumer check | API dump or consumer fixture under the repository's test tree | Diff shows one removal and one addition; consumer compiles. | Pre-change dump must contain `f_old`; post-change dump must contain `f_new`. |
+| `INV-SIGNATURE` | Parameterized compile checks for each parameter and return shape, or API dump signature comparison | Consumer fixture or API dump | Signatures compare equal. | At least one call exercises every parameter and the return type. |
+| `INV-BEHAVIOUR` | Existing focused test suite, run before and after | Existing tests for the function | Same pass count and results. | At least one test calls the function and asserts an output; a zero-test run is a failure. |
+| `INV-NO-ALIAS` | API dump inspection plus whole-repository search | API dump and search log | `f_old` absent from exports and current sources. | Search must find `f_old` before the change; a zero-hit pre-change search fails the check. |
+| `INV-LINEAGE` | Tag listing, tag commit resolution, and export inspection at the tag | Recorded tag, commit, and export evidence | Latest formal tag identified; `f_old` absent from it. | The tag's export dump must be non-empty and cover the module that later gained `f_old`. |
+| `L-CALLERS` | Whole-repository search plus build | Search log and build result | Zero current-source hits; build passes. | Seed one deliberate old-name reference in a scratch file, confirm the search finds it, then delete it. |
+| `L-SURFACE` | Comparison of API dump with the known delta | API dump diff | Exactly one removal and one addition; no other delta. | A second, unrelated public symbol must still appear in the dump, proving the dump is not empty. |
+
+Verification runs Red-Green-Refactor. The red stage is a consumer fixture or
+updated test that calls `f_new` before the rename; it must fail because the
+symbol does not exist. The green stage repeats it after the rename and passes.
+The refactor stage reruns the focused test and the repository gates after
+clean-up.
+
+### Non-vacuity and negative control
+
+The pre-change API dump is a witness that extraction sees the module and the old
+symbol. The post-change dump is a witness that extraction sees the new symbol.
+The search must have at least one pre-change hit; otherwise its post-change zero
+is vacuous. After the rename, a scratch consumer that calls `f_old` must fail to
+resolve; that is the negative control. Delete the scratch artefact afterwards
+and record its deletion. If the language cannot produce a compile-fail check,
+record why and use the API dump's absence of `f_old` plus the search log as the
+independent counterexample.
+
+### Formal verification decision
+
+No model checking or formal proof is needed. The obligations are set equality,
+signature equality, and reference completeness over a finite, observable
+surface; stronger methods would add no coverage for the residual risk, which is
+an external consumer outside the repository. That risk is addressed by the
+release-lineage classification, not by proving the rename.
+
+### Suggested BDD feature
+
+Proposed path: `features/unreleased_function_rename.feature`. The repository's
+BDD runner is unknown, so this is a proposed acceptance scenario, not an
+authorized dependency.
+
+```gherkin
+Feature: Unreleased exported function rename
+  Scenario: The next release exposes only the final name
+    Given the latest formal release tag does not export OLD_NAME
+    And the development tree exports OLD_NAME
+    When the rename lands before the next formal release
+    Then the public API exports NEW_NAME with the same signature
+    And no compatibility alias for OLD_NAME exists
+    And the library's tests pass
+```
+
+If no BDD runner exists, the compile-based consumer fixture and the search log
+exercise the same scenario.
+
+## 8. Handoff to execution
+
+The receiving ExecPlan is `/tmp/val2-c4/execplan.md`. It maps the design to
+milestones as follows:
+
+- `EP-M0` discharges `TDD-REQ-004` and closes `TDD-GAP-002` and
+  `TDD-GAP-003`.
+- `EP-M1` discharges `TDD-REQ-001`, `TDD-REQ-003`, and `TDD-REQ-005`, and
+  enforces `TDD-REQ-002`.
+- `EP-M2` closes the release record and reruns the full gates.
+
+Selected IDs: `TDD-REQ-001` through `TDD-REQ-005`, `TDD-GAP-001` through
+`TDD-GAP-003`, `INV-API-SWAP`, `INV-SIGNATURE`, `INV-BEHAVIOUR`,
+`INV-NO-ALIAS`, `INV-LINEAGE`, `L-CALLERS`, `L-SURFACE`, and `AXIOM-API-TOOL`,
+`AXIOM-SEARCH`, `AXIOM-COMPILER`.
+
+Target state: the next formal release exports the function only as `f_new`,
+with unchanged signature and behaviour, and no source-API compatibility
+machinery.
+
+Compatibility classification: unreleased API change ahead of the latest formal
+release tag; compatibility decision **none**.
+
+Acceptance boundaries: the repository's public export surface and in-repository
+references. External consumers outside the repository are outside the
+implementer's evidence boundary; the lineage check and release timing protect
+them from a published break.
+
+Readiness: ready for bounded implementation planning once `TOR-OPEN-001` and
+`TOR-OPEN-002` are supplied and the library repository is available. Not
+approved for implementation. `TOR-OPEN-003` is needed before the plan's
+commands and tolerance counts can be final.
+
+Unresolved decisions: the exact names, the exact tag, the toolchain, and the
+release timing. None of them reopens the compatibility decision. If any
+evidence shows the function in a formal release, the design is falsified and
+returns to the terms of reference before execution.
+
+## Revision note
+
+- 2026-11-21: Initial draft. Establishes the unreleased-surface
+  classification, the no-alias decision, the baseline gate, and the
+  verification obligations. Execution commands remain open pending repository
+  access.
