@@ -30,6 +30,37 @@ skill.
 - Run commits: `2cb36b6` for C1, C2, and C4 to S2; `271b0f8` for the first C3
   run; `29cd658` for the second C3 run, which also produced a design.
 
+## Run inputs
+
+`inputs/` holds the exact text sent to each run, so the artefacts can be
+reproduced from the same starting conditions. Each file is one prompt, recorded
+verbatim from the dispatching session; nothing was paraphrased or tidied
+afterwards. The two C3 prompts differ: the first asked for the artefacts the
+skills call for and left the choice open, which yielded a terms of reference
+and an ExecPlan; the second named the three artefacts explicitly.
+
+| File                    | Scenario and run                 |
+| ----------------------- | -------------------------------- |
+| `inputs/c1.txt`         | C1                               |
+| `inputs/c2.txt`         | C2                               |
+| `inputs/c3-271b0f8.txt` | C3, first run, commit `271b0f8`  |
+| `inputs/c3-29cd658.txt` | C3, second run, commit `29cd658` |
+| `inputs/c4.txt`         | C4                               |
+| `inputs/c5.txt`         | C5                               |
+| `inputs/c6.txt`         | C6                               |
+| `inputs/e1.txt`         | E1                               |
+| `inputs/e2.txt`         | E2                               |
+| `inputs/e3.txt`         | E3                               |
+| `inputs/e4.txt`         | E4                               |
+| `inputs/s1.txt`         | S1                               |
+| `inputs/s2.txt`         | S2                               |
+
+The prompts name the skill directories, the installed `execplans` skill, and an
+output directory. They contain no oracle and no statement of the expected
+verdict; the review of the output in
+[the validation document](../../architecture-contract-validation.md#defects-recorded-in-the-output)
+is what supplies that comparison.
+
 ## Conventions
 
 Markdown outputs are stored as `.md.txt`. They are evidence, so they are kept

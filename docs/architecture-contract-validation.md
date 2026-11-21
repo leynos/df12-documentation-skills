@@ -172,7 +172,11 @@ this branch change only this document and its evidence. The skills tree is
 `fffbba004a77cd117a54f73b0ca9172861bf3bd5` (`git rev-parse <revision>:skills`)
 at every run revision, and the installed `execplans` skill was at content hash
 `4fdba07976ac6a6f3b93bae5aa750230a0149379`. The run commits are `2cb36b6` for
-C1, C2, and C4 to S2.
+C1, C2, and C4 to S2. `git rev-parse HEAD:skills` returns that same tree hash
+on this branch's head, so the shipped skill text is identical to the text every
+run read. Each run's exact input is published in
+[`inputs/`](validation/2026-11-19-agent-scenarios/inputs/), named for its
+scenario and, for C3, for the run commit.
 
 The artefacts are published verbatim under
 [`validation/2026-11-19-agent-scenarios/`](validation/2026-11-19-agent-scenarios/),
@@ -200,3 +204,49 @@ the skill.
 | E4       | pass   | `e4/`                        | Affected evidence marked stale, axiom and verification obligation revisited, dead assertion not preserved to keep milestones ticked.                   |
 | S1       | pass   | `s1/`                        | Proportionate records; no invented legacy migration, stakeholder board, scenario catalogue, or numerical non-goal quota.                               |
 | S2       | pass   | `s2/`                        | No self-approval of expanded scope; `COMPLETE` withheld until the accepted design change and its links are reconciled.                                 |
+
+## Defects recorded in the output
+
+A review of the published artefacts found defects in the recorded output. A
+read-only verification pass then checked each finding against the artefact text
+and against the text of the skills. One finding, about C2's ExecPlan
+sequencing, was not supported: the reviewer read a `git diff` as the
+state-changing checkout, and the checkout it objected to runs after the
+milestone commit. The other 25 were substantiated, wholly or partly. They fall
+into six groups:
+
+- A check whose scope does not reach the claim it is said to establish: C2
+  states `INV-absence` as a symbol search, which cannot show that no alias or
+  wrapper preserves the old surface; C3 records "no alias" as an outcome its
+  own steps never observe; C4 names the `git grep` commands as the evidence
+  rather than their output; and C1 lists the compile-time axiom as a dependency
+  without an order that establishes it before the check relying on it.
+- A gate that can close before its condition holds: C1's `EP-M0` approval and
+  placeholder sequencing, C4's split of `EP-M1` and `EP-M2` atomicity, C5's
+  unqualified `EP-M2` acceptance, C6's prerequisite ordering, E1's D1 gate
+  ordering, and E2's red-step sequencing.
+- A law stated so that the recorded evidence cannot falsify it: C2's
+  `L-behaviour`, E2's `L-VER-001`, and S2's `L-COMPLETE`, whose statement is
+  inverted; S2's non-vacuity condition can only be met by an invalidation the
+  plan does not schedule.
+- Evidence carried forward without renewal: E4's "Current" batch-atomicity row,
+  E4's `error_translation_is_total` row linked to the wrong obligation, and
+  E2's expiry recorded without a fresh performance measurement.
+- A cleanup, restoration, or status claim that overstates the plan: E1's worker
+  cleanup, which contradicts the plan's own statement that it leaves no lasting
+  state; E4's `pipefail` without a stop; S2's partial ADR text restoration; and
+  S2's handoff reading `BLOCKED` as the plan's status where another artefact
+  records a different one.
+- Constraints that pull against each other: C5's `TOR-CONSTRAINT-004` against
+  `ASSUMPTION-002`, mitigated by the "or a longer window" in the statement it
+  qualifies, and C6's UTC storage schema, which leaves the offset unrecorded
+  without a mitigation.
+
+None of these defects contradicts its scenario's oracle. The verdict table
+above therefore still records what the artefact shows about the guidance: each
+run took the required position on the compatibility question, the deviation
+route, and the closure condition, even where its plan for getting there is
+unsound. The artefacts are not edited to remove these defects, because they
+were produced under the isolation rule and a correction here would no longer be
+the run's output. The line-level findings remain on the review threads attached
+to those files.
