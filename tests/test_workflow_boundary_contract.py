@@ -502,6 +502,16 @@ def test_the_prohibition_scan_decides_each_permission_form(
             True,
             id="negated-predicate",
         ),
+        pytest.param(
+            "A compatibility layer is not admissible, but the design is admissible.",
+            True,
+            id="negated-then-affirmative",
+        ),
+        pytest.param(
+            "A compatibility layer is required, but the design is admissible.",
+            True,
+            id="predicate-in-another-clause",
+        ),
     ],
 )
 def test_the_permission_scan_requires_an_affirmative_statement(

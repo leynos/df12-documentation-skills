@@ -144,9 +144,9 @@ _JUSTIFIED_SURFACE = re.compile(
     r"\b(?:released|compatibility commitment|deployed external consumer)\b",
     re.IGNORECASE,
 )
-# The released-contract permission must be affirmative: the statement names a
-# layer or migration and a positive predicate, and its clause carries no
-# negation.
+# The released-contract permission must be affirmative: the term and its
+# positive predicate sit in one clause, and neither that clause nor the match
+# itself carries a negation.
 _RELEASED_PERMISSION = re.compile(
     r"\b(?:layer|migration)\b[^.;]{0,60}\bis admissible\b"
     r"|\bcompatibility or a deliberate migration\b[^.;]{0,40}"
@@ -426,6 +426,11 @@ def _states_released_permission(text: str) -> bool:
     """Return whether a clause states affirmatively that a layer is admissible."""
     for clause in _CLAUSE_SPLIT.split(_normalise(text)):
         for match in _RELEASED_PERMISSION.finditer(clause):
+            statement = match.group(0)
+            if _CLAUSE_START.search(statement) is not None:
+                continue
+            if _PERMISSION_NEGATION.search(statement) is not None:
+                continue
             starts = [
                 boundary.end()
                 for boundary in _CLAUSE_START.finditer(clause, 0, match.start())
