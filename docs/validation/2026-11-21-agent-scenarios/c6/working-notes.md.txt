@@ -1,0 +1,140 @@
+# Working notes: private API and storage reshape
+
+Status: authoring working note, not a delivered document. Date 2026-11-21.
+Evidence basis: isolation-limited intake; no repository was inspected.
+
+## Evidence basis and limits
+
+The supplied brief is the only project-specific input:
+
+> Reshape a private API and storage representation; a deployed binary has
+> already written records that must remain readable.
+
+The authoring environment permitted reading only the installed
+`terms-of-reference-doc`, `tech-design-doc` and `execplans` skills. No
+repository, `docs/` directory, source file, test, fixture, ADR, release tag,
+deployed record, roadmap, prior plan or PR was inspected. Consequently every
+claim about the affected system is `[OPEN]` except the brief's own statements.
+Nothing in this note or the derived drafts approves design or implementation.
+
+## Phase 0 intake catalogue
+
+| Location | Present? | Sections informed | Notes |
+| --- | --- | --- | --- |
+| Attached brief | Yes | All | One sentence; quoted above |
+| `README.md` / `docs/README.md` | Not inspected | Background, domain | Isolation limit |
+| Prior terms of reference | Not inspected | All | May exist; unknown |
+| `docs/context.md` | Not inspected | Domain, glossary | Terminology unconfirmed |
+| ADRs / decisions | Not inspected | Constraints, prior reasoning | Unknown |
+| Existing design / architecture | Not inspected | Baseline, target | Unknown |
+| Roadmap | Not inspected | Sequencing | Not applicable at draft time |
+| ExecPlans, tags, PRs, acceptance evidence | Not inspected | Baseline, evidence | Unknown |
+| Deployed binary and records | Not inspected | Persisted obligation | Existence asserted by brief |
+
+Conflicts between prior artefacts cannot be assessed because none were read.
+One internal ambiguity is visible in the brief: "must remain readable" does not
+name the reader. The plausible readings are the new binary reading old records,
+the deployed binary reading records after a rollback, and long-term readability
+of pre-migration backups. They impose different obligations and gate different
+designs. The ambiguity is recorded as `TOR-OPEN-001`, not resolved by
+assumption.
+
+Conspicuously absent: evidence of the API's privacy and consumers, its release
+lineage, the storage format, the storage backend's atomicity guarantees, record
+volume, backup and retention policy, maintenance-window availability, corpus
+provenance, approval authority, and the motivation for reshaping now.
+
+## Phase 1 provisional sketch
+
+| ToR section | Status | Summary |
+| --- | --- | --- |
+| Background and motivation | Mixed | Reshape requested and deployment recorded `[KNOWN]`; why now `[OPEN]` |
+| Domain | `[ASSUMED]` | Internal persistence evolution; conventions inferred |
+| Market context | Not applicable | Internal change; no market or competitor to name |
+| Users and stakeholders | `[ASSUMED]` | Maintainer, operator, data owner, sponsor; rights `[OPEN]` |
+| Job to be done | `[ASSUMED]` | Evolve representation without losing readability |
+| Goals | `[KNOWN]` scope | Replace API atomically; preserve old-record readability; end with one interface |
+| Non-goals | `[KNOWN]` policy | No source shim; no semantic rewrite; no permanent dual format |
+| Success criteria | `[ASSUMED]` | Corpus readability, preservation, idempotence, rollback, no shim |
+| Constraints | Mixed | Readability `[KNOWN]`; privacy classification needs evidence |
+| Assumptions | `[ASSUMED]` | Single writer, structural-only change, atomic storage, obtainable corpus |
+| Open questions | `[OPEN]` | Eleven dependency-ordered items below |
+
+## Elicitation queue
+
+One question per turn, in dependency order. All remain unanswered because the
+authoring environment has no interactive sponsor.
+
+1. `TOR-OPEN-002` – Is the API genuinely application-internal, with no external
+   consumer, no published package or ABI, and no other repository calling it?
+   What is its release lineage? This question is first because a real external
+   consumer changes the compatibility classification and stops the current
+   plan.
+2. `TOR-OPEN-001` – Which reader must "remain readable" protect: the new binary
+   reading old records, the deployed binary reading new records after rollback,
+   pre-migration backups for a retention period, or some combination?
+3. `TOR-OPEN-003` – Is the reshape structural only, preserving every record's
+   meaning and observable value, or does it change semantics, units, defaults
+   or optionality?
+4. `TOR-OPEN-004` – What storage backend is used, and what atomicity and
+   durability guarantees does it document for replacing one record?
+5. `TOR-OPEN-005` – Is a maintenance window with a single, stopped writer
+   available for cutover?
+6. `TOR-OPEN-009` – Do any other deployed readers, writers or peers share the
+   records or a wire format?
+7. `TOR-OPEN-007` – Can a corpus of records written by the deployed binary be
+   captured, and at which versions?
+8. `TOR-OPEN-006` – How long must pre-migration records and backups remain
+   readable, and what backup retention applies?
+9. `TOR-OPEN-008` – What are the record count, maximum record size and
+   acceptable migration duration?
+10. `TOR-OPEN-010` – Who approves the design and execution plan, and who
+    accepts residual risk?
+11. `TOR-OPEN-011` – Why is the reshape being requested now, and what
+    deficiency does the current representation cause?
+
+## Research summary
+
+### Ecosystem survey
+
+Not performed, deliberately. The brief selects no library, framework or
+storage technology, and the design decisions depend on repository facts rather
+than ecosystem facts. If intake identifies a specific backend, targeted
+research into that backend's documented atomicity and durability semantics is
+required before `EP-M0` can close.
+
+### Standards and specifications
+
+No applicable external standard was identified. The normative policy sources
+are the installed skills.
+
+### Key findings
+
+1. Source-API compatibility machinery is prohibited for private APIs,
+   application-internal public declarations, test-only APIs, pre-1.0 APIs and
+   unreleased changes ahead of the latest formal release tag.
+2. Persisted data and wire formats are a separate obligation. Deployed records
+   may require a migration even when source compatibility is prohibited.
+3. Every proposed compatibility layer must answer "compatible with whom or
+   what?" and trace the answer to a real requirement. Otherwise it is
+   compatibility theatre.
+4. Milestones are coherent validated plateaus, not opportunities to keep old
+   and new source interfaces alive in parallel.
+5. Verification is designed with the implementation, with named invariants,
+   lemmas, axioms, non-vacuity arguments and negative controls.
+
+### Research gaps
+
+The gaps are all intake gaps rather than literature gaps: baseline API, field
+mapping, storage semantics, corpus provenance, retention and approval
+authority. External research was not run; this is recorded so that no claim in
+the drafts rests on unperformed research.
+
+## Source revisions inspected
+
+| Source | Path | SHA-256 |
+| --- | --- | --- |
+| `terms-of-reference-doc` skill | `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/SKILL.md` | `105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4` |
+| `tech-design-doc` skill | `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/SKILL.md` | `ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6` |
+| `execplans` skill | `/home/leynos/.claude/skills/execplans/SKILL.md` | `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15` |
+| ExecPlan template | `/home/leynos/.claude/skills/execplans/references/execplan-template.md` | `71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a` |

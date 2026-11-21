@@ -161,8 +161,17 @@ results and from validation reported in historical source PRs.
 
 Each run followed the evaluation procedure: a fresh agent received one scenario
 input and a bounded authoring request without the oracle, and a separate
-reviewer compared the artefacts with the oracle. C3 has two runs, one at
-`271b0f8` and one at `29cd658`; every other scenario has one.
+reviewer compared the artefacts with the oracle. Two campaigns have run. The
+first, on 19 November 2026, evaluated skill tree
+`fffbba004a77cd117a54f73b0ca9172861bf3bd5`. The second, on 21 November 2026,
+reran the same twelve scenarios on tree
+`2f1864f8d9f089d57cd6125d943d052b91668e33` after the elicitation reference was
+corrected.
+
+### Campaign of 19 November 2026
+
+C3 has two runs, one at `271b0f8` and one at `29cd658`; every other scenario
+has one.
 
 The first C3 input conflicts with itself: it permits three skill directories
 and then forbids reading anything under `/home/leynos/.lody/repos`, which
@@ -172,18 +181,18 @@ run received. A replay correction at
 supplies a reconciled isolation rule for the same scenario, and the second C3
 prompt already states the rule without the contradiction.
 
-Every run used the same configuration: a Claude Code subagent of the
-`general-purpose` type, model `deepseek-v4.1-flash-1017`. The evaluated skill
-text is identified by content rather than by head, because the later commits on
-this branch change only this document and its evidence. The skills tree is
+Every run in this campaign used the same configuration: a Claude Code subagent
+of the `general-purpose` type, model `deepseek-v4.1-flash-1017`. The evaluated
+skill text is identified by content rather than by head, because the commits
+that followed changed only this document and its evidence. The skills tree was
 `fffbba004a77cd117a54f73b0ca9172861bf3bd5` (`git rev-parse <revision>:skills`)
 at every run revision, and the installed `execplans` skill was at content hash
 `4fdba07976ac6a6f3b93bae5aa750230a0149379`. The run commits are `2cb36b6` for
-C1, C2, and C4 to S2. `git rev-parse HEAD:skills` returns that same tree hash
-on this branch's head, so the shipped skill text is identical to the text every
-run read. Each run's exact input is published in
-[`inputs/`](validation/2026-11-19-agent-scenarios/inputs/), named for its
-scenario and, for C3, for the run commit.
+C1, C2, and C4 to S2. A later correction to the elicitation reference changed
+the shipped tree, so the revalidation below evaluated different skill text;
+neither campaign's verdicts are carried into the other. Each run's exact input
+is published in [`inputs/`](validation/2026-11-19-agent-scenarios/inputs/),
+named for its scenario and, for C3, for the run commit.
 
 The artefacts are published verbatim under
 [`validation/2026-11-19-agent-scenarios/`](validation/2026-11-19-agent-scenarios/),
@@ -217,7 +226,61 @@ implements nothing else.
 | S1       | pass                 | `s1/`                        | Proportionate records; no invented legacy migration, stakeholder board, scenario catalogue, or numerical non-goal quota.                                                                                                                                                                    |
 | S2       | pass                 | `s2/`                        | No self-approval of expanded scope; `COMPLETE` withheld until the accepted design change and its links are reconciled.                                                                                                                                                                      |
 
+### Revalidation of 21 November 2026
+
+The 19 November review found that
+`skills/terms-of-reference-doc/references/elicitation-protocol.md` required
+goals and non-goals lists to be "roughly comparable", while the same skill's
+`SKILL.md` prohibits inventing non-goals to meet a numerical quota. The
+reference now says the count is not the test and asks the user to cut goals or
+name exclusions a reasonable reader would assume are in scope. The reference is
+part of the evaluated skill text, so the twelve scenarios were rerun rather
+than carried forward.
+
+The configuration matched the first campaign: a Claude Code subagent of the
+`general-purpose` type, model `deepseek-v4.1-flash-1017`, with `execplans` at
+content hash `4fdba07976ac6a6f3b93bae5aa750230a0149379`. The skills tree was
+`2f1864f8d9f089d57cd6125d943d052b91668e33`. Inputs and artefacts are published
+under
+[`validation/2026-11-21-agent-scenarios/`](validation/2026-11-21-agent-scenarios/),
+with a digest for every file. Eleven prompts are byte-identical to the 19
+November inputs apart from the output directory; the C3 prompt is the earlier
+campaign's second C3 run, which states the isolation rule without the first
+run's contradiction.
+
+The `Defects` column counts the confirmed findings recorded
+[below](#defects-recorded-in-the-output). It does not change the result, which
+records the position the artefact took on its oracle, not the soundness of
+every sentence it contains.
+
+| Scenario | Result | Artefacts | Evidence recorded by the reviewer                                                                                                                                                                           | Defects |
+| -------- | ------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| C1       | pass   | `c1/`     | Surface classified as an application-internal public declaration, so a private API; no alias, deprecated entrypoint, wrapper, or dual path; the signature and all three callers change atomically.          | none    |
+| C2       | pass   | `c2/`     | Suggested shim recorded as `TOR-CONFLICT-001` and rejected; every test caller migrates; no old interface, alias, or dual path survives.                                                                     | none    |
+| C3       | pass   | `c3/`     | Policy/RFC conflict escalated to the decision authority; RFC not rewritten, deleted, or retro-edited; the plan record sets `BLOCKED` with a proposed deviation entry and names the upstream resolution.     | 1       |
+| C4       | pass   | `c4/`     | Release baseline recorded and left `[OPEN]` for the unnamed tag; no alias for the unreleased export; a development-branch consumer creates no obligation.                                                   | 3       |
+| C5       | pass   | `c5/`     | Released 2.1 contract recognised despite the branch being ahead of the tag; compatibility or a deliberate migration stated as required and permitted; new entry point, deprecation, and consumer migration. | none    |
+| C6       | pass   | `c6/`     | No source-API shim; persisted records handled as a separate deployed-data obligation with a v2 format, read path, and migration.                                                                            | 2       |
+| E1       | pass   | `e1/`     | Promise and probe kept as separate records; gap and affected properties scoped; deviation `D1` routed for acceptance; plan `BLOCKED`.                                                                       | 2       |
+| E2       | pass   | `e2/`     | Passing results rejected as evidence for both claims; witnesses, iteration evidence, a negative control, and the original threshold required; claims recorded as unproven.                                  | none    |
+| E3       | pass   | `e3/`     | Only the implementation-scoped blocker conditionally retired; deployment blocker retained; daily summary treated as a lead, not authority; external state unchanged.                                        | none    |
+| E4       | pass   | `e4/`     | Revision-A evidence marked stale; the dependency axiom revisited as `AXIOM-DEP-B`; the unreachable failure obligation replaced; plan `BLOCKED`.                                                             | 3       |
+| S1       | pass   | `s1/`     | Proportionate records; explicit no-baseline; material gaps marked `[OPEN]`; no invented migration, stakeholder board, catalogue, or numerical non-goal quota.                                               | 1       |
+| S2       | pass   | `s2/`     | Recommendation not self-approved; the architectural change recorded as claimed-unverified; `COMPLETE` withheld; plan `BLOCKED` pending reconciliation.                                                      | 1       |
+
+The mechanical boundary checks stay scoped to the 19 November artefacts,
+because their phrase patterns were calibrated against that wording. Run over
+the new C3 and C5 records, `scripts/check_workflow_boundary.py` reports phrase
+mismatches rather than boundary violations: the C3 record states its status as
+"Status to record:" and its Decision log proposal is not keyed to a `D<n>`
+identifier, and the C5 design states the permission as "is therefore both
+required and permitted". The verdict table above records the required positions
+in both. The checker remains conservative, reporting a boundary it cannot read
+rather than passing it, and the CI scope was not widened to fit the new wording.
+
 ## Defects recorded in the output
+
+### Campaign of 19 November 2026
 
 A review of the published artefacts found defects in the recorded output. A
 read-only verification pass then checked each finding against the artefact text
@@ -260,16 +323,74 @@ into six groups:
   statement it qualifies; and C6's UTC storage schema leaves the offset
   unrecorded without a mitigation.
 
-None of these defects contradicts its scenario's oracle. The verdict table
-above therefore still records what the artefact shows about the guidance: each
-run took the required position on the compatibility question, the deviation
-route, and the closure condition, even where its plan for getting there is
-unsound. C4 is the qualification to that claim. It rejects the alias for the
-unreleased addition, then records an escalation rule under which a discovered
-consumer would hand the question to the released-surface compatibility rules,
-which the policy does not permit. Its row therefore reads "pass with
-limitation", with the initial rejection and the later exception distinguished
-in the C4 row above. The artefacts are not edited to remove any of this,
-because they were produced under the isolation rule and a correction here would
-no longer be the run's output. The line-level findings remain on the review
-threads attached to those files.
+None of these defects contradicts its scenario's oracle. The 19 November
+verdict table above therefore still records what the artefact shows about the
+guidance: each run took the required position on the compatibility question,
+the deviation route, and the closure condition, even where its plan for getting
+there is unsound. C4 is the qualification to that claim. It rejects the alias
+for the unreleased addition, then records an escalation rule under which a
+discovered consumer would hand the question to the released-surface
+compatibility rules, which the policy does not permit. Its row therefore reads
+"pass with limitation", with the initial rejection and the later exception
+distinguished in the C4 row above. The artefacts are not edited to remove any
+of this, because they were produced under the isolation rule and a correction
+here would no longer be the run's output. The line-level findings remain on the
+review threads attached to those files.
+
+### Revalidation of 21 November 2026
+
+A second review compared the revalidation artefacts with the same oracles and
+recorded thirteen defects in seven of the twelve runs. Each cited line was read
+before it was accepted, and two reviewer claims were not sustained: that S1 had
+to record acceptance criteria it could not derive from the supplied statement,
+and that E3 had to perform a reconciliation its input supplied no evidence for.
+Both withholdals are what the no-invention rule requires, and the 19 November
+S1 run recorded the same `[OPEN]` criteria. The confirmed defects fall into
+four groups.
+
+- An absence asserted rather than inspected. C4 states that no persisted data
+  or wire format is involved, and classifies the persisted-data obligation as
+  "not applicable to a source-symbol rename", although its input names no
+  encoding and its own evidence basis marks the surface's lineage `[ASSUMED]`;
+  the same lineage appears as fact in the stakeholder table at
+  `terms-of-reference.md:116`. S1 states that no `docs/context.md`, technical
+  design, roadmap, or ADR exists, then records at `terms-of-reference.md:22`
+  that no repository artefact was inspected and, in its intake note, that the
+  existence of those files is unknown. The 19 November S1 said explicitly that
+  its silence was not a claim that none exists, so this is a regression. C6
+  records the data owner as "represented by the sponsor" without evidence while
+  `TOR-OPEN-003` still requires the data owner's approval of the field mapping.
+  E1 labels `PROV-TOR-SUCCESS-001` "accepted upstream intent" while its
+  companion record says the approval state was not verified.
+- A check whose recorded evidence does not reach its claim. C4's `INV-LINEAGE`
+  requires the old name to be absent from every formal release tag, and its
+  discharge records export inspection at the latest tag alone
+  (`execplan.md:364` against `:457`), which does not establish absence from
+  earlier tags. E1's `git diff --numstat` command is the only counting rule
+  offered for the separate code, configuration, and documentation budgets, and
+  the plan does not say how a changed path is assigned to a category.
+- Proposal text written in the accomplished past tense. C3's record is an edit
+  pack that says the plan was not inspected, yet its progress entries and
+  revision note state that the status was set to `BLOCKED` and the conflict
+  recorded. S2 calls itself a "ready-to-apply amendment" with an unknown plan
+  path, then ticks "Set the plan to `BLOCKED` and stopped implementation" and
+  repeats the state as fact in its change-control record. E4's decision request
+  states "Plan status: BLOCKED" unconditionally although its own §6 retains
+  `DRAFT` for an unapproved plan, and its `D-R1` asserts that the plan does not
+  record a dependency authorization the run never read. E4 also records as
+  completed that it "stopped before further implementation edits", which
+  presumes implementation was under way.
+- A completion claim that outruns the plan's own state. C6 says the plan
+  "resolves the gaps listed in `Conformance basis`" while every named gap is
+  blocked pending its first milestone.
+
+None of these defects contradicts its scenario's oracle either, and no row's
+result is downgraded for them. Two reviewer limitations are not defects. C3's
+record is necessarily a proposal, because the isolation rule did not admit the
+executing plan; its recorded defect is the tense, not the deferral. E3
+conditions removal on evidence it could not read, which is the correct response
+to an input that supplies none. The 21 November C4 run also removes the 19
+November limitation: a development-branch consumer creates no exception, and a
+function later found in a release tag falsifies the classification and sends
+the question back through the released-contract rules rather than around them.
+The artefacts are again published unedited.

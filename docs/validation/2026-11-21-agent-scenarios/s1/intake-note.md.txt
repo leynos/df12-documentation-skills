@@ -1,0 +1,103 @@
+# Intake and provisional sketch – new library
+
+Status: working note for the terms of reference. Not a deliverable, not
+approved, and not to be carried forward as project intent.
+
+The input supplied to this session is a single statement:
+
+> A small new library has a clear brief, no legacy implementation, and no
+> multi-actor workflow or imposed technology choice.
+
+## Phase 0 – prior-art catalogue
+
+The workflow directs a check of the brief, the repository README, and `docs/`
+artefacts. This authoring session is restricted to reading three installed
+skill trees. No repository path was inspected.
+
+| Candidate source | Availability here | Sections it would inform |
+| --- | --- | --- |
+| The brief | Referenced; text not supplied | Every content-bearing section |
+| `README.md`, `docs/README.md` | Not inspected (read restriction) | Background, domain, users |
+| `docs/terms-of-reference.md` | Not inspected; existence unknown | Whole document, as a prior revision |
+| `docs/context.md` | Not inspected; no domain terms available | §2 and the glossary |
+| `docs/adr/`, `docs/decisions/` | Not inspected | §8 constraints, §6 boundaries |
+| `docs/design.md`, `docs/architecture.md` | Not inspected; no legacy implementation is stated | Ordering check only |
+| `docs/roadmap.md` | Not inspected | §7 success timing, §8 dependencies |
+| ExecPlans, release tags, PRs, acceptance evidence | Not inspected; no legacy implementation is stated | §1 and §7 |
+
+Result: an empty prior-art catalogue, the case the terms-of-reference skill
+anticipates when no prior art exists. No artefacts conflict because none are
+available. The conspicuous absences are the brief's content and every
+problem-space fact other than the facts stated below.
+
+## Established and absent facts
+
+The supplied statement establishes, within its own scope:
+
+- F1. The subject is a software library, not an application, service, or
+  platform.
+- F2. An explicit brief exists, and the supplied statement describes it as
+  clear.
+- F3. There is no legacy implementation.
+- F4. The brief describes no multi-actor workflow.
+- F5. No technology choice is imposed on the design.
+
+None of these establishes the library's domain, purpose, callers, competing
+alternatives, goals, non-goals, success measures, environmental constraints, or
+decision authority. F2 establishes what the sponsor requests; it does not
+establish the truth of any empirical claim inside the brief.
+
+## Tailoring decisions
+
+1. Scenario probe omitted. The optional probe exists for multiple actors,
+   lifecycle behaviour, integration paths, and exceptional flows. F4 removes
+   that trigger, and no other trigger is visible, so the probe would test
+   nothing at v0.1. Revisit it if the brief introduces concurrency, background
+   work, or an external integration.
+2. No baseline, gap register, or migration programme. The architecture
+   contract directs greenfield work to state that no implementation baseline
+   exists and to avoid manufacturing an empty legacy architecture.
+3. No technology constraint recorded. An imposed platform would be a sourced
+   constraint; with none imposed, technology selection belongs to
+   `tech-design-doc`. The terms of reference must not smuggle a choice.
+4. Minimal records. A small library warrants a few identifiers, two stakeholder
+   concerns, and a short handoff. No goal, success, or assumption identifier is
+   issued for content that does not yet exist.
+5. No invented content. Goals, non-goals, competitors, owners, approvers,
+   thresholds, and dependencies are marked `[OPEN]`, not filled with
+   plausible-sounding generalities.
+
+## Phase 1 – provisional sketch
+
+| Terms-of-reference section | Status | Gating item |
+| --- | --- | --- |
+| §1 Background and motivation | Brief known; motivation `[OPEN]` | TOR-OPEN-001 |
+| §2 Domain | Library known; field of practice `[OPEN]` | TOR-OPEN-001 |
+| §3 Market context | `[OPEN]` | TOR-OPEN-002, -003 |
+| §4 Users and stakeholders | Caller and sponsor `[ASSUMED]`; rest `[OPEN]` | TOR-OPEN-002, -007 |
+| §5 Job to be done | `[OPEN]` | TOR-OPEN-002 |
+| §6 Scope | Goals and non-goals `[OPEN]` | TOR-OPEN-003, -004 |
+| §7 Success criteria | `[OPEN]` | TOR-OPEN-005 |
+| §8 Constraints and assumptions | F3–F5 known; two assumptions | TOR-OPEN-006 |
+| §9 Open questions | Seven recorded | – |
+
+The sketch was not presented to a user for confirmation: no user was available
+in this session. Elicitation exit condition 3 applies, because the remaining
+items require input external to the session. The terms of reference therefore
+proceeds to a v0.1 draft with those items recorded rather than resolved.
+
+## Elicitation order
+
+One action or question per turn, in dependency order:
+
+1. Ingest the brief; quote its content and record its path and revision.
+2. TOR-OPEN-001 – confirm which artefact is authoritative and current.
+3. TOR-OPEN-002 – identify the primary caller and the triggering situation.
+4. TOR-OPEN-003 – establish the required capability as verifiable goals, and
+   define what "small" means for the surface.
+5. TOR-OPEN-004 – name exclusions a reasonable reader might assume are in
+   scope.
+6. TOR-OPEN-005 – establish success signals and any baselines or targets.
+7. TOR-OPEN-006 – establish environmental constraints: runtime, distribution
+   channel, licence, and support lifetime.
+8. TOR-OPEN-007 – establish scope-change and approval authority.

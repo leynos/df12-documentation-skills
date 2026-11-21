@@ -1,0 +1,263 @@
+# Library API rename – technical design
+
+Status: Draft v0.1 (unaccepted; bounded to the current ExecPlan milestone)
+
+Audience: Implementers, reviewers, and the authority resolving the inherited
+RFC conflict.
+
+Companion documents: `terms-of-reference.md` (draft v0.1, 2026-11-21,
+unaccepted); `execplan-record.md` (required plan edits); the executing
+ExecPlan (not inspected; path, identifier, and milestone number provisional).
+
+Date: 2026-11-21.
+
+## Conformance basis
+
+- **Terms of reference**: `terms-of-reference.md`, v0.1 draft, 2026-11-21,
+  unaccepted. Use: problem intent and constraints.
+- **ExecPlan**: not inspected; brief statement only; executing current
+  milestone. Use: receives this design's obligations.
+- **execplans skill**: installed copy inspected 2026-11-21; pinned revision
+  unavailable. Use: handoff shape.
+- **df12 compatibility contracts**: installed copies inspected 2026-11-21.
+  Use: compatibility classification.
+- **RFC**: not inspected; revision and status unknown. Use: conflict recorded,
+  not resolved.
+
+The installed copies are
+`skills/terms-of-reference-doc/references/problem-contract.md` and
+`skills/tech-design-doc/references/architecture-contract.md`. The execplans
+skill is `/home/leynos/.claude/skills/execplans/SKILL.md` with
+`references/execplan-template.md`.
+
+Known conflict: the RFC's alias demand conflicts with the df12 pre-1.0
+prohibition (`GAP-001`). Missing inputs: exact API names, call-site inventory,
+release lineage, persisted-format status, and the consumer build record. The
+symbols `OldName` and `NewName` below are placeholders until `TOR-OPEN-003`
+closes.
+
+## 1. Problem and context
+
+The library publishes a 0.8 source API with one known downstream consumer. An
+already executing ExecPlan is renaming one exported item. An older RFC
+requires an alias alongside that change. df12 policy forbids source-API
+compatibility machinery for pre-1.0 surfaces, and a named consumer is not an
+exception.
+
+This design does not choose the new name; the name is an input. It chooses the
+transition shape and the evidence that the shape was followed.
+
+## 2. Scope and goals
+
+In scope: the renamed exported item, every first-party reference, examples and
+documentation, the changelog, and the known consumer's update.
+
+Out of scope: any compatibility device for the old name; behaviour changes
+beyond the name; persisted-data or wire-format migration unless separately
+assessed; rewriting the RFC.
+
+Design requirements:
+
+- `TDD-REQ-001` (from `TOR-GOAL-001`, `TOR-CONSTRAINT-001`): the release
+  exports the new name and no old-name source interface.
+- `TDD-REQ-002` (from `TOR-GOAL-002`, `TOR-CONSTRAINT-002`): every first-party
+  caller and the known consumer use the new name in the same coherent
+  milestone.
+- `TDD-REQ-003` (from `TOR-GOAL-003`, `TOR-CONSTRAINT-003`): the RFC conflict
+  is explicitly resolved before milestone completion; the design neither
+  implements nor suppresses the demand.
+- `TDD-REQ-004` (from `TOR-CONSTRAINT-001`): no source-API compatibility
+  machinery is added.
+
+## 3. Compatibility assessment
+
+**Surface.** Public source API of a published 0.8 library. Publication does
+not change the classification: 0.8 is pre-1.0. The private and test-only
+categories do not apply; the pre-1.0 category applies and is independently
+sufficient to prohibit compatibility machinery.
+
+**Named consumer.** One downstream consumer exists. Under df12 policy, a
+named consumer does not create an exception for a pre-1.0 API. A compatibility
+layer must answer "compatible with whom or what?"; the available answer is
+that one consumer, and it is not an admissible justification here.
+
+**Atomicity test.** If the interface and the consumer changed in one atomic
+operation, would compatibility be required? No. The design therefore takes
+that shape. It does not manufacture an intermediate plateau that keeps the old
+name alive.
+
+**Inherited conflict.** The RFC demands an alias. This is an inherited
+conflicting commitment, exposed for explicit upstream resolution. The design
+does not implement the alias and does not record the RFC as satisfied. Until
+resolution, the ExecPlan stays `BLOCKED`.
+
+**Persisted data and wire formats.** Not established. If the name appears in
+stored records, messages, or a deployed peer contract, that is a separate
+obligation with its own migration and rollback analysis (`GAP-003`). Its
+existence would not authorize a source alias.
+
+## 4. Target state and change set
+
+| Element | Baseline | Target | Disposition |
+| --- | --- | --- | --- |
+| Exported item | `OldName` at 0.8 | `NewName` only | Renamed |
+| First-party calls | `OldName`, unknown count | `NewName` | Atomic change |
+| Compatibility symbols | None confirmed | Absent | Excluded |
+| Consumer source | `OldName` at 0.8 | `NewName` at release | Lockstep change |
+| Behaviour | Current semantics | Unchanged | Retained |
+| Persisted or wire format | Unknown | Classified if affected | Gap |
+
+The baseline is provisional; no source tree was inspected.
+
+No component or boundary is added. Only an exported identifier and its
+references change. No diagram is used: a rename has no topology, and a
+one-node picture would answer no stakeholder concern.
+
+## 5. Interfaces and contracts
+
+After the milestone, the package exports `NewName` with the existing signature
+and semantics, and `OldName` is absent. Repository callers use `NewName`. The
+downstream consumer's source uses `NewName` against the release carrying the
+rename.
+
+Error contracts, run-time behaviour, and data shapes stay unchanged unless the
+name itself is part of an externally visible format. That possibility is
+exactly what `GAP-003` must classify.
+
+The design rejects every compatibility form: alias, deprecated entrypoint,
+facade, wrapper, dual implementation, and adapter whose purpose is preserving
+the obsolete source interface. An adapter that serves a current domain or
+external-protocol boundary is not rejected merely because it is called an
+adapter.
+
+## 6. Failure modes and recovery
+
+- **Old name survives in a call site.** The search gate or the build fails.
+  Fix the call site before proceeding.
+- **Consumer not updated in lockstep.** The milestone is not a coherent
+  plateau. Hold the release until the consumer builds using the new name.
+- **Alias reintroduced under schedule pressure.** This is an escalation, not a
+  design option. Record the request and stop.
+- **RFC resolution delayed.** The plan stays `BLOCKED` and no release occurs.
+  A schedule is not a reason to add the alias or to declare the RFC
+  superseded.
+- **Persisted or wire format discovered.** Determine whether the persisted
+  name must change. If it must, plan the separate migration; if it need not,
+  record why the source rename leaves the format intact.
+- **Recovery.** Revert the atomic rename as a unit. No dual implementation
+  exists to unwind. Work already present in the tree is held pending
+  direction; this design does not order a revert.
+
+## 7. Verification obligations
+
+- `INV-1` – old name absent. Property: no occurrence of `OldName` remains in
+  the exported surface, first-party call sites, examples, or documentation.
+  Method: declared search over pinned paths, plus package and workspace
+  builds. Discharge: the search returns no matches and both builds pass.
+- `INV-2` – no compatibility machinery. Property: no alias, deprecated
+  entrypoint, facade, wrapper, dual implementation, or compatibility adapter
+  exists. Method: source search for those forms plus reviewer inspection.
+  Discharge: no matching symbols and a recorded review.
+- `INV-3` – consumer updated. Property: the known consumer builds and tests
+  against the release using `NewName`. Method: consumer build and test run.
+  Discharge: a passing log against the identified release.
+- `INV-4` – behaviour retained. Property: behaviour is unchanged apart from
+  the name. Method: the existing suite plus focused tests on the item.
+  Discharge: the suite passes and the diff is name-only.
+
+`AXIOM-1`: 0.8 is the latest formal tag and no 1.0-or-later contract covers
+the surface (`TOR-ASSUMPTION-001`). No tag evidence was inspected; unverified.
+`AXIOM-2`: The brief's one consumer is the complete known set
+(`TOR-ASSUMPTION-002`). No dependents scan was supplied; unverified.
+`AXIOM-3`: The release artefact under test corresponds to the source revision
+carrying the change. Record the tag or commit and the package artefact as
+evidence for that correspondence.
+
+Non-vacuity: seed one file with an `OldName` reference and confirm `INV-1`
+fails for that reason, then remove the seed. Seed an alias declaration and
+confirm `INV-2` rejects it. Exercise a real consumer call site, not only a
+synthetic fixture. A search that scans zero files is a harness failure, not a
+pass.
+
+Bounds and residual gaps: the search covers declared repository paths only and
+does not prove absence in external code. No registry-wide dependents scan is
+available. `INV-3` covers the one known consumer, not undiscovered consumers.
+
+Formal verification decision: no model checking or formal proof. The change
+substitutes an identifier and introduces no state, concurrency, or arithmetic.
+The material risk is an incomplete call-site inventory, which search and
+builds address more directly than a formal method. The ExecPlan records this
+decision.
+
+## 8. Gap register
+
+- `GAP-001` – RFC conflict. Upstream: `TOR-GOAL-003` and
+  `TOR-CONSTRAINT-003`. Baseline: the RFC demands an alias; its revision is
+  unknown. Target: an explicit resolution naming the revision. Missing
+  capability: a decision by the competent authority. Disposition: blocked.
+  Owner: not established; `TOR-OPEN-002` tracks the decision right. Unblock:
+  the recorded resolution. Verification: the resolution record.
+- `GAP-002` – identifiers and call sites. Upstream: `TOR-OPEN-003`. Baseline:
+  placeholders only. Target: an inventory at a pinned revision. Disposition:
+  proposed work. Owner: implementer (provisional). Unblock: source
+  inspection. Verification: search and diff.
+- `GAP-003` – persisted or wire involvement. Upstream: `TOR-OPEN-004`.
+  Baseline: unknown. Target: a classification of whether the name appears in
+  persisted data, messages, or a deployed peer contract. Disposition: bounded
+  discovery. Owner: implementer (provisional). Unblock: the inspection.
+  Verification: interface and serialization review.
+- `GAP-004` – consumer set. Upstream: `TOR-ASSUMPTION-002`. Baseline: the
+  brief asserts one consumer. Target: evidence before release. Disposition:
+  proposed work. Owner: release owner (provisional). Unblock: a dependents
+  scan. Verification: the scan record.
+- `GAP-005` – release and migration note. Upstream: `TOR-OPEN-005`. Baseline:
+  unknown. Target: a named release and changelog entry. Disposition: proposed
+  work. Owner: release owner (provisional). Unblock: the release decision.
+  Verification: the consumer log.
+
+No gap is a roadmap task merely because it is listed. `GAP-001` is the only
+one that blocks resumption; the others are planned work inside or before the
+same milestone.
+
+## 9. Decisions
+
+`D1`. Perform one atomic rename without compatibility machinery.
+Alternatives: an alias for the one consumer (rejected: prohibited for a
+pre-1.0 surface, and the named consumer is not an exception); a dual export
+during a transition (rejected: same prohibition, and no compatibility would be
+needed for an atomic change). Consequence: the consumer adopts in lockstep.
+
+`D2`. Escalate the RFC conflict instead of resolving it in this design.
+Alternatives: implement the alias (prohibited); proceed without it silently
+(violates the inherited commitment and the requirement for explicit
+resolution); treat the RFC as automatically superseded (no evidence of
+supersession and no authority to declare it). Consequence: the ExecPlan is
+blocked until resolution.
+
+`D3`. Update the consumer's source rather than preserving its old call. This
+is migration, not compatibility: the consumer changes with the interface.
+
+## 10. Handoff and readiness
+
+Ready for bounded design and verification planning. Blocked for implementation
+and release pending `GAP-001`. The receiving ExecPlan gets `TDD-REQ-001` to
+`TDD-REQ-004`, `INV-1` to `INV-4`, `AXIOM-1` to `AXIOM-3`, the compatibility
+classification (pre-1.0; no machinery), the atomic milestone shape, recovery
+by revert, and the residual gaps. Design acceptance is not implementation
+approval. The plan remains `BLOCKED` until the resolution is recorded in the
+terms of reference and this design, and any required ADR exists.
+
+## 11. Unresolved decisions
+
+The terms-of-reference register is authoritative. Design-relevant items are
+`TOR-OPEN-001` and `TOR-OPEN-002` for unblocking, `TOR-OPEN-003` for
+identifiers and call sites, `TOR-OPEN-004` for persisted or wire formats,
+`TOR-OPEN-005` for the release, and `TOR-OPEN-006` for consumer-set
+completeness. No design-level question is resolved by assumption.
+
+## References
+
+The references are recorded in `terms-of-reference.md`, Appendix B, and are not
+duplicated here. This design cites the same installed copies of the df12
+skills and the execplans skill, inspected on 2026-11-21 with no pinned
+revision. No external source was consulted.

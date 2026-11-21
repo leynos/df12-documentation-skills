@@ -1,0 +1,227 @@
+# Status reconciliation: merged implementation, unsupported completion
+
+Status: Working draft for decision; not accepted.
+
+Date: 2026-11-21.
+
+Audience: The programme owner, delivery lead, programme-record maintainer,
+daily-summary owner, and any downstream design, roadmap, or ExecPlan owner
+whose work cites the affected record.
+
+Authority: None identified. This record proposes dispositions; it approves
+none and changes no external state.
+
+Evidence basis: The scenario brief only. The programme tracker, merge record,
+release record, deployment record, and daily summary were not available inside
+the authoring boundary. The intake locations named by the terms-of-reference
+workflow (repository README, existing terms of reference, context, ADRs,
+design, roadmap, and ExecPlans) were outside the permitted read set, so their
+contents are unchecked rather than shown absent. Every material claim below
+therefore keeps an explicit evidence state.
+
+## Conformance basis
+
+These skill revisions govern the record and were inspected.
+
+- `skills/terms-of-reference-doc/SKILL.md`
+  SHA-256: `105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4`
+- `skills/terms-of-reference-doc/references/problem-contract.md`
+  SHA-256: `e8c6d8c6c7d552dea5a241f125f34d25d617840affb009e830305fbb29be5ef1`
+- `skills/tech-design-doc/SKILL.md`
+  SHA-256: `ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6`
+- `skills/tech-design-doc/references/architecture-contract.md`
+  SHA-256: `06f9ab2fdc0ff0d89cfede567d1d505396fb8a0e2d0b62c272f9abfeb006f1de`
+- `skills/tech-design-doc/references/field-evidence.md`
+  SHA-256: `e9df127f129a54520555360a4596eec1e518b8f79c3c68a31115d885dbe7d390`
+- `/home/leynos/.claude/skills/execplans/SKILL.md`
+  SHA-256: `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15`
+- `/home/leynos/.claude/skills/execplans/references/execplan-template.md`
+  SHA-256: `71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a`
+
+The ExecPlans skill and template were inspected for handoff compatibility. No
+ExecPlan file was within the permitted read set, so their entries record the
+contract examined, not an execution artefact.
+
+## Why this is not a full terms of reference or design
+
+The input supplies no problem-space brief and requests no design decision.
+Manufacturing a terms of reference would invent intent, users, and success
+criteria. Manufacturing a technical design would invent architecture for a
+deployment-state question. No approved implementation slice exists from which
+to author an ExecPlan. The work the governing skills actually direct here is
+evidence reconciliation and a traceable correction handoff.
+
+## Purpose and boundary
+
+Three signals conflict: a programme record that still blocks work, an
+implementation reported merged months ago, and a daily summary asserting
+completion while deployment evidence is absent. This record separates the
+signals rather than letting the most recent summary win. It does not edit the
+programme record, the summary, any deployment system, or any repository file.
+
+## Claim register
+
+Labels follow the problem contract: `[KNOWN]` is directly observed within its
+stated scope, `[ASSUMED]` is inferred but unverified, and `[OPEN]` is
+unresolved. A brief establishes what was reported, not that a report is true.
+
+- **CR-1. Programme blocker.** The programme record is reported as still
+  blocking work on the implementation. This is a programme-state assertion
+  paraphrased from a record not inspected. `[OPEN]` as to the record's current
+  contents and blocker scope.
+- **CR-2. Merged implementation.** The implementation is reported to have
+  merged months ago. This is an implementation event sourced from the brief;
+  the merge record was not inspected. `[OPEN]`. "Months ago" is elapsed time,
+  not a date, revision, or merge identity.
+- **CR-3. Absent deployment evidence.** The brief reports deployment evidence
+  absent. No search record was inspected. `[OPEN]`. This establishes neither
+  that a defined search occurred nor that deployment failed; it establishes
+  that the deployed state is not currently evidenced.
+- **CR-4. Daily summary.** The summary is reported to say complete. The summary
+  was not inspected. `[KNOWN]` only that the brief reports its wording; that
+  wording is not evidence of completion.
+- **CR-5. Blocker definition.** The blocker's exact unblock condition is
+  unstated. No source supplies it. `[OPEN]`. This is the decisive gap for
+  blocker disposition.
+- **CR-6. Deployment definition.** The deployment target, required evidence,
+  and accountable owner are unstated. `[OPEN]`.
+
+## Evidence separated by delivery state
+
+Approval, evidence, and delivery state are independent. A merged change
+establishes what implementation landed. It does not establish verification,
+release, deployment, or an outcome.
+
+| State | Established here | Needed to establish it |
+| ----- | ---------------- | ---------------------- |
+| Approved | Nothing. | Approval record, if material. |
+| Implemented | Merge reported, unverified. | Merge record, revision, date. |
+| Verified | Nothing. | Verification record and revision. |
+| Released | Nothing. | Release record naming revision. |
+| Deployed | Nothing; evidence absent. | Deployment record, or deferral. |
+| Outcome-validated | Nothing. | Baseline, measure, result, owner. |
+
+A merge does not supply approval retroactively. A deployment record must name
+the environment, revision, time, actor, result, and acceptance evidence. Its
+absence is not proof of failure; it means the deployed state is not
+established.
+
+## Blocker register and proposed dispositions
+
+`B1` and `B2` are local labels for this reconciliation, not programme
+identifiers. Preserve the existing programme identifier when one is available.
+
+### B1: implementation-scoped blocker
+
+The programme record is reported to keep blocking work on an implementation
+whose merge is reported. B1 gates implementation-scoped work. The proposed
+disposition is removal, conditional on two checks: the merge record must be
+verified at the required revision and capability scope, and the blocker's
+actual unblock condition must be that merge.
+
+A merged implementation satisfies an implementation-level prerequisite.
+Keeping the edge because a tracker or summary still displays it is the
+stale-blocker failure the problem contract prohibits. Recheck the edge against
+its actual unblock condition, not against a recent activity window or the
+summary's wording. Resolve the edge with linked evidence; do not delete the
+blocker's history.
+
+### B2: deployment-validation dependency
+
+B2 gates work that consumes the deployed capability: release, deployment, and
+later outcome validation. The proposed disposition is retention as an open
+dependency, reclassified away from the implementation edge.
+
+Deployment evidence is absent. A merge is not a deployment, and repository
+delivery is not host convergence. The unblock condition must name the
+deployment record or an authorized deferral. Retaining B2 is not the same as
+retaining B1; the gated scope differs.
+
+When recorded, B2 must name the provider, consumer, required capability and
+revision, linked evidence, last check, and the work it gates. The brief
+supplies none of these, so they remain open rather than invented.
+
+### B3: unsupported completion claim
+
+The daily summary's "complete" is not a blocker. It is a status claim that
+supports no state beyond a reported implementation merge. Reject it as status
+evidence and correct its source.
+
+### Conditions that change these dispositions
+
+If the blocker's actual unblock condition is deployment rather than merge, B1
+is not removable. Retain it and reclassify it as B2. If the merge record fails
+verification at the required revision, B1 remains. The daily summary is
+neither the reason to remove B1 nor the reason to retain it.
+
+## Treatment of the daily summary
+
+The daily summary is a discovery aid, not a status authority. The governing
+contract directs using summaries to locate evidence, then inspecting the
+underlying merge, release, or deployment record. Generated documents and agent
+summaries do not approve themselves by repetition.
+
+The summary's "complete" claim conflates separate states. Completion must be
+named at a boundary: implemented, verified, released, deployed, or
+outcome-validated. The available evidence supports at most a reported
+implementation merge. It does not support deployment, and therefore does not
+support an unqualified completion claim.
+
+The contradiction is recorded rather than smoothed. If the underlying records
+show a deployment the programme record missed, the programme record is the
+artefact to correct. If they do not, the summary is wrong and its source must
+be corrected. If the summary is generated, fix its source data and regenerate
+it; do not hand-edit a derived artefact and assume the edit survives the next
+run. Do not copy "complete" into a terms of reference, design, roadmap, or
+ExecPlan.
+
+## External state deliberately left unchanged
+
+- The programme record and its blocker: unchanged. The correction is proposed
+  separately because external trackers are outside the authorized write scope.
+- The daily summary: unchanged. Its provenance is unknown, and a derived view
+  should be corrected at source.
+- Deployment systems and environments: untouched. No deployment was performed,
+  inferred, or simulated.
+- Git, GitHub, releases, and pull requests: unchanged. No merge, release, or PR
+  state was altered.
+- Repository files: none written or changed. This reconciliation lives outside
+  the repository.
+- Any ExecPlan: none was inspected or modified. If one exists for the blocked
+  work, its implementation milestone may be dischargeable by the merge record,
+  but its status must not become `COMPLETE` while the deployment state remains
+  unrecorded or unaccepted under its own contract.
+- Approval: none granted or implied by this record.
+
+## Readiness and handoff
+
+Implementation-scoped work is conditionally ready to unblock once the merge
+record is verified and B1's unblock condition is confirmed to be the merge.
+
+Release, deployment, and outcome validation are not ready. They remain blocked
+on evidence, not on the merged implementation.
+
+The completion claim is not established. No reader should treat the daily
+summary, this record, or the passage of time as acceptance evidence.
+
+## Open questions
+
+Resolve Q1 first; the remaining questions depend on its answer.
+
+1. **Q1.** What is the blocker's exact unblock condition, and which work does
+   it gate: an implementation milestone, a release, or outcome validation?
+   This decides whether B1 is removed, retained, or reclassified.
+2. **Q2.** Which merge record identifies the implementation, its revision, its
+   merge date, and the capability it delivered?
+3. **Q3.** Which environment and revision must supply deployment evidence, and
+   what record counts as acceptance at that boundary?
+4. **Q4.** Who may accept the programme-record correction and the replacement
+   completion wording?
+5. **Q5.** Which downstream artefacts repeat the stale blocker or the
+   "complete" claim, and who owns each correction?
+
+## Revision note
+
+- 2026-11-21: Initial reconciliation from the scenario brief. No external
+  records were inspected. Remaining work depends on the evidence listed in the
+  accompanying request.

@@ -1,0 +1,225 @@
+# Persisted record format v2 – draft contract
+
+| Field | Value |
+| --- | --- |
+| Status | Draft, provisional, unapproved. This contract is not implemented and has not been validated against repository schema. |
+| Scope | Normative rules for the v2 record envelope, version identification, canonical encoding, integrity, field mapping and the v1-to-v2 migration. |
+| Out of scope | The application's domain fields and their serialization library. Those are intake gaps (`TDD-GAP-001`, `TDD-GAP-002`). |
+| Companion documents | `terms-of-reference.md` (v0.1 draft), `tech-design.md` (v0.1 draft), `execplan.md` (DRAFT). |
+| Date | 2026-11-21. |
+
+The key words MUST, MUST NOT, SHOULD and MAY are used normatively. Nothing in
+this document may be cited as evidence that a repository implements it.
+
+## 1. Definitions
+
+- **Logical record** – the application value identified by a stable record ID,
+  independent of any serialized representation.
+- **Envelope** – the framing bytes that identify the format version, record ID,
+  payload length and integrity value.
+- **Payload** – the encoded logical record carried inside the envelope.
+- **v1** – the deployed format whose records must remain readable. Its exact
+  schema is unknown at draft time.
+- **v2** – the reshaped format defined here.
+- **Migration** – decoding a v1 record to its logical value, mapping it to the
+  v2 logical shape, encoding v2, and replacing the stored bytes.
+- **Legacy decode path** – the v1 decoder and version-dispatch branch used only
+  to read deployed records during the migration window.
+
+## 2. Format identity and versioning
+
+1. Every v2 record MUST carry an integer format version equal to `2`. The
+   version MUST be readable without decoding the payload.
+2. A v2 writer MUST emit only version `2`.
+3. During the migration window, a reader MUST accept versions `1` and `2`.
+   Before the window opens and after it closes, the accepted set is decided by
+   the decommission milestone; it MUST NOT be widened silently.
+4. A reader MUST reject every version it does not know, including version `0`,
+   versions greater than `2`, and a missing version where one is required. It
+   MUST return a typed error naming the version and the record ID. It MUST NOT
+   guess, default to v1, or skip the record silently.
+5. Version identification is per record. There is no in-band negotiation and no
+   attempt to reinterpret bytes as another version after a decode failure.
+
+## 3. Version detection
+
+The reader determines the format in this order:
+
+1. If the store has a generation manifest or equivalent store-level marker that
+   names the format for all contained records, the reader uses it and MUST
+   verify it against each record's discriminator. A disagreement is an error.
+2. Otherwise, the reader inspects the record discriminator. A v2 record has a
+   magic prefix and version field as defined in §4.
+3. If the discriminator does not match v2 and the bytes decode as a complete,
+   valid v1 record, the reader treats the record as v1.
+4. Any other outcome is an error. A record that is valid under both v1 and v2
+   is ambiguous: the reader MUST fail closed rather than choose.
+
+The v2 magic MUST be chosen so that no valid v1 record can begin with it. The
+choice MUST be checked against the captured v1 corpus, not only reasoned about.
+If no disjoint magic exists, the store-level manifest is mandatory and a
+per-record-only deployment is prohibited.
+
+## 4. Envelope
+
+The envelope is serialization-neutral. A concrete encoding is chosen at intake
+and recorded in this section before implementation. It MUST expose the
+following fields with these semantics:
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| `magic` | fixed byte sequence | Distinguishes v2 from v1; disjoint from every valid v1 prefix |
+| `format_version` | unsigned integer | Equals `2`; outside the payload |
+| `record_id` | bytes or string | Stable identity; encoding preserved across formats |
+| `payload_length` | unsigned integer | Exact payload length; mismatch is a malformed record |
+| `payload` | bytes | Encoded v2 logical record |
+| `checksum` | fixed-width value | Covers the header and payload as defined in §6 |
+
+Lengths, byte order, alignment and string encoding MUST be fixed by the chosen
+serialization and recorded here. They are not left to the decoder to infer.
+
+## 5. Canonical encoding
+
+1. The v2 encoder MUST produce a deterministic byte sequence for a given
+   logical value and codec version: map entries have a defined order, numeric
+   values have one representation, duplicate keys are impossible, and optional
+   values have exactly one absent form.
+2. Canonical encoding exists so that migration idempotence can be checked at
+   the byte level. If the chosen serialization cannot guarantee it, the design
+   MUST record a deviation and idempotence is checked on the logical value plus
+   a canonical digest. Byte-level idempotence MUST NOT be claimed in that case.
+3. The codec version is not the same as the format version. A codec change that
+   alters bytes without changing the logical value MUST NOT silently change the
+   format version; the design records how such a change is handled.
+
+## 6. Integrity
+
+1. The checksum MUST cover the header and the payload. It detects truncation
+   and accidental corruption; it is not authentication and MUST NOT be
+   described as tamper-proof.
+2. The algorithm and width are chosen at intake from the platform's available
+   primitives. The choice MUST be recorded with its collision and performance
+   properties.
+3. A checksum mismatch is a malformed record and produces a typed error. The
+   reader MUST NOT return a partially decoded value.
+
+## 7. Record identity
+
+The record ID is preserved exactly across migration. It MUST NOT be re-derived
+from field values, normalized beyond the v1 definition, or reused for a
+different record. A migration that changes an ID is a record replacement, not a
+migration, and requires explicit approval.
+
+## 8. Logical value and field mapping
+
+The v2 logical shape is defined at intake. The mapping from v1 must be total:
+
+1. Every v1 field MUST map to a v2 field, be deliberately transformed with an
+   approved rule, or be listed as an approved drop with the data owner's
+   acceptance. No field may disappear because the mapper did not mention it.
+2. Absence MUST be distinguished from an explicit empty or default value. A
+   mapping that collapses this distinction is a semantic change and requires
+   `TOR-OPEN-003` to be resolved.
+3. A default value introduced during mapping MUST be approved and recorded.
+   The migration report MUST count records that received the default.
+4. Unknown v1 fields encountered in the corpus MUST be preserved where the
+   logical model allows, or trigger a mapping failure. They MUST NOT be
+   silently discarded.
+5. The mapping table below is a template. It is not populated because the v1
+   schema was not available. An unpopulated row is a blocking gap, not an
+   empty mapping.
+
+| v1 field | v1 meaning | v2 field | Transformation | Loss? | Approval |
+| --- | --- | --- | --- | --- | --- |
+| `<field>` | `<meaning>` | `<field>` | `<identity or rule>` | none / approved drop | `[OPEN]` |
+
+## 9. Migration rules
+
+1. Migration MUST decode the source bytes to a v1 logical value, apply the
+   mapping, encode v2, and verify the result before replacing the source.
+2. The destination MUST be written to a temporary location, flushed according
+   to the storage platform's documented durability rule, and installed by an
+   atomic replacement or transaction. Writing in place is prohibited.
+3. Migration MUST be idempotent. A record already in v2 MUST be decoded and
+   validated, then left unchanged. A second full run MUST NOT change the stored
+   bytes.
+4. Migration MUST be resumable without a mutable cursor as the source of truth.
+   Re-running after interruption rescans the store; any progress report is
+   advisory.
+5. Migration MUST NOT delete a record whose decode or mapping fails. It MUST
+   leave the source bytes untouched, record the failure with the record ID and
+   error class, and continue or abort according to the approved failure policy.
+   The default policy is abort before any replacement if a preflight decode of
+   the whole store fails.
+6. Migration MUST verify, per record, that `decode_v2(new_bytes)` is equal to
+   the mapped v1 logical value under the approved equality relation. The
+   equality relation and its limitations are recorded in the design.
+
+## 10. Reader error taxonomy
+
+The reader returns one of these typed outcomes; the names are illustrative of
+the contract, not a required API spelling:
+
+| Outcome | Condition | Effect |
+| --- | --- | --- |
+| `Ok(record)` | Valid known version, checksum matches, mapping not required for reads | Returns the logical record |
+| `UnsupportedFormatVersion` | Version is missing, zero, unknown or greater than the supported set | Record is unreadable; migration refuses to rewrite it |
+| `MalformedRecord` | Truncation, length mismatch, invalid structure | Record is unreadable; no partial value |
+| `ChecksumMismatch` | Integrity check fails | Record is unreadable; no partial value |
+| `MappingError` | v1 decodes but cannot map under the approved rules | v1 remains readable as v1; migration fails that record |
+
+An unreadable record MUST NOT be reported as an absent record. The caller must
+be able to distinguish "no such record" from "record exists but cannot be
+read".
+
+## 11. Decommission
+
+The v1 decode branch is removed when both conditions hold: every live record
+has been migrated and verified, and the approved retention window for
+pre-migration backups has ended or those backups have been converted. The
+removal is a separate change with its own verification; it MUST NOT happen in
+the same step as the migration that first rewrites records. After removal,
+version `1` becomes an `UnsupportedFormatVersion` error by the normal rule.
+
+## 12. Illustrative example
+
+The following example is illustrative only. It uses neutral field names and
+does not claim to describe the repository's schema.
+
+v1 bytes, shown as JSON for readability:
+
+```json
+{"id":"rec-1","title":"Example","done":false}
+```
+
+v2 bytes, shown as JSON for readability:
+
+```json
+{"formatVersion":2,"id":"rec-1","record":{"title":"Example","state":"open"}}
+```
+
+The mapping `done:false` to `state:"open"` is a semantic change. It is
+permitted only if `TOR-OPEN-003` is resolved as a semantic change with an
+approved mapping. A structural-only reshape would preserve `done` and would not
+introduce `state`.
+
+## 13. Validation status and open items
+
+- No v1 schema, corpus or serialization was available. No schema or example
+  here was validated against the repository.
+- The envelope encoding, checksum algorithm, magic value, canonicalization
+  rules and mapping table are all `[OPEN]` until intake.
+- The contract requires validation by a table-driven corpus test and property
+  tests; those tests do not yet exist. This document is not evidence of
+  implementation or verification.
+- A JSON Schema or equivalent is deliberately not supplied while the
+  serialization remains open. Adding one now would create a false canonical
+  artefact.
+
+## 14. References
+
+- `terms-of-reference.md`, draft v0.1, SHA-256
+  `f68e0d0319f9f400e1732c04ab6a7a871c4a3d8c329b615af14e31cda965155b`.
+- `tech-design.md`, draft v0.1.
+- Installed `tech-design-doc` skill, SHA-256
+  `ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6`.

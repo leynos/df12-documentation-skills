@@ -492,6 +492,16 @@ def test_the_prohibition_scan_decides_each_permission_form(
             True,
             id="negated-imperative",
         ),
+        pytest.param(
+            "The design rejects compatibility or a deliberate migration.",
+            True,
+            id="rejecting-design",
+        ),
+        pytest.param(
+            "A compatibility layer or a deliberate migration is not admissible.",
+            True,
+            id="negated-predicate",
+        ),
     ],
 )
 def test_the_permission_scan_requires_an_affirmative_statement(

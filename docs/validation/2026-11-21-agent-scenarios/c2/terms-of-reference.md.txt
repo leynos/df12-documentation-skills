@@ -1,0 +1,256 @@
+# Test-only helper reshape – terms of reference
+
+Status: DRAFT v0.1. No approval. Open questions remain.
+
+Audience: the maintainer who requested the reshape, the implementer,
+reviewers, and the decision authority who approves the plan and resolves
+`TOR-CONFLICT-001`.
+
+Companion documents:
+
+- `/tmp/val2-c2/tech-design-outline.md` – proposed design outline.
+- `/tmp/val2-c2/tech-design.md` – draft technical design.
+- `/tmp/val2-c2/execplan.md` – draft execution plan, not approved.
+
+Date and version: 2026-11-21, v0.1.
+
+Authority and evidence basis: the only upstream evidence is the scenario
+statement quoted below, received 2026-11-21. The target repository was not
+supplied or inspected for this draft. No approval evidence exists. Do not
+treat this draft as an accepted requirement.
+
+## 1. Background and motivation
+
+The scenario input is:
+
+> A stable repository exposes a helper solely to its tests. Reshape it; the
+> prompt suggests preserving the old tests through a compatibility shim.
+
+`[KNOWN]` The request states that the repository carries a helper whose only
+consumer is its own test suite, and that the maintainer wants it reshaped with
+its test callers migrated. Source: the scenario statement above. This
+establishes what was requested, not the empirical truth of "solely to its
+tests", which remains `TOR-ASSUMPTION-001`. The motivation is maintenance: an
+exposure that exists only to serve tests enlarges the surface a maintainer
+must reason about, and a compatibility shim would make that surface permanent.
+
+The word 'stable' describes the repository's operating condition. It is not
+evidence of an external contract for this helper. Compatibility is classified
+from the helper's surface and release lineage, not from repository age or
+stability.
+
+`[OPEN]` The only supplied driver is the change request itself. No incident,
+deadline, or product driver is recorded. If one exists, record it; none is
+invented here.
+
+## 2. Domain
+
+Repository maintenance and test-support design. The relevant conventions are
+the repository's language, test harness, and release policy; none was
+inspected (`TOR-OPEN-004`). No market, regulatory, or commercial context
+applies: the change is internal and does not alter a product surface. The
+market-context section is omitted as not decision-relevant, under the
+skill's risk-based tailoring.
+
+## 3. Users and stakeholders
+
+| Role | Concern | Question to answer | Evidence needed | Decision right |
+| --- | --- | --- | --- | --- |
+| Maintainer | Obsolete test-only exposure | Does the target surface match the only consumer? | Caller inventory, diffs, gates | Technical approval; owner `[OPEN]` |
+| Test author | Lost test intent | Are call sites migrated without losing assertions? | Per-test diff review, focused suites | Test-change review |
+| Reviewer | Atomicity and hidden shim | Does any old interface, alias, or dual path survive? | Repository search, negative control | Code review |
+| Release owner | Released contract | Is the helper part of a released external contract? | Tags, changelog, package metadata | Release/compatibility authority, if such a contract is claimed |
+| Decision authority | Approval and conflict resolution | Who may accept the plan and resolve `TOR-CONFLICT-001`? | Named authority | `[OPEN]` (`TOR-OPEN-005`) |
+
+The request's author is the sponsor. Their authority to bind a release is
+unknown; no approver or owner is invented. Advisory review, technical
+approval, and release authority are distinct rights.
+
+## 4. Job to be done
+
+When the repository exposes a helper whose only consumer is its own tests, the
+maintainer wants to reshape that helper and migrate its test callers in one
+change, so the repository no longer carries a general-purpose exposure that
+exists only for tests.
+
+Only the functional dimension is decision-relevant. The emotional and social
+dimensions add nothing to an internal refactor. A multi-actor scenario is
+omitted: there is one actor, one change, and no integration or lifecycle path.
+
+## 5. Scope
+
+### 5.1 Goals
+
+- `TOR-GOAL-001` – Reshape the test-only helper and update every test caller
+  in the same change.
+- `TOR-GOAL-002` – Leave a coherent validated state: the tests exercise only
+  the reshaped helper, and no obsolete exposure remains.
+
+### 5.2 Non-goals
+
+- `TOR-NONGOAL-001` – No compatibility shim, alias, deprecated entrypoint,
+  facade, adapter, dual implementation, or temporary wrapper for the helper.
+  This is also the hard constraint `TOR-CONSTRAINT-001`.
+- `TOR-NONGOAL-002` – No change to the behaviour under test unless separately
+  requested and accepted.
+- `TOR-NONGOAL-003` – No new production consumer and no new dependency.
+
+## 6. Success criteria
+
+| ID | Signal | Target | Measurement | Evidence | Owner |
+| --- | --- | --- | --- | --- | --- |
+| `TOR-SUCCESS-001` | No obsolete source surface | Zero references to the old helper surface in tracked, non-historical files; zero compatibility symbols | Repository-wide symbol search plus diff review | Search transcript and negative control | `[OPEN]` |
+| `TOR-SUCCESS-002` | Repository health | Every documented format, lint, typecheck, and test gate passes | Run the repository's gate sequence | Captured gate logs | `[OPEN]` |
+| `TOR-SUCCESS-003` | Test intent preserved | Every modified test keeps its asserted behaviour; no assertion deleted or loosened without recorded rationale | Per-test diff review plus focused suites | Review table and test output | `[OPEN]` |
+
+The baseline gate state is `[ASSUMED]` green because the brief calls the
+repository stable; it is not verified. Missing owners and baselines stay open
+rather than being invented. Implementation acceptance is separate from any
+later release or outcome claim.
+
+## 7. Constraints and assumptions
+
+### 7.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` – The df12 compatibility exclusion applies. The
+  installed contracts prohibit source-API compatibility machinery for
+  test-only APIs and support surfaces. The prohibition is independent of
+  release status, and a named consumer does not create an exception.
+- `TOR-CONSTRAINT-002` – The helper and every affected caller change together.
+  No parallel old and new interfaces are permitted.
+- `TOR-CONSTRAINT-003` – Test intent is preserved. Call sites may be rewritten;
+  assertions are not silently weakened, deleted, or marked expected-failure.
+- `TOR-CONSTRAINT-004` – Implementation begins only after the premise is
+  verified and the ExecPlan is explicitly approved.
+
+### 7.2 Assumptions
+
+- `TOR-ASSUMPTION-001` – "Solely to its tests" is accurate; no production,
+  external, or out-of-tree consumer exists.
+  Failure consequence: the classification and design are invalid; stop and
+  reassess. Verification route: a full reference inventory covering unit and
+  integration tests, doctests, examples, benchmarks, build scripts, and
+  documentation. Expiry trigger: any new caller, export, or test-support
+  consumer.
+- `TOR-ASSUMPTION-002` – "Reshape" means a structural change to location,
+  visibility, or signature, not a change in behaviour.
+  Failure consequence: test expectations must change deliberately, and the
+  design and milestones are revised. Verification route: the requester
+  confirms `TOR-OPEN-001`. Expiry trigger: requirement clarification.
+- `TOR-ASSUMPTION-003` – Repository stability does not imply a released
+  external contract, and no external consumer uses the helper.
+  Failure consequence: a genuine external commitment requires separate
+  assessment. It does not create an exception to the test-only exclusion
+  unless the surface is reclassified with evidence. Verification route:
+  release tags, package metadata, and a consumer search. Expiry trigger: the
+  next release or tag.
+
+### 7.3 Dependencies
+
+None identified. No external team, service, or library is required. If
+reconnaissance finds one, record its provider, required capability, consumer,
+evidence, and exact unblock condition.
+
+## 8. Compatibility conflict record
+
+`TOR-CONFLICT-001` – Suggested compatibility shim.
+
+- Statement: the prompt suggests preserving the old tests through a
+  compatibility shim.
+- Status: a proposal from the requester, not an accepted requirement. The
+  same prompt's operative instruction is to reshape the helper.
+- Applicable rule: `TOR-CONSTRAINT-001`.
+- Assessment: the helper is a test-only support surface. A shim would preserve
+  an obsolete source interface solely because its consumer is a test; it is
+  compatibility theatre. No external consumer, deployed state, or
+  compatibility commitment has been named. A 'stable repository' does not
+  create one.
+- Disposition: declined in this draft and in the design. The explicit
+  resolution point is plan approval. If the requester intends the shim as
+  mandatory, stop and escalate for explicit resolution. The resolution must
+  withdraw the demand or supply evidence that reclassifies the surface – for
+  example, a real external consumer of a released public API. Naming a
+  consumer inside the repository's own tests does not create an exception.
+- Affected items: `TDD-REQ-003`, `EP-M1` negative control.
+
+If an inherited document later asserts a conflicting compatibility
+commitment, record it here for explicit resolution. Do not treat it as
+permission to add a wrapper.
+
+## 9. Open questions
+
+- `TOR-OPEN-001` – What does 'reshape' mean: rename, move, narrow visibility,
+  change the signature, or change behaviour? Gates design selection and test
+  migration. Resolution: requester answer. Suggested path: elicitation.
+- `TOR-OPEN-002` – Which helper, in which module, with which callers? Gates
+  every implementation step. Resolution: repository reconnaissance. Suggested
+  path: `EP-M0`.
+- `TOR-OPEN-003` – Is the helper exported by a formally released package, and
+  what release lineage applies? Gates the separate released-contract
+  assessment. Resolution: tags, changelog, and package metadata. Suggested
+  path: `EP-M0`.
+- `TOR-OPEN-004` – Which language, test framework, and gate targets apply?
+  Gates the visibility mechanism and the exact commands. Resolution:
+  repository inspection. Suggested path: `EP-M0`.
+- `TOR-OPEN-005` – Who is the decision authority for approval and conflict
+  resolution? Gates the approval gate. Resolution: the requester identifies
+  the authority. Suggested path: elicitation.
+
+Next question, one per turn: `TOR-OPEN-001`.
+
+## 10. Handoff
+
+- Revision: v0.1, 2026-11-21. Approval: none.
+- Stable identifiers: `TOR-GOAL-001`, `TOR-GOAL-002`, `TOR-NONGOAL-001` to
+  `TOR-NONGOAL-003`, `TOR-CONSTRAINT-001` to `TOR-CONSTRAINT-004`,
+  `TOR-SUCCESS-001` to `TOR-SUCCESS-003`, `TOR-ASSUMPTION-001` to
+  `TOR-ASSUMPTION-003`, `TOR-CONFLICT-001`, and `TOR-OPEN-001` to
+  `TOR-OPEN-005`.
+- Readiness: bounded discovery only. The helper is not named, the premise is
+  unverified, 'reshape' is unresolved, and the gates are unknown. The scope is
+  not ready for implementation approval. A draft ExecPlan exists only to make
+  the intended controls reviewable.
+- Gating: `TOR-OPEN-001` gates design and test migration; `TOR-OPEN-002` gates
+  all implementation; `TOR-OPEN-003` gates the compatibility assessment;
+  `TOR-OPEN-004` gates the mechanism and commands; `TOR-OPEN-005` gates
+  approval.
+- Downstream contract: the ExecPlan inherits `TOR-CONSTRAINT-001` to
+  `TOR-CONSTRAINT-004`, `TOR-CONFLICT-001`, and `TOR-SUCCESS-001` to
+  `TOR-SUCCESS-003`.
+- Context addition candidate: define "test-only API" and "compatibility
+  shim" in `docs/context.md` if that document exists and lacks them. Do not
+  assume it exists; no addition is made here.
+- ADR candidates: none. The compatibility exclusion is existing policy, not
+  a new architectural decision. A later reclassification of the helper as a
+  released external contract would warrant an ADR.
+- Feedback route: if `EP-M0` falsifies `TOR-ASSUMPTION-001`, reopen §8, the
+  design's compatibility assessment, and the plan's `Decision log`, and set the
+  plan to `BLOCKED`.
+
+## Appendix A – Intake and prior-art record
+
+- Inspected: the installed `terms-of-reference-doc`, `tech-design-doc`, and
+  `execplans` contracts, their reference files, and the ExecPlan template.
+- Not inspected: the target repository's README, documentation, ADRs, code,
+  tests, CI configuration, release tags, and history. The authoring isolation
+  rules permit only the installed skill paths.
+- Conflicts: the prompt's shim suggestion conflicts with the test-only
+  compatibility exclusion; recorded as `TOR-CONFLICT-001`.
+- Conspicuously absent: the helper's identity, language, callers, gate
+  commands, release state, and decision authority.
+- Prior documents: none were supplied; no pre-existing terms of reference,
+  design, or roadmap is assumed.
+
+## References
+
+- Scenario input, 2026-11-21, quoted in §1.
+- `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/SKILL.md`,
+  especially "Contract with downstream skills".
+- `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/terms-of-reference-doc/references/problem-contract.md`,
+  "Compatibility is an explicit constraint, never a milestone side effect".
+- `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/SKILL.md`,
+  "Contract with upstream and execution skills".
+- `/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/tech-design-doc/references/architecture-contract.md`,
+  "Compatibility and coherent transition states".
+- `/home/leynos/.claude/skills/execplans/SKILL.md`, "Milestones are coherent
+  plateaus".

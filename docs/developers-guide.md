@@ -176,35 +176,39 @@ warrants a view, whether evidence is adequate, whether a target is honest, and
 whether a handoff is proportionate are judgement calls covered only by the
 fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
-Their artefacts are published under `docs/validation/`, so a reader can inspect
-what the reviewer judged, but rerunning a scenario still needs an agent: the
-verdicts are manual evidence, not CI results.
-`scripts/check_workflow_boundary.py` decides one boundary mechanically from
-those artefacts, and `tests/test_workflow_boundary_contract.py` drives it
-through its command line: a record with a pending deviation must not claim
-`COMPLETE` or `ACTIVE` until a later Decision log entry accepts that deviation,
-a `BLOCKED` record must still log a pending deviation as a concrete entry
-rather than a placeholder template, and a handoff must state its approval
-state, readiness, stable identifiers, and a feedback route that is not declared
-absent. It also runs two phrase checks over the same output: a record for a
-private, test-only, pre-1.0, or unreleased surface may not permit compatibility
-machinery, and the C5 records must keep their affirmative statement that a
-layer or migration is admissible, so a negated form such as "no layer or
-migration is admissible" does not satisfy the check. The script reads the
-governing sentences from the shipped skills and reports one that is missing, so
-a rule cannot be deleted from a skill while the check keeps passing. These
-checks decide the recorded output, not whether an agent obeys the skill: the
-phrase checks find a permissive sentence, not a plan that implements
-compatibility without saying so.
+Their artefacts are published under `docs/validation/` for the 19 November and
+21 November campaigns, so a reader can inspect what the reviewer judged, but
+rerunning a scenario still needs an agent: the verdicts are manual evidence,
+not CI results. `scripts/check_workflow_boundary.py` decides one boundary
+mechanically from those artefacts, and
+`tests/test_workflow_boundary_contract.py` drives it through its command line:
+a record with a pending deviation must not claim `COMPLETE` or `ACTIVE` until a
+later Decision log entry accepts that deviation, a `BLOCKED` record must still
+log a pending deviation as a concrete entry rather than a placeholder template,
+and a handoff must state its approval state, readiness, stable identifiers, and
+a feedback route that is not declared absent. It also runs two phrase checks
+over the same output: a record for a private, test-only, pre-1.0, or unreleased
+surface may not permit compatibility machinery, and the C5 records must keep
+their affirmative statement that a layer or migration is admissible, so a
+negated form such as "no layer or migration is admissible" does not satisfy the
+check. The script reads the governing sentences from the shipped skills and
+reports one that is missing, so a rule cannot be deleted from a skill while the
+check keeps passing. These checks decide the recorded output, not whether an
+agent obeys the skill: the phrase checks find a permissive sentence, not a plan
+that implements compatibility without saying so.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard
 covers: `tech-design-doc/references/document-anatomy.md`,
 `editing-checklist.md`, and `research-protocol.md`, and
-`terms-of-reference-doc/references/elicitation-protocol.md`. Guarding their
-wording is separate work: no rule in this branch's change set touches them.
-`field-evidence.md` is covered for packaging only, because it records rationale
-rather than obligations. These are the areas that remain unguarded.
+`terms-of-reference-doc/references/elicitation-protocol.md`. One rule in this
+branch's change set does touch the last of these: its non-goal guidance no
+longer prescribes a list-length target, because that contradicted the
+`SKILL.md` rule against inventing non-goals to meet a numerical quota. The
+other three are unchanged by this branch, and guarding the wording of any of
+the four is separate work. `field-evidence.md` is covered for packaging only,
+because it records rationale rather than obligations. These are the areas that
+remain unguarded.
 
 ______________________________________________________________________
 

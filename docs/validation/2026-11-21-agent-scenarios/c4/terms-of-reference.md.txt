@@ -1,0 +1,311 @@
+# Version 2 library function rename – terms of reference
+
+Status: Draft v0.1 (bounded change; sponsor confirmation pending; not
+accepted)
+
+Audience: library maintainers, the release manager, and reviewers of the
+change.
+
+Companion documents: `/tmp/val2-c4/tech-design.md` and
+`/tmp/val2-c4/execplan.md`.
+
+Date and version: 2026-11-21, v0.1.
+
+Authority and evidence basis: The scenario brief supplied on 2026-11-21 is the
+only project source. No library checkout, release tag, issue tracker, or
+repository documentation was accessible in the authoring environment.
+`[OPEN]` items therefore remain unresolved, and no approval is inferred from
+this draft. Document acceptance is separate from implementation approval.
+
+## Intake working note (Phase 0)
+
+The accessible prior art consists of the scenario brief and the installed
+documentation skills. The brief establishes the following facts:
+
+- The library has major version 2. `[KNOWN]`
+- The brief requests a rename of an exported function that it says was
+  introduced after the latest formal release tag. The request is `[KNOWN]`;
+  the lineage claim is `[ASSUMED]` until the tag is inspected.
+- The sponsor wants that function renamed before the next release. `[KNOWN]`
+
+No README, `docs/context.md`, ADR, roadmap, changelog, release note, source
+file, or ExecPlan for the library was available. The following cannot be
+recovered from prior art and become elicitation targets: the current and
+proposed names (`TOR-OPEN-001`), the identity of the latest formal release tag
+(`TOR-OPEN-002`), the implementation language and gates
+(`TOR-OPEN-003`), the export topology (`TOR-OPEN-004`), development-branch
+adoption (`TOR-OPEN-005`), and pre-release artefacts (`TOR-OPEN-006`).
+
+No artefact conflict is recorded because no second artefact exists. The
+conspicuous absence is any evidence about the published API surface and its
+release lineage; that evidence is required before execution, not before
+planning.
+
+## Provisional sketch (Phase 1)
+
+The sketch below is drawn from the brief alone. The sponsor has not confirmed
+it, so the elicitation phase has not started. Present this sketch for
+confirmation before asking anything; the first question, once a sponsor
+channel exists, is `TOR-OPEN-001` only.
+
+| Section | Sketch | Status |
+| --- | --- | --- |
+| 1. Background | Rename before the next release, because a formal tag publishes the name. | `[KNOWN]` request; lineage `[ASSUMED]` |
+| 2. Domain | Public API evolution; a formal tag bounds the published surface. | `[KNOWN]`; tag identity `[OPEN]` |
+| 3. Market | No market or adoption decision in scope. | `[KNOWN]` |
+| 4. Users | Library maintainer and release manager; downstream formal-release consumers are unaffected. | `[ASSUMED]`; named owner `[OPEN]` |
+| 5. Job | Rename an unreleased exported function before release. | `[ASSUMED]`, reconstructed from the brief |
+| 6. Scope | Rename and update every reference; no alias. | `[KNOWN]`; export topology `[OPEN]` |
+| 7. Success | New name present, old name absent, gates pass, baseline recorded. | `[ASSUMED]`; tooling `[OPEN]` |
+| 8. Constraints | Unreleased-surface exclusion, atomic update, behaviour preserved. | `[KNOWN]`; tag `[OPEN]` |
+| 9. Open questions | Six items, listed below. | `[OPEN]` |
+
+Elicitation state: no interview turn has occurred. This authoring environment
+has no sponsor channel, so the sketch is recorded rather than presented live.
+Normally drafting waits for sketch confirmation. This record keeps the sketch
+and draft together so the work is reviewable in one pass, but the draft
+inherits the sketch's unconfirmed status and must not be handed downstream as
+accepted. Do not treat the draft or the sketch as confirmed.
+
+## 1. Background and motivation
+
+A formal release tag publishes the library's exported surface. A name that
+has never appeared in such a tag is still provisional: the maintainers can
+change it directly. Once the next release is tagged, the same name becomes
+part of the published contract, and any later rename must be assessed against
+real consumers and an existing compatibility commitment. The next release is
+therefore the last point at which this rename avoids a released-contract
+assessment.
+
+The sponsor asks for the rename now because the intended name should ship
+rather than remain a corrected-after-release defect. This is a naming and
+release-timing decision, not a product-market decision.
+
+## 2. Domain
+
+The domain is public library API evolution under formal release tagging. A
+**formal release tag** is the tag that publishes an installable or consumable
+version of the applicable package. It is not a branch point, a pre-release
+artefact, or the "unreleased" heading in a changelog. **Unreleased** describes
+a surface absent from every formal release tag; it does not describe a change
+that merely sits on the development branch. An edit to an already released
+1.0-or-later symbol remains a released-contract change even when the edit is
+not yet tagged.
+
+Version 2 places the library in the post-1.0 lineage. That fact does not by
+itself make every symbol released, because release lineage is evaluated per
+surface. The brief states that the function in scope was introduced after the
+latest formal release tag, so the design treats the function as absent from
+every formal release. `[ASSUMED]` until the tag is inspected and recorded.
+
+The governing compatibility policy applies to source APIs only. Persisted data
+and wire formats are separate obligations; no such format is in scope here.
+
+## 3. Market context
+
+Not applicable. This bounded change has no competitor, adoption, pricing, or
+market-entry decision. The section is omitted under the skill's risk-based
+tailoring rather than populated with invented context.
+
+## 4. Users and stakeholders
+
+| Stakeholder | Concern | Decision right |
+| --- | --- | --- |
+| Library maintainer | The final name is correct; every reference changes together. | Proposes the name and implements the rename. |
+| Release manager | The rename lands before the next formal tag; notes promise no unsupported name. | Controls timing and tagging. |
+| Downstream consumer bound to a formal release | No released version contains the old name, so no released dependency breaks. | None. |
+| Consumer tracking the development branch | An untagged build may break; notice may be needed. | None that creates an obligation. |
+| Reviewer | Rename only; no alias, behaviour change, or unrelated public movement. | Approves or rejects. |
+
+The primary user is the library maintainer acting at release time. The release
+manager is a stakeholder with veto power over timing. Downstream consumers of
+formal releases have never been able to use the old name because it never
+shipped in one.
+
+## 5. Job to be done
+
+> When the library is preparing its next formal release, a maintainer wants to
+> rename an exported function that has never shipped in a formal release, so
+> that the release publishes the intended name without carrying a compatibility
+> alias for a name no released consumer has used.
+
+The functional outcome is a single final name in the published API. The
+emotional outcome is confidence that the release does not freeze a known
+error. The social outcome is a maintainable public surface that reviewers can
+defend without an unexplained deprecated entrypoint.
+
+## 6. Scope
+
+### 6.1 Goals
+
+`TOR-GOAL-001`: Rename the exported function and update every in-repository
+reference before the next formal release, so that the next release exports the
+function only under its final name.
+
+`TOR-GOAL-002`: Preserve the function's signature, visibility, and observable
+behaviour; only its name changes.
+
+### 6.2 Non-goals
+
+- Preserving the old name through an alias, deprecated entrypoint, facade,
+  wrapper, dual export, or shim. The function is unreleased, so compatibility
+  machinery is prohibited rather than optional (`TOR-NONGOAL-001`).
+- Renaming released symbols or performing unrelated naming clean-ups
+  (`TOR-NONGOAL-002`).
+- Changing the function's parameters, return type, error behaviour,
+  documentation semantics, or implementation (`TOR-NONGOAL-003`).
+- Changing persisted data, wire formats, package versioning policy, or release
+  cadence (`TOR-NONGOAL-004`).
+- Rewriting or retagging historical release notes (`TOR-NONGOAL-005`).
+
+## 7. Success criteria
+
+`TOR-SUCCESS-001`: The public export surface after the change contains the
+final name and does not contain the old name.
+
+`TOR-SUCCESS-002`: Every in-repository caller, re-export, test, example, and
+current documentation reference uses the final name. Historical release notes
+and tags are deliberately excluded from the search.
+
+`TOR-SUCCESS-003`: The library's build, lint, typecheck, and test gates pass,
+and the public API diff contains exactly the rename with no other public
+surface change.
+
+`TOR-SUCCESS-004`: The baseline is recorded as the latest formal release tag of
+the applicable package, including its commit, and the function is absent from
+that tag's exported surface.
+
+`TOR-SUCCESS-005`: The next release's notes name only the final symbol. No
+alias, deprecation notice, or migration wrapper exists.
+
+The baseline value for `TOR-SUCCESS-004` is `[OPEN]` until
+`TOR-OPEN-002` is resolved. Measurement conditions, owners, and the exact gate
+commands are `[OPEN]` under `TOR-OPEN-003`.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+`TOR-CONSTRAINT-001`: The baseline is the latest formal release tag of the
+applicable package. Pin its name and commit before any edit. If the function is
+found in any formal release tag, stop: the change is then a released-contract
+change requiring separate assessment, not an unreleased-surface rename.
+
+`TOR-CONSTRAINT-002`: Do not add source-API compatibility machinery for this
+function. The prohibition covers aliases, deprecated entrypoints, facades,
+wrappers, dual implementations, migration shims, and re-exports under the old
+name. The function was introduced after the latest formal release tag, so the
+exclusion for unreleased API changes applies. A consumer that depends on the
+development branch does not create an exception.
+
+`TOR-CONSTRAINT-003`: Update the definition, every re-export, and every
+in-repository caller atomically. Do not create a milestone that keeps the old
+and new names alive together.
+
+`TOR-CONSTRAINT-004`: Preserve the function's signature, visibility, and
+observable behaviour apart from the name.
+
+`TOR-CONSTRAINT-005`: Do not modify, rewrite, or retag historical release notes,
+release tags, or published artefacts.
+
+`TOR-CONSTRAINT-006`: Implementation begins only after explicit approval of the
+receiving ExecPlan. This draft does not grant that approval.
+
+### 8.2 Assumptions
+
+`TOR-ASSUMPTION-001`: No formal release tag contains the function. Source: the
+brief states that the function was introduced after the latest formal release
+tag. Failure consequence: the function may be a released 1.0-or-later contract,
+and the rename becomes a compatibility or migration decision. Verification:
+inspect the tag's exported surface at the recorded commit. Expiry: when
+`TOR-OPEN-002` is resolved and the tag is inspected.
+
+`TOR-ASSUMPTION-002`: No released generated binding or packaged artefact
+outside the library exports the old name. Failure consequence: a released
+artefact may expose the name, which triggers a separate released-contract
+assessment. Verification: search related release artefacts. Expiry: before the
+next formal release.
+
+### 8.3 Dependencies
+
+The next formal release tag is the release manager's deliverable. The rename
+must land before that tag is created; the tag itself is not required to
+implement or verify the rename. No third-party service or upstream library
+release is required. The API-surface inspection tool (or, failing that, a
+compile-based consumer check) is a verification dependency whose availability
+is `[OPEN]` under `TOR-OPEN-003`.
+
+## 9. Open questions
+
+`TOR-OPEN-001`: What are the current and proposed function names, and what
+naming rationale governs the choice? This gates every edit and the acceptance
+evidence. Resolution path: the sponsor supplies both names and the rationale.
+
+`TOR-OPEN-002`: Which tag is the latest formal release tag for the applicable
+package, and what commit does it point to? This gates the baseline, the
+release-lineage check, and `TOR-SUCCESS-004`. Resolution path: inspect the
+repository's formal tags; record the exact name and commit. Do not guess.
+
+`TOR-OPEN-003`: What language, build system, API-surface tool, and gate
+commands does the library use? This gates the ExecPlan's concrete commands and
+tolerance counts. Resolution path: read the library's `AGENTS.md`, Makefile,
+and manifest at reconnaissance.
+
+`TOR-OPEN-004`: Through which modules, re-exports, preludes, feature flags,
+generated documentation, or code-generation inputs is the function exposed?
+This gates completeness of the rename. Resolution path: source search for the
+old name and for the export path.
+
+`TOR-OPEN-005`: Does any consumer tracking the development branch use the old
+name? This affects communication only; it does not permit an alias.
+Resolution path: issue tracker or downstream search, if available.
+
+`TOR-OPEN-006`: Does a pre-release artefact or release branch contain the
+function? A pre-release is not a formal release tag, but a published pre-release
+may create a practical commitment worth recording. Resolution path: inspect
+pre-release tags and release branches; record the result without treating it as
+a formal released contract.
+
+No question is presented as resolved by this draft. `TOR-OPEN-001` and
+`TOR-OPEN-002` are the only items that block the receiving plan's baseline
+milestone.
+
+## Phase 5 handoff
+
+**Context vocabulary.** If the library has a `docs/context.md`, propose entries
+for "formal release tag", "unreleased API surface", and "compatibility
+machinery". No such file was inspected, so no patch is offered.
+
+**ADR candidates.** None for the rename itself; the governing policy already
+decides the compatibility question. If `TOR-ASSUMPTION-001` fails, an ADR is
+required for the released-contract migration.
+
+**Open questions register.** The register in §9 is the primary input to the
+next iteration. `TOR-OPEN-001` and `TOR-OPEN-002` gate execution;
+`TOR-OPEN-003` gates concrete commands; `TOR-OPEN-004` gates completeness;
+`TOR-OPEN-005` and `TOR-OPEN-006` affect communication and assessment.
+
+**Downstream readiness.** Ready for a bounded technical design and ExecPlan
+with the open questions acknowledged. Not ready for execution. The design has
+no open architectural alternatives: the change is a mechanical rename with an
+explicitly prohibited compatibility layer.
+
+**Traceable handoff.** Revision v0.1, approval state "draft, not accepted";
+material IDs are listed above; the compatibility exclusion is
+`TOR-CONSTRAINT-002`; the baseline is `TOR-CONSTRAINT-001`; no owner, approval
+date, consumer, or measurement is invented.
+
+**Feedback route.** If implementation finds the old name in a formal release
+tag, or finds a released artefact exposing it, return to `TOR-CONSTRAINT-001`
+and `TOR-ASSUMPTION-001`, record the evidence, and reassess before any further
+edit. Do not add an alias to resolve the conflict.
+
+## Appendix: sources
+
+- Scenario brief, supplied 2026-11-21.
+- Installed `terms-of-reference-doc` skill and its references, read
+  2026-11-21.
+- Installed `tech-design-doc` skill and its references, read 2026-11-21.
+- Installed `execplans` skill and template, read 2026-11-21.
+
+No repository, release, or tracker source was accessible.

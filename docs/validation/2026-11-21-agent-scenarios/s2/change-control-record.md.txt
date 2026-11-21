@@ -1,0 +1,222 @@
+# Change control record: advisory hardening recommendation and unrecorded approved architecture change
+
+Status: Open – reconciliation incomplete. Execution blocked; completion not
+claimed.
+
+Date: 2026-11-21
+
+Version: 0.1
+
+Audience: executing plan owner, technical design owner, ADR approver, and the
+decision authority for the hardening proposal.
+
+Authority and evidence basis: The only input is the scenario report. No Terms of
+Reference, technical design, ADR, roadmap, ExecPlan, approval record, or
+repository revision was inspected. Approval states below are claims to verify,
+not established facts. Identifiers, owners, revisions, and paths are unknown and
+are not invented.
+
+Companion records:
+
+- `execplan-deviation-entry.md` – plan-level decision log and status.
+- `design-adr-amendment-request.md` – upstream design and ADR action.
+- `hardening-recommendation-triage.md` – advisory recommendation record.
+
+## 1. Situation
+
+Implementation is proceeding under a technical design and an ExecPlan whose
+`Conformance basis` cites that design. Two events occur:
+
+1. A discovery agent recommends extra hardening.
+2. Implementation finds an approved architectural change that the technical
+   design and ADRs do not record.
+
+Neither event can be absorbed silently. The first is advice, not authority. The
+second is an approved change whose upstream record is missing, so the executing
+plan no longer conforms to its declared basis. The two items are treated as
+independent unless evidence links them.
+
+## 2. Authority and evidence classification
+
+| Item | Source | Claimed state | Verified state | Decision authority | Evidence held | Disposition |
+| --- | --- | --- | --- | --- | --- | --- |
+| A. Extra hardening | Discovery agent | Recommended | Advisory input only | Unknown | Scenario statement only | Proposed; not in scope |
+| B. Architectural change | Implementation | Approved | Approval evidence absent; design and ADR absence reported, not inspected | Unknown | None attached | Blocking reconciliation |
+
+A discovery agent may recommend a change without approving it or completing the
+parent goal. A reviewer suggestion or subordinate agent report is input, not an
+approval or a licence to complete a parent goal. The label "approved" in the
+implementation report is likewise a claim: working code, or a merged change,
+establishes what landed, not that a decision was authorized.
+
+## 3. Item A – hardening recommendation
+
+### 3.1 Status
+
+`PROPOSED / ADVISORY`. Not approved. Not in the terms of reference, the design,
+or the plan scope. No implementation is authorized on its basis.
+
+### 3.2 Why it is not accepted here
+
+"Extra hardening" does not identify an asset, threat, failure mode, control,
+cost, or owner. Accepting it would expand scope on the strength of an advisory
+voice. Rejecting it silently would discard potentially material risk
+information. The record therefore preserves it as an open proposal.
+
+### 3.3 Evidence required before a decision
+
+Ask in dependency order, one question at a time:
+
+1. Which asset, trust boundary, or failure mode is under-protected, and what
+   evidence shows the gap?
+2. Which approved ToR goal, constraint, success criterion, or design
+   requirement does the gap threaten?
+3. What control is proposed, and what alternatives exist?
+4. What are the cost, operational, performance, compatibility, and verification
+   impacts?
+5. Who owns the residual risk, and who has authority to accept or reject the
+   change?
+
+### 3.4 Classification pending
+
+- ToR-level: it changes a hard constraint, risk appetite, success criterion, or
+  scope boundary.
+- Design-level: it adds or changes a control, component, interface, trust
+  boundary, or verification obligation.
+- Implementation-level: an approved requirement already covers it and the work
+  stays within ExecPlan tolerances. Even then, record the choice.
+- Out of scope: record the rationale and redirect.
+
+### 3.5 Disposition and gating
+
+Record-local ID: `OPEN-HARDEN-01`. No upstream identifier is assigned, and no
+existing identifier is reused.
+
+Resolution criteria: a named decision authority records accept, defer, or
+reject with rationale and affected upstream links.
+
+Gating: the recommendation does not by itself block completion of the current
+work. It blocks if the authority accepts it into scope, or if it demonstrates
+that an approved requirement or acceptance criterion is unmet. Either outcome
+requires a design or plan revision before completion.
+
+## 4. Item B – approved architectural change not in design or ADR
+
+### 4.1 Status
+
+`APPROVED (claimed) / IMPLEMENTED (claimed or in progress) / UNRECORDED
+upstream / BLOCKING`.
+
+The change may be legitimately approved. The reported defect is that the
+technical design and ADRs, which are the authoritative record of architecture,
+do not contain it. The ExecPlan's `Conformance basis` therefore cites a design
+that no longer describes the reported approved architecture. The design and ADR
+record was not inspected in this workspace, so the absence is a report to
+verify, not an observed fact.
+
+### 4.2 Evidence required
+
+- Approval record: decision authority, date, scope, and revision.
+- Change description: affected components, interfaces, trust boundaries, data
+  formats, dependencies, and failure modes.
+- Implementation evidence: what actually landed, at which revision.
+- Confirmation that the approving authority is the design authority, and that
+  the change remains within approved ToR intent.
+
+If any of these is absent, the change is a proposal pending evidence, not an
+approved change.
+
+Evidence expiry: re-check the approval record and design revision after any
+rebase, upstream merge, or design or ADR amendment. Implementation and
+verification evidence remains tied to the revision that produced it; an earlier
+green result does not become current evidence after the architecture changes.
+
+### 4.3 Bidirectional impact analysis
+
+| Upstream or downstream artefact | Impact to assess | Required action if affected |
+| --- | --- | --- |
+| ToR goals, constraints, success criteria, assumptions | Does the change contradict or falsify an assumption, constraint, or criterion? | Record evidence and propose a ToR revision. Do not rewrite intent to match code. |
+| Technical design | Missing decision, design element, contract, failure mode, or verification obligation | Amend the design with decision, alternatives, rationale, consequences, and trace links. |
+| ADR | Hard-to-reverse decision absent from the decision record | Create or amend an ADR and link it from the design. |
+| Roadmap | Sequencing, phase hypothesis, or outcome affected | Re-check the affected phase and record the change. |
+| ExecPlan | Stale `Conformance basis`, milestone acceptance, and trace links | Update the basis and links; keep status `BLOCKED` until reconciliation is accepted. |
+| Compatibility | Interface or persisted/wire-format obligation | Classify the surface. No compatibility machinery for private, test-only, pre-1.0, or unreleased APIs. Assess released 1.0+ contracts and deployed state separately. |
+| Verification | Invariants, lemmas, axioms, and evidence invalidated by the architecture change | Reopen the obligations. Mark unexecuted checks planned, not passed. |
+
+### 4.4 Required sequence
+
+1. Attach approval evidence and confirm the approving authority.
+2. Amend the technical design or ADR; see the amendment request.
+3. Re-check every affected ToR, design, roadmap, and ExecPlan link in both
+   directions.
+4. Record explicit acceptance of the reconciled deviation in the ExecPlan
+   `Decision log`.
+5. Update `Conformance basis` to the amended revision.
+6. Resume implementation and verification.
+
+### 4.5 Prohibited resolutions
+
+- Treating working code or a merged change as proof of approval.
+- Editing the design to legitimize implementation without approval evidence.
+- Continuing implementation or claiming completion while the design is stale.
+- Inventing owners, identifiers, dates, or revisions.
+- Adding aliases, facades, deprecated entrypoints, dual implementations, or
+  wrappers to avoid recording the change.
+- Silently converting the change into a proposal, or the proposal into an
+  approved change.
+
+## 5. Completion state
+
+Not complete. The executing plan is `BLOCKED`.
+
+| Gate | Status | Reason |
+| --- | --- | --- |
+| Approval evidence attached for Item B | Not met | No decision record available. |
+| Design or ADR records Item B | Not met | Amendment request outstanding. |
+| ToR impact check complete | Not performed | Impact unknown until the design amendment is drafted. |
+| Trace links re-checked | Not met | Amended design revision not established. |
+| ExecPlan `Conformance basis` current | Not met | Still cites the pre-change design. |
+| Verification obligations re-planned | Not met | The change may invalidate prior evidence. |
+| Item A recorded and routed | Met as a record only | Proposal recorded, authority unknown. It does not gate unless admitted. |
+
+Document status and work status are separate. This record can be complete as a
+record while the underlying work remains blocked. It is not a delivery and does
+not authorize implementation.
+
+Readiness: blocked. The design amendment and resumed execution are not ready to
+proceed. The only permitted work is evidence collection, the ToR impact check,
+and bounded triage of Item A. Bounded discovery on the hardening proposal does
+not alter approved scope.
+
+## 6. Handoff and decision rights
+
+| Action | Authority required | Input | Gates |
+| --- | --- | --- | --- |
+| Decide Item A hardening proposal | Unknown; name the product or security risk owner | Answers to §3.3, cost and evidence | Any scope, design, or acceptance change |
+| Produce Item B approval evidence | Unknown; name the approving authority | Decision record, scope, revision | Design and ADR amendment |
+| Amend design or ADR | Technical design owner and ADR approver | Amendment request with impact analysis | Trace-link update and plan unblock |
+| Accept reconciled deviation | Executing plan owner or approver | Amended design revision, updated links | Plan status change from `BLOCKED` |
+| Reopen or confirm verification | Design owner and implementer | Affected obligations | Completion claim |
+
+## 7. Conformance basis for this record
+
+Documentation skills root:
+`/home/leynos/.lody/repos/github---leynos---df12-documentation-skills/worktrees/fcf156c3-8ee2-40f3-a101-aaf06a8b6dad/skills/`.
+
+- `terms-of-reference-doc/SKILL.md` and
+  `references/problem-contract.md`, inspected 2026-11-21.
+- `terms-of-reference-doc/references/elicitation-protocol.md`, inspected
+  2026-11-21.
+- `tech-design-doc/SKILL.md` and `references/architecture-contract.md`,
+  inspected 2026-11-21.
+- `tech-design-doc/references/document-anatomy.md` and
+  `references/editing-checklist.md`, inspected 2026-11-21.
+
+Execution skill root: `/home/leynos/.claude/skills/execplans/`.
+
+- `SKILL.md` and `references/execplan-template.md`, inspected 2026-11-21.
+
+The installed skill files expose no version identifier, and their repository
+revision was not inspected. Project ToR, design, ADR, roadmap, and ExecPlan
+content was unavailable under the exercise isolation rule. All project
+identifiers, paths, owners, and revisions remain unknown.

@@ -1,0 +1,286 @@
+# ExecPlan record – required changes for the API rename conflict
+
+Status to record: `BLOCKED (RFC alias demand conflicts with df12 pre-1.0 policy; explicit resolution required)`
+
+Applies to: the ExecPlan already executing the library API rename. The plan
+file was not inspected. Its path, current status, milestone identifier, and
+progress entries are provisional and must be read before these edits are
+applied. Do not replace unrelated plan content, including the Branch and
+Roadmap item fields.
+
+Date: 2026-11-21.
+
+Basis: `terms-of-reference.md` draft v0.1 and `tech-design.md` draft v0.1,
+both dated 2026-11-21 and unaccepted; the df12 compatibility contracts named
+in the design's conformance basis; the installed execplans skill and template,
+inspected 2026-11-21 with no pinned revision available. This record does not
+approve anything. It states what the situation requires of the executing plan.
+
+## 1. Status change and reason
+
+Change the header status from `IN PROGRESS` to:
+
+`BLOCKED (RFC alias demand conflicts with df12 pre-1.0 policy; explicit resolution required)`
+
+The plan is executing a rename for which an inherited RFC demands an alias.
+The surface is a published 0.8 source API, so df12 policy prohibits source-API
+compatibility machinery, and the one named downstream consumer is not an
+exception. Two courses are unavailable: adding the alias violates the
+governing policy, and proceeding without it silently violates the RFC's
+inherited commitment. The execplans contract requires an executing plan that
+cannot follow the approved design to record the deviation in `Decision log`,
+set `BLOCKED`, and await explicit acceptance. The technical-design contract
+requires inherited conflicts to be exposed for explicit upstream resolution.
+
+`BLOCKED` is correct rather than `IN PROGRESS` because implementation must
+stop now. The conflict is not a mechanical difference. `DRAFT` is wrong: the
+plan was approved and is executing. `COMPLETE` is impossible while the
+deviation is unaccepted.
+
+Immediate actions: stop before any further code change; do not publish or
+release; do not add an alias; record the conflict; present the options to the
+authority identified for `TOR-OPEN-002`. Work already in the tree is held
+pending direction. This record does not order a revert.
+
+## 2. Required edits to the existing plan
+
+### 2.1 Constraints
+
+Add these hard invariants:
+
+- The renamed surface is pre-1.0. The plan MUST NOT add an alias, deprecated
+  entrypoint, facade, wrapper, dual implementation, compatibility adapter, or
+  any other source-API compatibility machinery. A named external consumer does
+  not create an exception.
+- The interface and every affected caller change in one coherent milestone.
+  No milestone may keep the old name to make itself independently viable.
+- The RFC's alias demand is an inherited conflict. The plan does not satisfy
+  it, does not suppress it, and does not rewrite the RFC. Implementation
+  resumes only after a recorded explicit resolution accepted by the named
+  authority.
+- No release, publication, or `COMPLETE` status before the resolution is
+  recorded in the terms of reference and the design, and in an ADR if the
+  resolution creates a durable decision.
+- Persisted-data and wire-format changes are outside this plan's
+  authorization and require separate assessment.
+
+If the plan already contains an alias or compatibility step, delete that
+step. Deletion does not unblock the plan; the conflict still requires
+resolution.
+
+### 2.2 Tolerances (exception triggers)
+
+Keep the plan's existing file, code, configuration, documentation, iteration,
+and time budgets. Add these escalation triggers:
+
+- **Compatibility:** any step that would add an alias, deprecated entrypoint,
+  facade, wrapper, dual implementation, compatibility adapter, or other
+  source-API compatibility machinery stops implementation and escalates. It is
+  never a schedule workaround.
+- **Interface:** any public interface change beyond the authorised rename
+  stops implementation and escalates.
+- **Conflict:** if the RFC demand cannot be explicitly resolved, or if
+  resolution would require the plan to decide policy, stop and escalate. The
+  plan does not self-resolve.
+- **Persisted format:** if the name is found in persisted data or a wire
+  format, stop and classify it under a separate assessment before proceeding.
+
+### 2.3 Risks
+
+Add:
+
+- Risk: schedule pressure produces an alias anyway. Severity high; likelihood
+  medium. Mitigation: the constraint above; any alias request is an
+  escalation, not a workaround.
+- Risk: the conflict stays unresolved and the milestone remains blocked.
+  Severity high; likelihood medium. Mitigation: name the decision authority
+  and agree a review point; do not self-resolve.
+- Risk: the consumer cannot adopt immediately. Severity medium; likelihood
+  medium. Mitigation: name the release and migration note; do not add an alias
+  in response.
+- Risk: an undiscovered consumer breaks. Severity medium; likelihood unknown.
+  Mitigation: dependents scan before release (`AXIOM-EP-2`).
+- Risk: the name appears in a persisted or wire format. Severity medium;
+  likelihood unknown. Mitigation: classify before release (`GAP-003`).
+
+### 2.4 Progress
+
+Insert these entries in chronological order. Existing entries stay.
+
+- [x] (2026-11-21 08:25Z) Inherited RFC alias demand recorded; conflict
+  exposed for explicit resolution.
+- [x] (2026-11-21 08:25Z) Status set to `BLOCKED`; implementation stopped
+  before further changes and before release.
+- [ ] Confirm no alias or compatibility step remains in the milestone; remove
+  any that exists.
+- [ ] Explicit resolution of the RFC conflict accepted by the authority
+  identified through `TOR-OPEN-002`, naming the revision from `TOR-OPEN-001`.
+- [ ] Terms of reference and design updated with the accepted resolution.
+- [ ] Resume the atomic rename milestone.
+- [ ] Downstream consumer updated and built against the release.
+- [ ] Completion reconciliation and `COMPLETE`.
+
+### 2.5 Surprises & discoveries
+
+Add:
+
+- Observation: an inherited RFC demands an alias for a pre-1.0 API whose
+  rename is already in flight. Evidence: the RFC named in the brief; its
+  revision and issuing authority are not yet identified. Impact: the milestone
+  is blocked pending explicit resolution, and the terms of reference and
+  design now record the conflict.
+- Observation: the brief asserts one downstream consumer but does not
+  establish that no others exist. Evidence: the brief supplies no dependents
+  scan. Impact: the claim is recorded as `AXIOM-EP-2` and checked before
+  release.
+
+### 2.6 Decision log
+
+Append an entry using the next free `D-n` identifier:
+
+- Decision: Block the plan and escalate the RFC conflict. Do not implement the
+  alias and do not continue without an explicit resolution.
+- Rationale: The alias is prohibited for a pre-1.0 surface, and the named
+  consumer is not an exception. Continuing without resolution would silently
+  violate an inherited commitment. Blocking is the only available course that
+  neither violates the policy nor suppresses the RFC.
+- Options considered:
+  - Implement the alias. Rejected: prohibited compatibility machinery.
+  - Continue without the alias and treat the RFC as superseded. Rejected: no
+    evidence of supersession and no authority granted to this plan.
+  - Block and escalate. Chosen.
+  - Seek a formal exception or policy change. Not available to this plan. Only
+    the competent authority could grant it, and the exclusions read as
+    absolute. Any such grant must appear as an explicit, sourced upstream
+    change, never as a plan-level workaround.
+- Affected identifiers: `TOR-CONSTRAINT-001` to `TOR-CONSTRAINT-004`,
+  `TOR-GOAL-003`, `TDD-REQ-003`, `TDD-REQ-004`, `GAP-001`, and the current
+  milestone (`EP-M<n>`, identifier provisional).
+- Impacts: the current milestone is paused; release and consumer adoption are
+  delayed; no further code change occurs until resolution; the terms of
+  reference and design require the resolution record.
+- Upstream changes required: update the terms-of-reference conflict record and
+  the design's compatibility assessment; create an ADR if the deciding
+  authority requires one. The plan cannot reach `COMPLETE` while any of these
+  remains unrecorded or unaccepted.
+- Approving authority: not established (`TOR-OPEN-002`).
+- Date and author: 2026-11-21, author of this record; approval absent.
+
+### 2.7 Outcomes & retrospective
+
+No outcome is claimed while the plan is blocked. Keep the section open until
+completion. At completion, record whether the atomic rename held, whether the
+known consumer adopted in lockstep, and whether the conflict was resolved
+without a compatibility layer. Do not mark the plan `COMPLETE` while the
+resolution is unrecorded or unaccepted.
+
+### 2.8 Conformance basis
+
+Add the draft terms of reference (`terms-of-reference.md`, v0.1, 2026-11-21,
+unaccepted), the draft design (`tech-design.md`, v0.1, 2026-11-21,
+unaccepted), the governing compatibility contracts, and the RFC as an
+uninspected conflicting input. Replace `EP-M<n>` with the plan's real
+milestone identifier. Add these chains:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-001 -> EP-M<n> -> old-name-absent search + build
+TOR-GOAL-002 -> TDD-REQ-002 -> EP-M<n> -> workspace build + consumer build
+TOR-GOAL-003 -> TDD-REQ-003 -> EP-M<n> -> recorded RFC resolution
+TOR-CONSTRAINT-001 -> TDD-REQ-004 -> EP-M<n> -> no-compatibility search + review
+TOR-OPEN-001/002 -> blocking edge to EP-M<n> -> resolution record
+```
+
+Compatibility classification: pre-1.0; no compatibility machinery; the named
+consumer is updated in lockstep. Record the ToR and design as drafts: they are
+inputs, not approvals.
+
+### 2.9 Verification plan
+
+Add these obligations beside the existing ones:
+
+- `INV-EP-1`: No old name remains in the exported surface, first-party call
+  sites, examples, or documentation. Method: declared search over pinned paths
+  plus package and workspace builds. Evidence: empty search and passing
+  builds. Non-vacuity: seed a file with an `OldName` reference and confirm the
+  search fails for that reason, then remove the seed; confirm real old-name
+  call sites existed at baseline.
+- `INV-EP-2`: No compatibility machinery exists. Method: source search for
+  alias, deprecated, facade, wrapper, dual, and adapter patterns plus reviewer
+  inspection. Non-vacuity: seed an alias declaration and confirm rejection.
+- `INV-EP-3`: The known consumer builds and tests against the release using
+  the new name. Method: consumer build and test run. Non-vacuity: the
+  consumer's pre-change source referenced the old name; the post-change build
+  passes only with the new name.
+- `INV-EP-4`: Behaviour is unchanged apart from the name. Method: existing
+  suite and focused tests on the item.
+- `AXIOM-EP-1`: 0.8 is the latest formal tag and no 1.0-or-later contract
+  covers the surface (`TOR-ASSUMPTION-001`). Unverified; no tag evidence was
+  inspected.
+- `AXIOM-EP-2`: The brief's one consumer is the complete known set
+  (`TOR-ASSUMPTION-002`). Unverified; no dependents scan was supplied.
+- `AXIOM-EP-3`: The release artefact under test corresponds to the source
+  revision carrying the change. Record the tag or commit and the package
+  artefact as evidence for that correspondence.
+
+Lemma `L-EP-1`: if the exported surface and every caller are updated
+atomically, no pre-1.0 compatibility requirement remains. The searches and
+builds discharge the antecedent; the policy supplies the conclusion.
+
+Formal verification decision: no model checking or formal proof. The change
+introduces no state, concurrency, or arithmetic. Record that decision here
+rather than leaving the section silent.
+
+Residual gaps: repository searches do not cover external code; consumer
+evidence covers one known consumer; persisted or wire involvement remains
+unclassified until `GAP-003` closes.
+
+### 2.10 Milestones and plateaus
+
+Amend the current milestone (`EP-M<n>`, provisional identifier):
+
+- Outcome: the atomic rename. The package exports the new name, the old name
+  is absent, every first-party caller and the known consumer use the new name,
+  and no compatibility machinery exists.
+- Requirements and gaps: `TDD-REQ-001` to `TDD-REQ-004`; `GAP-002` and
+  `GAP-005` inside the milestone; `GAP-001` must close before resumption and
+  before `COMPLETE`; `GAP-003` and `GAP-004` close before release.
+- Acceptance evidence: the search and build results, the consumer log, and the
+  recorded resolution.
+- Conformance check:
+  - requirements satisfied;
+  - design still followed;
+  - upstream assumptions still valid;
+  - no unapproved public interface or dependency change;
+  - no unapproved trust boundary or persisted-format change;
+  - trace links current.
+- Recovery: revert the atomic rename as a unit. There is no dual
+  implementation to unwind. Held work is not reverted without direction.
+- Remaining gaps: `GAP-001` resolution, `GAP-003` classification if
+  applicable, `GAP-004` scan, and the migration note.
+- Compatibility decision: `none`. The surface is pre-1.0; the known consumer
+  is updated in lockstep; no commitment requires compatibility. The unresolved
+  RFC demand does not authorize a layer.
+
+### 2.11 Completion reconciliation
+
+Before `COMPLETE`, the plan must:
+
+1. Record the accepted resolution of the RFC conflict in the terms of
+   reference and the design, and in an ADR if required.
+2. Confirm that no alias or compatibility machinery was added anywhere.
+3. Confirm the known consumer builds and tests against the release.
+4. Reconcile every trace link and acceptance item.
+5. Record any purely mechanical difference in `Decision log`.
+
+An unaccepted deviation must not disappear into a follow-up list. The plan
+stays `BLOCKED` while any item above is outstanding.
+
+## 3. Revision note
+
+- 2026-11-21: Recorded the inherited RFC conflict, set the status to
+  `BLOCKED`, added the no-compatibility constraint, the escalation triggers,
+  the surprise and outcome records, the escalation decision, the verification
+  obligations, the milestone amendment, and the completion gate. Remaining
+  work is unchanged in substance and cannot resume until the conflict is
+  explicitly resolved. If the plan contained an alias step, that step is
+  removed.

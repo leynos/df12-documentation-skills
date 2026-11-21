@@ -1,0 +1,717 @@
+# Restore multi-chunk test coverage and measure the capture-only path
+
+This ExecPlan (execution plan) is a living document. The sections
+`Constraints`, `Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`,
+`Decision log`, `Outcomes & retrospective`, `Conformance basis`, and
+`Verification plan` must be kept up to date as work proceeds.
+
+Status: BLOCKED (the current evidence contradicts the design claim; the
+proposed claim revision and this plan await explicit acceptance).
+
+Branch: none. This draft was authored in an isolated sandbox at
+`/tmp/val2-e2`; no repository branch is bound to it.
+
+Roadmap item: none identified.
+
+## Purpose / big picture
+
+The design claims that a chunked reader delivers a capture-only performance
+gain. The evidence offered for that claim has two defects. First, increasing
+the chunk size makes a test that is meant to exercise multiple chunks execute
+only one iteration, yet the test still passes. Second, the benchmark measures
+the echo path, in which captured bytes are written back to an output sink,
+while the claim concerns the capture-only path, which performs no echo write.
+A definition is useful here: a **chunk** is the block of bytes requested by one
+iteration of the read-and-process loop, the **chunk size** is its maximum
+length in bytes, and an **echo write** is a presentation write of captured
+bytes.
+
+After this work, a reader can observe two things. The multi-chunk test fails if
+its configured chunk size collapses the fixture into a single iteration, and it
+passes with an observed iteration count of at least two and a boundary-spanning
+sentinel reproduced exactly. The benchmark reports a capture-only run and an
+echo control as separate labelled measurements, so a capture-only claim is
+supported only by a capture-only result. The production default chunk size and
+echo behaviour remain unchanged unless a genuine defect requires a separately
+approved change.
+
+The work closes `GAP-001` and `GAP-002` from the design update at
+`./tech-design-verification-update.md`, or it records that the claim cannot be
+supported at the agreed scope.
+
+## Constraints
+
+- Do not change the production default chunk size, the echo behaviour, or any
+  production interface unless the verification exposes a defect and a separate
+  approved decision authorises the change.
+- Do not weaken, skip, or delete the intent of the multi-chunk test. No
+  expected-failure marker may remain on the main coverage test in the final
+  passing state.
+- Do not lower the acceptance threshold, change the control, change the
+  workload, or substitute a cheaper metric after seeing results.
+- Do not add a benchmark framework, crate, package, or service without explicit
+  authorisation. Reuse the existing harness if one exists.
+- Keep the iteration counter and any path-selection hook test-only or
+  benchmark-only. They must not create a source-API compatibility obligation.
+- Preserve existing behaviour for every caller not covered by this correction.
+- Implementation begins only after the user explicitly approves this plan and
+  the design owner accepts the proposed claim revision. Silence is not
+  approval.
+- The executing agent runs the repository gates; this authoring agent did not
+  and must not run them in the sandbox.
+- Until `EP-M0` replaces the placeholders in this plan with exact paths and
+  commands, the plan is not executable.
+
+## Tolerances (exception triggers)
+
+No repository tree, test configuration, benchmark harness, or comparable
+ExecPlan history was available during authoring, so the budget-setting survey
+required by the `execplans` skill could not be performed. The limits below are
+provisional ceilings, not approved budgets. `EP-M0` must revalidate them
+against the real tree; if the survey shows that a limit is too small, stop and
+escalate before editing rather than raising it during execution.
+
+- Files: if implementation changes more than 4 non-ExecPlan files, stop and
+  escalate. Exclude this ExecPlan file from the count.
+- Code: if changes exceed 120 net lines of code, stop and escalate. Count
+  production source, tests, and executable automation logic, measured as
+  additions minus deletions.
+- Configuration: if changes exceed 20 net lines of configuration, stop and
+  escalate. Count declarative settings, manifests, lockfiles, deployment
+  descriptors, and CI workflow configuration.
+- Documentation: if changes exceed 80 net lines of documentation excluding
+  ExecPlan files, stop and escalate.
+- Interface: if a production API, default, flag, or wire format must change,
+  stop and escalate.
+- Dependencies: if any new dependency is needed, stop and escalate.
+- Architecture: if the capture mechanism or echo semantics must change to make
+  the claim true, stop and escalate with a proposed design deviation.
+- Iterations: if a focused test or benchmark still fails after 3 attempts, stop
+  and escalate.
+- Time: if any milestone takes more than 2 hours, stop and escalate.
+- Ambiguity: if the workload, selected path, baseline, threshold, or decision
+  owner cannot be established, stop and present the options.
+
+Sparing capacity in one category does not offset another category exceeding
+its limit. `EP-M0` records the comparison base, category paths, counting
+commands, and whether each measure is net lines or churn.
+
+## Risks
+
+- Risk: The test passes again without exercising multiple chunks.
+  Severity: high. Likelihood: medium. Mitigation: assert the observed iteration
+  count and run the negative control that collapses it to one.
+- Risk: The counter increments on underlying reads rather than loop iterations,
+  so short reads inflate the count.
+  Severity: medium. Likelihood: medium. Mitigation: instrument the loop entry,
+  and cross-check the count against bytes processed and the boundary sentinel.
+- Risk: Changing the fixture hides the boundary defect the test was meant to
+  catch.
+  Severity: high. Likelihood: medium. Mitigation: derive the sentinel from a
+  real boundary and compare against an independent whole-buffer oracle.
+- Risk: The benchmark still accidentally measures echo.
+  Severity: high. Likelihood: medium. Mitigation: assert zero echo writes in the
+  capture-only run and label the echo control separately.
+- Risk: The threshold is quietly lowered or the workload changed after results.
+  Severity: high. Likelihood: low. Mitigation: pre-register the threshold and
+  forbid post-result changes in `Decision log`.
+- Risk: The unsupported claim is repeated in downstream prose.
+  Severity: medium. Likelihood: medium. Mitigation: mark it unsupported in the
+  design and search for stale wording before completion.
+- Risk: The repository cannot be located or the symbols do not exist as
+  described.
+  Severity: medium. Likelihood: medium. Mitigation: `EP-M0` reconnaissance; stop
+  and escalate if the test or benchmark cannot be found.
+
+## Progress
+
+- [x] (2026-11-21 08:24Z) Intake and evidence analysis completed; design
+  update and initial ExecPlan draft written.
+- [ ] Design owner accepts the proposed revision of the performance claim.
+- [ ] User approves this plan.
+- [ ] `EP-M0` reconnaissance binds the plan to exact paths and commands.
+- [ ] `EP-M1` multi-chunk test observes at least two iterations and rejects the
+  one-iteration negative control.
+- [ ] `EP-M2` capture-only benchmark runs with an echo control, and the claim is
+  supported or withdrawn.
+- [ ] `EP-M3` documentation and gates reconcile the claim at its measured scope.
+- [ ] Decision authority accepts the final claim wording.
+
+## Surprises & discoveries
+
+- Observation: A larger chunk size reduced a multi-chunk test to one iteration,
+  and the test still passed.
+  Evidence: Scenario brief, `OBS-001`. Impact: the pass covers the single-chunk
+  path only; `VO-001` is undischarged.
+- Observation: The benchmark measures the echo path while the design claims a
+  capture-only gain.
+  Evidence: Scenario brief, `OBS-002`. Impact: the measurement is evidence about
+  the echo path only; `VO-002` is undischarged and `CLM-002` is unsupported.
+
+Neither observation establishes a functional defect. Both establish that the
+current evidence cannot support the claim it is offered for.
+
+## Decision log
+
+- `D1`. Decision: do not accept the passing multi-chunk test as evidence for
+  multi-chunk coverage. Rationale: the test executes one iteration, so it
+  exercises the single-chunk path. The pass is valid only at that narrower
+  scope. A passing check demonstrates only the property and scope it actually
+  exercises. Date/Author: 2026-11-21, authoring agent.
+- `D2`. Decision: do not accept the echo benchmark as evidence for a
+  capture-only gain. Rationale: a measured result for one execution path is not
+  evidence for a claim about a different path, nor for an unmeasured causal
+  mechanism. Date/Author: 2026-11-21, authoring agent.
+- `D3`. Decision: propose a design deviation that replaces the claim "the
+  implementation produces a capture-only gain" with "the gain is unproven
+  pending a capture-only measurement". Affected identifiers: `CLM-002`,
+  `REQ-002`, `VO-002`, and section 7 of the design update. Options: run the
+  capture-only benchmark and restate the claim at measured scope; withdraw the
+  claim; or revise the design so the claim concerns the echo path. Recommended
+  option: run `VO-002` first, then restate or withdraw according to the agreed
+  threshold. Required approval: the design owner or named decision authority.
+  Until accepted, the plan stays `BLOCKED`. Date/Author: 2026-11-21, authoring
+  agent.
+- `D4`. Decision: preserve the agreed threshold, control, workload, and
+  environment. Rationale: changing them after results would make the measurement
+  answer a different question and weaken the claim. Date/Author: 2026-11-21,
+  authoring agent.
+- `D5`. Decision: authorise no new dependency, framework, or public interface.
+  Rationale: the correction should use the existing test and benchmark
+  infrastructure; a new tool would expand scope and require separate approval.
+  Date/Author: 2026-11-21, authoring agent.
+- `D6`. Decision: no formal proof or model checking is required for this change.
+  Rationale: the obligations concern test coverage and measurement protocol,
+  which parameterized tests and instrumentation can discharge at proportionate
+  rigour. A formal model cannot establish that the benchmark selected the
+  capture-only path. Date/Author: 2026-11-21, authoring agent.
+
+## Outcomes & retrospective
+
+Current outcome: the evidence defects are identified, the claim is marked
+unsupported, and the verification obligations are specified. No implementation,
+test rerun, benchmark, or gate has been performed. The plan is not complete.
+
+The main lesson so far is that a passing result is evidence only for the
+execution path and scope it actually exercises. A larger configuration value
+can silently remove the precondition a test depends on, and a benchmark can
+measure a neighbouring path without any test failing.
+
+At completion, compare the delivered evidence against the original purpose. If
+the capture-only result does not meet the pre-registered threshold, record that
+outcome and withdraw or revise the claim; do not present an echo result as a
+capture-only gain. Reconcile every discovery with the design update and this
+plan before setting the status to `COMPLETE`.
+
+## Context and orientation
+
+The scenario brief names no repository, language, file path, symbol, or command.
+This plan is therefore staged. `EP-M0` must bind it to the real tree before any
+red test is written. The design update at
+`./tech-design-verification-update.md` owns the requirements, gaps, and
+verification obligations; this plan owns the execution slice.
+
+Reconnaissance targets:
+
+- the chunk-size constant or configuration key;
+- the multi-chunk test and its fixture builder;
+- the benchmark harness and its echo/capture path selector;
+- the repository's gate commands and test framework versions;
+- the inspected base revision.
+
+Useful discovery commands, run from the repository root:
+
+```bash
+rg -n --hidden -g '!.git' 'chunk[_-]?size|CHUNK_SIZE|read[_-]?size' .
+rg -n -i 'multi[_- ]?chunk|multi[_- ]?iteration|chunked' .
+rg -n 'bench|criterion|divan|iai|hyperfine|bencher' .
+rg -n -i 'echo|tee' .
+git rev-parse HEAD
+```
+
+Record the exact paths, symbol names, framework versions, and gate commands in
+this section and in `Concrete steps` during `EP-M0`. Do not rely on the names in
+the brief as if they were repository identifiers.
+
+Budget-setting survey: not performed, because no repository was available. No
+comparable ExecPlan history was available in the sandbox. The provisional
+limits in `Tolerances` reflect the smallest plausible change: one test, one
+test-only counter, one fixture adjustment, and benchmark-harness labels. They
+are explicitly unapproved until `EP-M0` confirms them.
+
+## Conformance basis
+
+- Scenario brief supplied to the authoring agent, 2026-11-21. It is the only
+  project-specific source and is authoritative for the reported observations,
+  not for their independent truth.
+- Design update `./tech-design-verification-update.md`, v0.1, 2026-11-21. It is
+  a sandbox draft, not an accepted design.
+- Terms of Reference: not supplied and not inspected. ADRs, roadmap, and prior
+  ExecPlans: not supplied and not inspected. No revision is invented for them.
+- Installed `execplans` skill, `SKILL.md` and
+  `references/execplan-template.md`, inspected 2026-11-21.
+
+Requirements and gaps:
+
+- `REQ-001`: a multi-chunk test must witness at least two iterations at the
+  configured chunk size and exercise a boundary-spanning sentinel.
+- `REQ-002`: a performance claim must name its measured path and retain the
+  workload, control, environment, protocol, uncertainty, baseline, and
+  threshold; an echo result cannot support a capture-only claim.
+- `REQ-003`: do not weaken the threshold or control after seeing results.
+- `GAP-001`: multi-chunk coverage collapses to one iteration while passing.
+- `GAP-002`: the benchmark measures echo while the design claims capture-only.
+
+Trace links, with evidence names to be bound in `EP-M0`:
+
+```plaintext
+GAP-001 -> REQ-001 -> VO-001 -> EP-M1 -> <focused multi-chunk test>
+GAP-002 -> REQ-002 -> VO-002 -> EP-M2 -> <capture-only benchmark run>
+REQ-003 -> VO-003 -> EP-M3 -> <freshness and stale-claim check>
+```
+
+A trace link means the items relate. It is not evidence that an obligation has
+been discharged.
+
+## Verification plan
+
+### Abstract model
+
+Let `C` be the configured chunk size in bytes and `F` the fixture. Let
+`n(F, C)` be the number of read-and-process iterations observed by the test.
+Under full reads, `n = ceil(|F| / C)`; short reads can only increase `n`. The
+obligation does not require an exact formula. It requires `n >= 2` when
+`|F| > C`, together with exact reproduction of a sentinel whose bytes straddle
+the boundary at offset `C`.
+
+Let `P_capture` and `P_echo` be the two execution paths, and let `T(P)` be the
+measured statistic for path `P`. The performance claim is a statement about
+`T(P_capture)`. A result `T(P_echo)` is a different measurement and does not
+discharge it.
+
+The preconditions of `VO-001` are satisfiable by construction: choose a
+fixture with `|F| > C` and place a sentinel so that it begins before offset `C`
+and ends after it. The preconditions of `VO-002` are satisfiable only when the
+harness can select the capture-only path and the echo path separately.
+
+### Invariants and lemmas
+
+- `INV-001`: For the approved `C` and `F`, the test observes `n >= 2`, and the
+  processed output equals an independent whole-buffer oracle including the
+  boundary sentinel. Linked to `REQ-001` and `VO-001`.
+- `INV-002`: Any result offered for `CLM-002` is produced with
+  `P = P_capture`; the echo run is a separately labelled control; and the
+  capture-only run performs zero echo writes. Linked to `REQ-002` and
+  `VO-002`.
+- `INV-003`: A change to `C`, `F`, the path selector, the harness, the
+  performance-relevant implementation, or the upstream design revision reopens
+  `VO-001` and `VO-002`. Linked to `REQ-003` and `VO-003`.
+- `L-001`: The test-only counter increments exactly once per loop iteration and
+  is observable by the test. If it counts underlying reads instead, short
+  reads can inflate `n`; the test must therefore instrument the loop entry and
+  cross-check bytes processed.
+- `L-002`: The oracle computes expected output from the whole fixture without
+  using the chunked implementation under test, so agreement is not the
+  implementation compared with itself.
+- `L-003`: The capture-only selector excludes the echo write, and a zero-write
+  assertion confirms exclusion rather than assuming it.
+- `L-004`: The capture-only and echo runs hold the workload, input, environment,
+  and protocol constant, so any difference is attributable to the selected
+  path.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-001`: The operating system and storage layer return the requested
+  bytes or a short read reflecting end of file or pipe state. Source: the
+  platform's documented read semantics, recorded in `EP-M0`. Boundary: the
+  reader's chunk loop.
+- `AXIOM-002`: The benchmark timer and process isolation have adequate
+  resolution and stability for the observed effect. Repeats and dispersion
+  evidence are required; the timer internals are not verified. Source: the
+  harness's timing protocol, recorded in `EP-M0`. Boundary: the capture-only
+  and echo comparisons.
+- `AXIOM-003`: The test framework's documented strict expected-failure or
+  panic-assertion mechanism reports an unexpected pass as a failure. Source: the
+  framework's strict-mode contract, recorded in `EP-M0`. Boundary: the
+  negative-control check in `EP-M1`.
+- `AXIOM-004`: The existing echo behaviour is intended production behaviour and
+  is not changed by this work. This is an assumption, not an approval to alter
+  it. Source: the design's stated production behaviour, confirmed in `EP-M0`.
+  Boundary: the echo control and all callers.
+
+### Methods per obligation
+
+`VO-001`:
+
+- Obligation: `INV-001`, supported by `L-001` and `L-002`, and relying on
+  `AXIOM-001` and `AXIOM-003`.
+- Method: parameterized test over a small set of `(F, C)` pairs, with a
+  test-only counter and an independent whole-buffer oracle.
+- Rationale: finite, explicit cases cover the boundary and the one-iteration
+  collapse without a new framework; a generated property over `C` is optional
+  if the existing harness supports it.
+- Domain: the approved `C`, one smaller `C`, and one `C >= |F|` for the negative
+  control.
+- Artefact: the located multi-chunk test plus the test-only counter.
+- Evidence: red run fails on `n >= 2` with `n = 1`; green run passes with
+  `n >= 2`; sentinel matches the oracle; negative control is rejected for the
+  missing second iteration.
+- Non-vacuity: the witness has `|F| > C`; the negative control has
+  `C >= |F|` and must fail on the iteration assertion. An empty loop, a
+  one-chunk fixture, or a permanently expected-failure marker is not evidence.
+
+`VO-002`:
+
+- Obligation: `INV-002`, supported by `L-003` and `L-004`, and relying on
+  `AXIOM-002` and `AXIOM-004`.
+- Method: two labelled benchmark runs with a pre-registered measurement record,
+  repeated measurements, dispersion reporting, and a path assertion.
+- Rationale: the question is empirical and protocol-shaped; separating the runs
+  and asserting the selected path is proportionate. A formal model cannot prove
+  which path the harness executed.
+- Domain: the agreed workload and environment; capture-only and echo control.
+- Artefact: the existing benchmark harness, with labels and a zero-echo
+  assertion.
+- Evidence: capture-only run transfers non-zero bytes and performs zero echo
+  writes; echo control performs echo writes; capture-only result meets the
+  pre-registered threshold with uncertainty; claim updated at measured scope.
+- Non-vacuity: a benchmark that skips the path, processes zero bytes, or differs
+  only in unrelated startup work is rejected. A temporary mutation in the
+  capture path must change the measured result for the intended reason.
+
+`VO-003`:
+
+- Obligation: `INV-003`.
+- Method: recorded trigger list checked at each milestone and before claim
+  acceptance.
+- Evidence: each trigger is followed by a re-run or an explicit unverified
+  state in `Progress`.
+- Non-vacuity: a deliberately collapsed `C` reopens `VO-001`; a relabelled
+  benchmark path reopens `VO-002`.
+
+### Formal verification decision
+
+No model checking or formal proof is needed. The obligations concern whether a
+test exercised a path and whether a benchmark measured the claimed path. Those
+are empirical and protocol questions. The strongest useful methods are the
+iteration-count witness with a negative control and a path-asserted benchmark
+with an independent control. This decision is recorded as `D6`.
+
+### Suggested BDD features
+
+These are proposed acceptance scenarios, not an authorisation to add a BDD
+framework. If the repository has no runner, the located tests and benchmark
+commands exercise them directly.
+
+```gherkin
+Feature: Multi-chunk coverage is observable
+  Scenario: The configured chunk size exercises multiple chunks
+    Given a fixture larger than the configured chunk size
+    When the reader processes the fixture
+    Then the observed iteration count is at least two
+    And a sentinel spanning a chunk boundary is reproduced exactly
+
+  Scenario: Collapsing to one chunk is rejected
+    Given a fixture no larger than the chunk size
+    When the coverage assertion runs
+    Then it fails for the missing second iteration
+```
+
+```gherkin
+Feature: Capture-only performance evidence
+  Scenario: The capture-only path is measured
+    Given the echo write is disabled and asserted absent
+    When the benchmark processes the agreed workload
+    Then the result is labelled capture-only
+    And the echo control is reported separately
+```
+
+## Plan of work
+
+### `EP-M0` reconnaissance and plan binding
+
+This is a reconnaissance probe, not an implementation milestone. Locate the
+chunk-size symbol, the multi-chunk test, its fixture builder, the benchmark
+harness, and the existing echo/capture selector. Record the base revision,
+language and toolchain versions, test framework, gate commands, and exact
+focused commands in this plan. Replace every placeholder in `Concrete steps`
+and `Conformance basis`.
+
+Acceptance: the plan contains exact repository-relative paths, symbol names,
+and runnable commands; the budget survey is complete and the provisional
+tolerances are confirmed or escalated. If the test or benchmark cannot be
+found, stop and escalate rather than inventing one. No production edits occur
+in this milestone. Recovery: reconnaissance is read-only and idempotent.
+
+### `EP-M1` restore genuine multi-chunk coverage
+
+Assign `REQ-001`, `GAP-001`, and `VO-001`.
+
+Red: add a test-only counter to the located test and assert that the observed
+iteration count is at least two at the approved `C`. Run the focused test. The
+expected failure is the coverage assertion with `iterations = 1`, not a
+compilation error or an unrelated panic.
+
+Green: adjust the test-local fixture or chunk-size parameter so that
+`|F| > C` at the approved `C`, and place a boundary sentinel so that its bytes
+straddle a chunk boundary. Do not change the production default. Run the same
+focused test. The expected result is a pass with `iterations >= 2` and output
+matching the independent oracle.
+
+Refactor: remove duplicate fixture scaffolding, keep the counter test-only, and
+rerun the focused test and the containing test target.
+
+Negative control: run the coverage assertion with `C >= |F|` and confirm that it
+fails for the missing second iteration. Keep this as a strict expected-failure
+test if the framework supports it, or run it temporarily and record the
+transcript, then revert it. A permanent negative-control test is acceptable
+because it asserts that the helper rejects one-chunk coverage. The main
+coverage test must carry no expected-failure marker in the final state.
+
+Acceptance: the red, green, and negative-control transcripts are recorded, and
+the production chunk-size default is unchanged.
+
+### `EP-M2` measure the capture-only path
+
+Assign `REQ-002`, `GAP-002`, and `VO-002`.
+
+Before running the benchmark, fill the measurement record in section 7 of the
+design update: workload, control, environment, selected path, protocol,
+uncertainty method, baseline, acceptance threshold, and decision owner. If the
+threshold or owner cannot be established, stop and escalate. The threshold is
+pre-registered and may not change after results are seen.
+
+Red: add a path assertion or label check to the benchmark harness. Run the
+current benchmark. The expected failure is that the capture-only run is absent,
+mislabelled, or performs echo writes, while the echo path is the measured one.
+
+Green: select the capture-only path in the harness without changing the
+production default, suppress the echo write, and assert zero echo writes and
+non-zero bytes transferred. Verify the path in a separate untimed run, or with
+instrumentation disabled during timing, so the assertion does not perturb the
+measurement. Run the capture-only and echo control benchmarks separately under
+the agreed workload and environment. Record the statistic, dispersion, and exact
+commands.
+
+Negative control: introduce a temporary mutation in the capture path, or route
+the capture-only run through the echo path, and confirm that the measured
+result changes for the intended reason. Revert the mutation and record the
+transcript.
+
+Acceptance: the capture-only run is path-verified; the echo control is
+separate; the result meets or misses the pre-registered threshold. If it
+misses, the owner withdraws or revises the claim; no threshold is lowered.
+
+### `EP-M3` documentation, gates, and claim closure
+
+Assign `REQ-003` and `VO-003`.
+
+Update section 7 of the design update and every downstream claim with the
+measured scope, or mark the claim withdrawn. Update the test-coverage note.
+Search for stale wording with:
+
+```bash
+rg -n -i 'capture[- ]only|chunk size|multi[- ]chunk' <documentation roots>
+```
+
+Exclude historical completed ExecPlans from the search results. Run the
+repository's full gate sequence sequentially, in the order its `AGENTS.md` or
+`Makefile` requires. This authoring agent did not run them. Reconcile the
+design update, this plan, and any affected ADR or roadmap link before asking
+the decision authority to accept the final wording.
+
+Acceptance: gates pass; the claim is stated at its measured scope or withdrawn;
+the evidence-freshness triggers are recorded; no unsupported gain claim remains.
+
+## Milestones and plateaus
+
+`EP-M0`:
+
+- Outcome: the plan is bound to the real tree and is executable.
+- Requirements and gaps: enables all later milestones; discharges none.
+- Acceptance evidence: exact paths, symbols, commands, and gate order recorded.
+- Conformance check: no production change; no upstream artefact invented.
+- Recovery: rerun the read-only reconnaissance.
+- Remaining gaps: `GAP-001` and `GAP-002`.
+- Compatibility decision: none.
+
+`EP-M1`:
+
+- Outcome: the multi-chunk test observes at least two iterations and rejects the
+  one-iteration negative control.
+- Requirements and gaps: discharges `VO-001` and advances `GAP-001`.
+- Acceptance evidence: focused red, green, and negative-control transcripts.
+- Conformance check: `REQ-001` satisfied; design followed; no public interface
+  or dependency change; no persisted-format change; trace links current.
+- Recovery: revert test-local changes and rerun the focused test.
+- Remaining gaps: `GAP-002`.
+- Compatibility decision: none; the counter is test-only.
+
+`EP-M2`:
+
+- Outcome: capture-only evidence exists, with the echo control separately
+  labelled, and the claim is supported or withdrawn.
+- Requirements and gaps: discharges `VO-002` and advances `GAP-002`.
+- Acceptance evidence: path assertion, zero-echo-write evidence, benchmark
+  statistic with dispersion, and the threshold decision.
+- Conformance check: `REQ-002` satisfied; design followed; no unauthorised
+  dependency; no production interface change; trace links current.
+- Recovery: rerun both benchmark runs under the same environment; revert any
+  temporary mutation.
+- Remaining gaps: final claim wording.
+- Compatibility decision: none.
+
+`EP-M3`:
+
+- Outcome: documentation and gates reconcile the claim at its measured scope.
+- Requirements and gaps: discharges `VO-003` and closes `GAP-001` and
+  `GAP-002`, or records a withdrawn claim.
+- Acceptance evidence: gate results, stale-claim search, accepted wording.
+- Conformance check: `REQ-003` satisfied; design followed; upstream assumptions
+  still valid; no unapproved change; trace links current.
+- Recovery: revert documentation edits and rerun the documentation gate.
+- Remaining gaps: none authorised.
+- Compatibility decision: none.
+
+## Concrete steps
+
+`EP-M0` must replace the angle-bracketed placeholders below with the exact
+paths and commands it discovers. Until then, this plan is not executable.
+
+```plaintext
+Working directory: <repository root, recorded in EP-M0>
+Reconnaissance: rg -n --hidden -g '!.git' 'chunk[_-]?size|CHUNK_SIZE|read[_-]?size' .
+Reconnaissance: rg -n -i 'multi[_- ]?chunk|multi[_- ]?iteration|chunked' .
+Reconnaissance: rg -n 'bench|criterion|divan|iai|hyperfine|bencher' .
+Reconnaissance: git rev-parse HEAD
+Red: <focused multi-chunk test command> -> coverage assertion fails; iterations = 1
+Green: <same focused command> -> pass; iterations >= 2; sentinel matches oracle
+Negative: <strict expected-failure command> -> coverage assertion fails for one iteration
+Benchmark red: <current benchmark command> -> capture-only assertion fails; echo writes observed
+Benchmark green: <capture-only command> -> zero echo writes; non-zero bytes
+Benchmark control: <echo control command> -> echo writes observed
+Gates: <repository gate sequence from AGENTS.md or Makefile>, run sequentially
+```
+
+Run the gates sequentially in the order the repository requires. Pipe output
+through `tee` with `set -o pipefail` so a failed gate cannot appear to pass,
+and name the log paths in this section. Record known host-specific baseline
+failures separately from regressions; do not waive a gate.
+
+This plan does not supply final focused commands because the repository was
+unavailable during authoring. `EP-M0` supplies them before approval to execute.
+
+## Validation and acceptance
+
+Tests and verification:
+
+- The focused multi-chunk test fails before the fixture or parameter change
+  with `iterations = 1`, and passes after it with `iterations >= 2`.
+- The negative control with `C >= |F|` fails for the missing second iteration.
+- The sentinel and the full output match an independent whole-buffer oracle.
+- The capture-only benchmark performs zero echo writes and transfers non-zero
+  bytes; the echo control performs echo writes.
+- The capture-only statistic is reported with dispersion and compared with the
+  pre-registered threshold.
+- `VO-003` triggers are recorded and checked.
+
+Lint, typecheck, and gates:
+
+- Run the repository's full gate sequence and record the exact commands and
+  results. The expected result is a pass for every gate; a failure blocks
+  completion and is recorded with its log path.
+
+Performance:
+
+- The claim is accepted only at the measured path, workload, environment, and
+  threshold. If the threshold is not met, the claim is withdrawn or revised by
+  its owner. The threshold is never lowered to manufacture a pass.
+
+Security:
+
+- No security scan is required by this change unless the repository's own gate
+  sequence requires one.
+
+Quality method:
+
+- The executing agent runs the focused tests and gates, captures transcripts,
+  and reconciles the design update before requesting acceptance. This authoring
+  agent ran none of them.
+
+## Idempotence and recovery
+
+The tests and benchmark runs are repeatable. Benchmark runs must use the same
+input, environment, warm-up, and repeat count for both paths; if a run is
+interrupted, rerun both paths rather than comparing across conditions. Any
+temporary mutation used as a negative control is reverted immediately and its
+revert is recorded. No destructive operation, data migration, or deployment is
+involved. If a step fails halfway, revert the test-local or harness-local edit
+and rerun the focused command.
+
+## Artefacts and notes
+
+Scenario input, quoted verbatim:
+
+```plaintext
+A larger chunk size makes a multi-chunk test execute only one iteration; a
+benchmark measures echo while the design claims a capture-only gain.
+```
+
+Evidence state: the two observations are reports from the scenario brief. They
+were not independently reproduced here. No test transcript, benchmark
+transcript, or gate log exists yet. The expected transcript shapes in
+`Concrete steps` are expectations, not observations.
+
+Expected red evidence to be captured in `EP-M1`:
+
+```plaintext
+<focused test> -> assertion failed: iterations >= 2 (observed 1)
+```
+
+Expected green evidence:
+
+```plaintext
+<focused test> -> 1 passed; iterations = 2; sentinel matched
+```
+
+Expected benchmark evidence to be captured in `EP-M2`:
+
+```plaintext
+capture-only: bytes=..., echo_writes=0, median=..., dispersion=...
+echo control: bytes=..., echo_writes=..., median=..., dispersion=...
+```
+
+Record the exact commands, revision, and environment beside each transcript.
+Remove temporary faults and generated regression artefacts before completion.
+
+## Interfaces and dependencies
+
+No new dependency is authorised. Reuse the existing test framework, fixture
+builders, benchmark harness, and measurement tooling. If no benchmark harness
+exists, stop and escalate; adding one requires separate authorisation.
+
+The only new test seam is a test-only iteration counter, conceptually a wrapper
+or instrumented loop that counts entries and is visible to the assertion. Its
+language-specific signature is chosen in `EP-M0` and recorded here. It must not
+become a public production interface.
+
+The only benchmark seam is path selection. Prefer an existing capture-only mode
+or harness configuration; otherwise add a benchmark-local label or selector.
+Do not add a public command-line flag or change the production default.
+
+If the chunk size is a compile-time constant that the test cannot inject, adjust
+the fixture so that `|F| > C` at the approved constant, and record that choice.
+Do not change the constant to make the test easier.
+
+Existing behaviour preserved: the production default chunk size, the echo
+output, and all caller-visible behaviour. Deliberately changed behaviour: none.
+If verification finds a genuine defect, record a proposed deviation in
+`Decision log`, set the plan to `BLOCKED`, and await acceptance before changing
+production code.
+
+## Revision note
+
+- 2026-11-21: Initial draft. Status `BLOCKED` because the design claim is
+  unsupported and the proposed claim revision and plan approval are outstanding.
+  No implementation, test, benchmark, or gate has been run. Remaining work
+  begins with `EP-M0` after acceptance.

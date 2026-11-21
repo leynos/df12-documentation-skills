@@ -1,0 +1,283 @@
+# New library (working title) – terms of reference
+
+Status: draft v0.1; not reviewed, not accepted.
+
+Audience: the sponsor or author of the brief; the developers who will design,
+implement, and maintain the library; whoever writes the technical design and
+the roadmap.
+
+Companion documents: the brief (path and revision not recorded; its text was
+not available to the session that produced this draft). No `docs/context.md`,
+technical design, roadmap, or ADR exists yet. See "Handoff and readiness" for
+what each downstream artefact may inherit.
+
+Date and version: 2026-11-21, v0.1 (first draft).
+
+Authority and evidence basis: no approver is identified. The only evidence
+available is a supplied statement characterizing the brief:
+
+> A small new library has a clear brief, no legacy implementation, and no
+> multi-actor workflow or imposed technology choice.
+
+No repository artefact was inspected. Last verification: 2026-11-21, against
+that statement alone. A statement inside the brief is the sponsor's request,
+not an established fact, until the brief is ingested and any empirical claim in
+it is separately supported.
+
+Evidence labels: `[KNOWN]` is established by the cited source within its stated
+scope; `[ASSUMED]` is a reasonable inference that needs confirmation; `[OPEN]`
+is unresolved.
+
+## 1. Background and motivation
+
+[KNOWN] An explicit brief commissions a new software library, and the supplied
+statement describes the brief as clear. Source: the supplied statement.
+
+[OPEN] Why the work is worth doing now rather than earlier or later, and what
+changed to make it necessary. The brief is expected to answer this; no answer
+is available to this session. Gates: TOR-OPEN-001.
+
+## 2. Domain
+
+[KNOWN] The product is a library: reusable code that other code calls, rather
+than an application, service, or platform. Source: "library" in the supplied
+statement.
+
+[OPEN] The field of practice, its established conventions, the prior art the
+library builds on or displaces, and any regulatory or contractual bedrock.
+These depend on the brief's subject, which is not available here.
+
+Terminology: no domain vocabulary is established, so `docs/context.md` has no
+entries to receive yet. The first domain terms supplied by the brief are
+candidates for that document.
+
+## 3. Market context
+
+[OPEN] No direct alternative, adjacent tool, or current default is named. The
+brief must identify what callers use for this job today – another library,
+hand-written code, a script, or nothing – and where that option falls short.
+Gates: TOR-OPEN-002 and TOR-OPEN-003.
+
+[OPEN] Whether the gap is one of capability, ergonomics, cost, or trust. Gates:
+TOR-OPEN-003.
+
+## 4. Users and stakeholders
+
+### Primary user (caller)
+
+[ASSUMED] The primary user is a developer who calls the library from their own
+code. Source: a structural inference from "library". Confirmation is needed,
+because a library can also be built for an internal platform team, a plugin
+author, or an end-user scripting audience, and each choice implies a different
+interface and support posture.
+
+[OPEN] Their ecosystem, role, seniority, technical fluency, the situation that
+triggers use, what they care about, and what they will ignore or dislike.
+Gates: TOR-OPEN-002.
+
+### Secondary users and non-users
+
+[OPEN] Whether anyone consumes the library indirectly, for example reviewers of
+code that embeds it, and which developers the library is explicitly not for.
+Naming non-users is the usual way to bound a primary-user definition, so this
+is a material gap.
+
+### Stakeholders
+
+Candidate roles only. No person, owner, or decision right is established.
+
+| Candidate role | Material concern | Design question |
+| --- | --- | --- |
+| Brief sponsor | Capability at justifiable cost | What outcome justifies the work, and what would falsify it? |
+| Maintaining developer | Correct, supportable surface | What compatibility obligations attach to the API? |
+
+Evidence each role would need: the sponsor, a demonstrated outcome against the
+stated goal; the maintainer, an interface the design can commit to supporting.
+Neither is available yet.
+
+Whether these roles are held by one person, and who may accept scope changes,
+is `[OPEN]` (TOR-OPEN-007). Decision rights are not inferred from role titles.
+
+## 5. Job to be done
+
+The canonical statement cannot yet be completed:
+
+> When [situation – `[OPEN]`], [developer role – `[OPEN]`] wants to
+> [motivation – `[OPEN]`], so they can [outcome – `[OPEN]`].
+
+Functional, emotional, and social dimensions are therefore unrecorded. The
+competing alternatives, including writing the code by hand or not having the
+capability, are `[OPEN]` with §3. Gates: TOR-OPEN-002.
+
+Scenario probe: deliberately omitted. The supplied statement describes no
+multi-actor workflow, lifecycle orchestration, integration path, or exceptional
+flow that a trigger/actors/flow scenario would test. Revisit if the brief
+introduces concurrency, background work, or an external integration.
+
+## 6. Scope
+
+### 6.1 Goals
+
+[OPEN] No goal is recorded. A goal must be a falsifiable outcome, and the
+capability set from which goals derive is in the brief, which this session does
+not hold. Gates: TOR-OPEN-003.
+
+### 6.2 Non-goals
+
+[OPEN] No non-goal is recorded. A defensible non-goal is an exclusion a
+reasonable reader might otherwise assume is in scope, and that judgement
+requires knowing the goals. Gates: TOR-OPEN-004.
+
+Two boundaries are fixed by the supplied statement: the work is greenfield
+(TOR-CONSTRAINT-001), and no multi-actor workflow is recorded
+(TOR-CONSTRAINT-003).
+
+## 7. Success criteria
+
+[OPEN] No user-facing, operational, or strategic signal is recorded, and no
+baseline, target, measurement condition, evidence source, or owner is
+established.
+
+The dimensions to elicit, in the sponsor's terms, are:
+
+- User-facing: whether callers adopt the library and complete the job it
+  serves.
+- Operational: the maintenance and support burden the library imposes.
+- Strategic: the capability the sponsor gains from its existence.
+
+Gates: TOR-OPEN-005.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+TOR-CONSTRAINT-001 [KNOWN] Greenfield: no legacy implementation. Source: the
+supplied statement. Consequence: no existing behaviour, migration, or
+backward-compatibility obligation is inherited, and this document records
+none. Whether a pre-release surface or an early caller exists is not
+established. Source-API compatibility machinery for a pre-1.0 library is
+excluded by the governing policy in any case; an inherited demand for it would
+be a conflict to resolve explicitly, not a reason for an alias or shim.
+
+TOR-CONSTRAINT-002 [KNOWN] No technology choice is imposed. Source: the
+supplied statement. Consequence: language, runtime, packaging, distribution,
+and dependency selection are design decisions. This document records an
+environmental constraint only if one is supplied, for example a mandated
+runtime or distribution channel, and states no preference of its own.
+
+TOR-CONSTRAINT-003 [KNOWN] No multi-actor workflow is described. Source: the
+supplied statement. Consequence: actor orchestration and inter-actor ordering
+are outside the recorded scope. A later change to this fact invalidates the
+scenario-probe omission in §5 and widens the design's verification scope.
+
+### 8.2 Assumptions
+
+TOR-ASSUMPTION-001 [ASSUMED] The supplied statement accurately characterizes
+the brief. Failure consequence: if any of the four stated properties is wrong,
+§3–§8 change and the design's scope changes with them; an unreported mandated
+platform would invalidate the technology options the design may consider.
+Verification: ingest the brief and confirm with the sponsor. Expiry: on brief
+ingestion.
+
+TOR-ASSUMPTION-002 [ASSUMED] The brief is the authoritative statement of
+intent. Failure consequence: a charter, ticket, or prior discussion may carry
+different goals or constraints, and the design would build against the wrong
+one. Verification: the sponsor confirms authority and identifies any competing
+artefact. Expiry: when a second authoritative artefact appears.
+
+### 8.3 Dependencies
+
+[OPEN] No external dependency is recorded. Whether the library depends on a
+runtime, a distribution channel, a licence, or an upstream project is not
+established. None is inferred. Gates: TOR-OPEN-006.
+
+## 9. Open questions
+
+Owner: not identified for any item. That fact is recorded rather than guessed;
+TOR-OPEN-007 resolves the authority question.
+
+**TOR-OPEN-001 – What is the brief's exact content and revision?** Gates every
+section. Resolution: the brief's text is supplied and quoted, and its path and
+revision are recorded. Path: ingest the brief before any elicitation question
+is asked.
+
+**TOR-OPEN-002 – Who is the primary caller, and what situation triggers use?**
+Gates §3, §4, §5, §7, and the design's interface section. Resolution: a named
+developer role, ecosystem, and triggering situation that the sponsor confirms.
+Path: elicitation after TOR-OPEN-001.
+
+**TOR-OPEN-003 – What capability must the library provide, and what does
+"small" mean for it?** Gates §3, §6.1, and the design's requirement set.
+Resolution: at least one falsifiable outcome, plus the intended surface size,
+expressed as callable operations, dependency count, or an explicit statement
+that size is not a constraint. Path: derive from the brief and confirm with the
+sponsor.
+
+**TOR-OPEN-004 – Which exclusions would a reasonable reader assume are in
+scope but are not?** Gates §6.2 and the design's alternatives. Resolution: a
+short list of plausible exclusions, each with a redirect where one exists.
+Path: elicitation after TOR-OPEN-003.
+
+**TOR-OPEN-005 – What signals success, against which baseline and target?**
+Gates §7. Resolution: for each material measure, a signal, measurement
+condition, evidence source, target or an explicit finding that it is not
+currently measurable, and an owner. Path: elicitation, then user or market
+research where the sponsor cannot answer.
+
+**TOR-OPEN-006 – Which environmental constraints must the design obey?** Gates
+the design's technology selection: target runtime, distribution channel,
+licence, support lifetime, and any consuming organization's mandate.
+Resolution: each constraint stated with provenance, or an explicit statement
+that none applies. Path: brief ingestion and sponsor confirmation.
+
+**TOR-OPEN-007 – Who may approve this document and accept scope changes?**
+Gates handoff, approval state, and the design's authority to proceed.
+Resolution: a named role or person, and the approval evidence that will record
+acceptance. Path: sponsor confirmation.
+
+## Handoff and readiness
+
+Readiness: bounded discovery only. The problem space is not established, so the
+scope is not ready for a technical design. Resolving TOR-OPEN-001 to
+TOR-OPEN-006 is the bounded work; it needs the brief and a short elicitation,
+not a discovery campaign.
+
+Approval state: v0.1 draft, unreviewed, with no identified approver. Nothing in
+this document authorizes implementation.
+
+Identifiers carried forward: TOR-CONSTRAINT-001 to TOR-CONSTRAINT-003,
+TOR-ASSUMPTION-001 and TOR-ASSUMPTION-002, and TOR-OPEN-001 to TOR-OPEN-007. No
+goal, non-goal, or success-criterion identifier is issued while the
+corresponding content is unresolved. A later issue must not recycle an
+identifier used here.
+
+Downstream:
+
+- `tech-design-doc`: may begin only after TOR-OPEN-002 to TOR-OPEN-006 are
+  resolved or explicitly waived by the decision authority. Its conformance
+  basis should cite this revision. Technology selection is its decision, not
+  this document's.
+- `roadmap-doc`: not started. It needs goals and success criteria that do not
+  yet exist.
+- `execplans`: not started. It requires an approved design slice and its own
+  approval gate. The installed skill and template were inspected on
+  2026-11-21; the installed files carry no version identifier.
+- `docs/context.md`: no domain term has been established, so no entry is
+  proposed. The first terms from the brief are candidates.
+- ADRs: none surfaced. Technology selection and API-stability policy may
+  warrant one during design; that decision belongs to the design.
+
+Feedback route: if the brief contradicts a `[KNOWN]` item or supplies a
+constraint absent from §8, revise the affected sections, re-check the design
+outline, and record the change as proposed until the decision authority accepts
+it. Approval of this document is separate from any implementation, verification,
+release, or deployment state.
+
+## Appendix – terminology and references
+
+`docs/context.md` does not exist yet. This document uses no project-specific
+terms beyond "library" (§2) and the evidence labels in the front matter. The
+brief's domain vocabulary will populate `context.md` when ingested.
+
+References: the supplied statement, quoted in the front matter. It has no URL,
+path, or revision yet; TOR-OPEN-001 requires all three.

@@ -1,0 +1,179 @@
+# Released 2.1 function change – terms of reference constraint revision
+
+Status: Draft v0.1, not accepted.
+
+Date: 2026-11-21.
+
+Audience: maintainers, the release authority, and the technical-design author.
+
+Companion documents: `00-intake-and-elicitation.md`,
+`02-technical-design.md`, and `03-execplan.md` in this directory. The target
+repository's own terms of reference, `context.md`, ADRs, roadmap, and release
+notes were not inspected; the invoking session's isolation rule prohibits
+reading them.
+
+Authority and evidence basis: the supplied change statement. No approver,
+approval date, or acceptance evidence was supplied. Document acceptance and
+release state are separate: this revision does not approve the change and does
+not establish that any implementation, verification, release, or deployment
+has occurred.
+
+## Purpose
+
+This revision does not restate the package's terms of reference. It records the
+problem-space constraints that the change inherits, so that the technical
+design classifies the surface correctly instead of inferring compatibility from
+the branch position. Per the tailoring rule in
+`terms-of-reference-doc/references/problem-contract.md` §"Tailor the records,
+not the obligations" (inspected 2026-11-21), only the sections that resolve a
+real question appear below.
+
+## Hard constraints
+
+### TOR-CONSTRAINT-001 – compatibility commitment on the released surface
+
+Statement: the function's published 2.1 contract is subject to an explicit
+compatibility commitment.
+
+Provenance: supplied change statement.
+
+Evidence status: `[KNOWN]` existence. The commitment's exact text, duration,
+notice period, permitted change classes, and removal conditions are `[OPEN]`
+(TOR-OPEN-002).
+
+Binding effect: the change must not break the committed surface in place. Any
+in-place breaking change, removal, or semantic change is permitted only by the
+commitment's own process, at the release it permits, with the notice it
+requires.
+
+Known downstream items: the technical design's compatibility assessment; the
+ExecPlan's compatibility decision and removal gate.
+
+### TOR-CONSTRAINT-002 – deployed external consumer
+
+Statement: at least one external consumer is deployed against the released
+function.
+
+Provenance: supplied change statement.
+
+Evidence status: `[KNOWN]` existence. The consumer's identity, deployed
+version, deployment date, and usage profile are `[OPEN]` (TOR-OPEN-003).
+
+Binding effect: the maintainers cannot assume that the consumer upgrades in
+lockstep with the package. A migration must give the consumer a path that the
+commitment supports.
+
+Known downstream items: stakeholder table; characterization and consumer
+acceptance obligations.
+
+### TOR-CONSTRAINT-003 – release lineage fixes the obligation, not the branch tip
+
+Statement: the compatibility obligation attaches to a surface that has appeared
+in a formal release tag. The function's release in 2.1 is such a surface. The
+current branch being ahead of the tag does not withdraw the published 2.1
+contract; it means only that edits made on the branch are not yet released.
+
+Provenance: supplied facts EV-001 and EV-004, interpreted under the df12 policy
+in `terms-of-reference-doc/references/problem-contract.md` §"Compatibility is
+an explicit constraint, never a milestone side effect" (inspected 2026-11-21):
+"Evaluate the surface and its release lineage, not just whether the branch is
+ahead of a tag."
+
+Binding effect: the design must not apply the "unreleased API changes ahead of
+the latest formal release tag" exemption to this function. The exemption may
+apply to symbols that exist only on the branch and in no release tag; it does
+not reach back to a shipped 2.1 declaration.
+
+Known downstream items: the technical design's classification verdict and
+rejected alternatives.
+
+## Stakeholders
+
+| Stakeholder                 | Relevant role                        | Concern                                                          | Question the design must answer                                                          | Evidence required                                                        | Decision rights (unknown unless stated)              |
+| --------------------------- | ------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| External consumer operator  | Affected party, not a design reviewer | Upgrading on its own schedule without breakage.                  | Which parts of the 2.1 contract are relied on, and what migration path is offered?       | Contract diff, characterization evidence, migration guide, consumer acceptance run. | Unknown; presumed authority over its own deployment. |
+| Package maintainers         | Implementers and technical reviewers  | Evolving the function without an indefinite dual implementation.  | Which path preserves the commitment, and when may the old entry point be removed?        | Equivalence evidence, deprecation policy, release checklist.             | Technical approval; exact authority `[OPEN]`.        |
+| Release authority           | Approver of releases and removals     | The commitment is kept at every release.                         | Does each release satisfy the commitment's terms, including notice and removal limits?   | Release notes, version check, exported-symbol evidence.                  | Release and removal approval; identity `[OPEN]`.     |
+
+The decision rights are recorded as unknown rather than assigned. A discovery
+or review agent may recommend a change without approving it.
+
+## Goals and non-goals
+
+### TOR-GOAL-001 – deliver the change without breaking committed behaviour
+
+Deliver the intended change while every guarantee of the published 2.1 contract
+remains true for committed consumers.
+
+### TOR-GOAL-002 – provide a migration path
+
+Provide a documented path so the deployed consumer can adopt the new contract
+on its own schedule within the commitment's terms.
+
+### TOR-NONGOAL-001 – unrelated API redesign
+
+This work does not redesign other public surfaces and does not add a
+package-wide compatibility layer. Unrelated surfaces follow the package's
+normal release policy.
+
+### TOR-NONGOAL-002 – prescribing the mechanism
+
+This revision does not choose between a wrapper, a renamed entry point, an
+overload, a deprecation cycle, or a coordinated migration. That is a technical
+design decision, subject to TOR-CONSTRAINT-001 and TOR-CONSTRAINT-003.
+
+### TOR-NONGOAL-003 – treating branch-only symbols as compatibility-bound
+
+The fact that the branch is ahead of the tag does not create a compatibility
+obligation for symbols that have never appeared in a formal release tag. It
+also does not erase one for the released function. The design must distinguish
+the two cases per surface.
+
+## Success criteria
+
+| ID              | Criterion                                                                                                                                   | Baseline | Target | Measurement conditions and evidence source                     | Owner   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ---------------------------------------------------------------- | ------- |
+| TOR-SUCCESS-001 | The existing entry point preserves the documented 2.1 observable contract for inputs in its documented domain.                              | `[OPEN]` | `[OPEN]` | Characterization evidence captured at the 2.1 tag, including error and boundary behaviour. | `[OPEN]` |
+| TOR-SUCCESS-002 | The deployed consumer either runs unchanged on the supported release line or completes the documented migration within the commitment's notice period. | `[OPEN]` | `[OPEN]` | Consumer acceptance evidence against a representative workload. | `[OPEN]` |
+
+Missing baseline and target values are recorded as open rather than invented.
+A merged change would not by itself establish either criterion.
+
+## Assumptions
+
+| ID                  | Assumption                                                                                                       | Failure consequence                                                                                                                       | Verification route                                | Expiry trigger                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| TOR-ASSUMPTION-001  | The consumer relies only on documented 2.1 behaviour.                                                            | Undocumented reliance escapes characterization tests; the consumer can break even when the documented contract is preserved.               | Obtain consumer usage evidence or run its suite.  | Consumer changes its usage profile.     |
+| TOR-ASSUMPTION-002  | The commitment permits removal of the old entry point at a later major release.                                  | If removal is never permitted, the old path is permanent; if permitted earlier, the migration window is shorter than planned.             | Read the exact commitment text (TOR-OPEN-002).    | Commitment is revised or reinterpreted. |
+| TOR-ASSUMPTION-003  | Version 2.1 is a formal release tag for the applicable package, not a version string on an unreleased branch.     | The classification as a released surface is unsupported, and the prohibition on unreleased-API compatibility machinery may apply instead. | Inspect the tag and package release record.       | Tag or release record changes.          |
+
+## Open questions
+
+| ID           | Question                                                                                                                       | Why it matters                                                                                       | Resolution criteria                                                       | Owner    | Resolution path               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------- | ----------------------------- |
+| TOR-OPEN-001 | What is the intended change to the function, relative to the 2.1 contract?                                                     | Determines the change class: internal refactor, additive change, in-place breaking change, or mandatory fix. Gates every design branch. | A sponsor or maintainer states the new contract and motivation.            | `[OPEN]` | Further elicitation.          |
+| TOR-OPEN-002 | What is the exact text and scope of the compatibility commitment?                                                              | Determines whether deprecation, removal, or a coordinated migration is permitted, and on what timetable. | The commitment document or release policy is produced and accepted.        | `[OPEN]` | Document retrieval.           |
+| TOR-OPEN-003 | Who is the external consumer, what version does it deploy, and which behaviour does it exercise?                               | Determines the evidence needed for TOR-SUCCESS-002 and the residual risk of undocumented reliance.   | Consumer inventory and a representative workload are identified.          | `[OPEN]` | Further elicitation.          |
+| TOR-OPEN-004 | What are the function's name, module, language, package, and exact 2.1 tag?                                                    | Required for a self-contained implementation plan and traceable evidence.                            | Repository reconnaissance supplies them.                                  | `[OPEN]` | Repository inspection at execution. |
+| TOR-OPEN-005 | Who may accept a deviation from the commitment, such as an out-of-band security fix?                                           | Determines the escalation route for a blocking conflict.                                              | A named decision authority accepts or rejects deviations.                 | `[OPEN]` | Further elicitation.          |
+
+## Handoff
+
+Readiness by scope:
+
+- Ready for design classification: yes. The surface classification and the
+  compatibility decision framework do not depend on the open items.
+- Ready for implementation planning: no. Blocked on TOR-OPEN-001 to
+  TOR-OPEN-004; the ExecPlan is a draft with those blockers recorded.
+- Blocked items: the change contract, the commitment terms, the consumer
+  profile, and the function's identity.
+
+The design inherits TOR-CONSTRAINT-001 to TOR-CONSTRAINT-003, TOR-GOAL-001 and
+TOR-GOAL-002, and TOR-ASSUMPTION-001 to TOR-ASSUMPTION-003. The ExecPlan
+inherits the applicable subset and records its own traceability. This revision
+does not authorise a shim; it records why compatibility or a deliberate
+migration may be required, and leaves the mechanism to the design.
+
+Feedback route: if implementation falsifies an assumption, record the evidence
+here first, then impact-check the technical design and the ExecPlan before
+treating any change as complete.

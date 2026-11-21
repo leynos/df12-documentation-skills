@@ -1,0 +1,194 @@
+# Supervisor cancellation promise – terms-of-reference feedback record
+
+Status: Proposed reconciliation record; not an accepted ToR revision
+
+Date: 2026-11-21 08:12Z
+
+Upstream ToR: path, revision, identifier, and approval record not supplied
+
+Companion records:
+
+- `02-technical-design-and-adr-impact.md`
+- `03-execplan-supervisor-worker-shutdown.md`
+
+Audience: ToR owner, ADR owner, technical-design author, and implementing agent
+
+## Purpose
+
+This record captures evidence that contradicts a promise in the project's terms
+of reference (ToR) and its associated architecture decision record (ADR). The
+terms-of-reference skill directs that a falsified promise be recorded with its
+evidence, a proposed revision, and its downstream impacts, without presenting
+the proposal as accepted. This record follows that feedback route. It does not
+amend the ToR, approve a change, or authorize implementation.
+
+## Terms
+
+Definitions live here so that the companion records can reference them rather
+than restate them.
+
+- **Supervisor** – the process that starts, monitors, and stops worker
+  processes for one supervised unit of work.
+- **Worker** – a process started by the supervisor to perform the supervised
+  work.
+- **Cancellation** – the documented operation by which an operator asks a
+  running supervisor to stop. The exact command, signal, and grace period are
+  not stated in the supplied input and remain open.
+- **Surviving worker** – a worker process that is still alive after its
+  supervisor has exited.
+
+## The promise
+
+Provisional handle: `PROV-TOR-SUCCESS-001`.
+
+Kind: operational success criterion and operator stakeholder concern.
+
+Statement: When an operator cancels a supervisor through the documented
+cancellation operation, the supervisor stops its workers. After the supervisor
+has exited and the shutdown deadline has passed, no worker started by that
+supervisor remains alive.
+
+Source: the supplied scenario states that the ToR and the ADR make this
+promise. The ToR path, revision, section, and established identifier were not
+available under this task's read restrictions, so the handle above is local to
+these records and must be replaced during reconciliation.
+
+Evidence status: reported upstream promise. Approval state: not verified here.
+This record neither manufactures nor denies approval.
+
+Downstream links: `PROV-ADR-001`, `PROV-TDD-REQ-001`, `GAP-WORKER-REAP-001`,
+and ExecPlan milestone `EP-M1` in the companion records.
+
+If the ToR states a mechanism, for example "the supervisor signals its process
+group", that wording is solution-space material. The observable outcome belongs
+in the ToR; the mechanism belongs in the ADR and technical design. The editing
+pass should move the mechanism without weakening the outcome.
+
+## The probe result
+
+Evidence identifier: `EVID-PROBE-001`.
+
+Kind: observed fact from an integration probe. It is not an accepted
+requirement, and it does not approve a change.
+
+Reported observation: after the supervisor was cancelled and exited, worker
+processes remained alive.
+
+Method and scope: the supplied input does not include the probe command,
+transcript, repository revision, worker count, cancellation signal, liveness
+check, platform, or elapsed-time window. Those omissions bound the claim. The
+probe establishes non-conformance for the exercised path only if it used the
+documented cancellation operation on workers that the supervisor started. It
+does not establish the cause, the prevalence, or behaviour under other
+cancellation paths, platforms, or container runtimes.
+
+Cause: unresolved. Candidate explanations are recorded in the design impact
+record and must be tested in `EP-M0`, not assumed.
+
+## Assessment against the promise
+
+- The promise remains the accepted intent until its owner revises it.
+- The probe is counter-evidence against conformance; it is not a new
+  requirement.
+- A single probe does not rewrite a universal promise. It falsifies the promise
+  for the exercised path once the probe's preconditions are confirmed against
+  the promise's definitions.
+- Observed implementation, however merged or released, does not establish user
+  approval for the behaviour it happens to exhibit.
+- A passing supervisor exit code is not evidence that its workers stopped; the
+  claim is about worker process liveness.
+
+## Proposed ToR disposition (not accepted)
+
+Default: retain the promise and record the observation as a conformance gap.
+The design and the ExecPlan then treat the gap as a defect or as a design
+change according to the accepted design decision.
+
+Alternative: if bounded discovery shows that the promise is infeasible on the
+supported platforms, or was intended to cover only graceful cancellation of
+direct children, the promise's scope is narrowed explicitly by its owner. That
+is a requirement change, not a design choice, and it requires recorded
+acceptance.
+
+This record adopts neither disposition. The options give the decision owner a
+concrete choice; they are not recommendations presented as decisions.
+
+## Stakeholder concern and measure
+
+Concern (operator): "What remains running after I cancel the supervisor?"
+
+Question the downstream design must answer: which processes are in scope, and
+how is their termination observed?
+
+Evidence needed: a reproducible integration observation of process liveness
+after cancellation.
+
+Decision right: unknown. Identify the ToR owner and the ADR owner before
+accepting any change.
+
+Measure record:
+
+- Measure: surviving supervisor-started worker processes after cancellation
+  completes.
+- Baseline: at least one survivor under the supplied probe, subject to
+  precondition confirmation.
+- Target: zero survivors.
+- Measurement conditions: documented cancellation operation; supervisor-started
+  workers; deadline D after supervisor exit (D is open).
+- Evidence source: probe transcript from `EP-M0`, then the post-fix integration
+  test.
+- Owner: unassigned; do not invent one.
+
+## Open questions
+
+- `TOR-OPEN-CANCEL-01`: Which operation, signal, and grace period define
+  cancellation? Without an answer, the promise is not testable and the probe's
+  scope cannot be confirmed. Resolution: quote the documented operation from
+  the ToR or design. Owner unknown.
+- `TOR-OPEN-DEADLINE-02`: What deadline D applies between cancellation,
+  supervisor exit, and worker death? The promise says "stops", which admits an
+  unbounded delay. Resolution: the owner states D, or the ToR records that the
+  criterion is currently unmeasurable. Owner unknown.
+- `TOR-OPEN-SCOPE-03`: Does "its workers" mean direct children only, or all
+  descendants and processes started through any supervisor path? Resolution:
+  the owner defines the worker set. Owner unknown.
+- `TOR-OPEN-PLATFORM-04`: Which operating systems, container runtimes, and
+  service managers are in scope? Process-death semantics differ between them.
+  Resolution: a supported-platform list in the ToR. Owner unknown.
+- `TOR-OPEN-CRASH-05`: Does the promise cover only operator cancellation, or
+  also supervisor crash and forced termination? Resolution: the owner states
+  the failure models covered. Owner unknown.
+- `TOR-OPEN-PROBE-06`: What are the probe's exact command, source revision,
+  environment, and transcript? Resolution: attach the transcript and rerun it
+  under `EP-M0`. Owner unknown.
+- `TOR-OPEN-AUTHORITY-07`: Who may accept a change to the promise and to the
+  ADR? Resolution: a named role with recorded acceptance. Owner unknown.
+
+## Feedback route and impact
+
+Blocked decisions: the ToR disposition above and the design response. Until
+they are accepted, the ExecPlan remains `BLOCKED` and no implementation
+starts.
+
+On an accepted resolution, reconcile in this order:
+
+1. Revise the ToR section that contains the promise, and record the acceptance
+   evidence and revision.
+2. Revise or supersede the ADR if its mechanism or scope changes, recording the
+   decision and its consequences.
+3. Update the technical design's requirement, gap, and verification links.
+4. Update the ExecPlan's `Conformance basis`, milestones, and acceptance
+   evidence, then seek plan approval.
+
+Roadmap: no roadmap path or item was supplied or inspectable. This record
+claims no roadmap link and invents none; add one only when the receiving
+roadmap is identified.
+
+Until that reconciliation is recorded, no part of this work is complete.
+
+## Sources
+
+- Supplied scenario input, quoted in the ExecPlan's `Artefacts and notes`.
+- No repository document was read for this record. The task's isolation rules
+  permitted only the named skill directories, so upstream paths, revisions,
+  and identifiers remain unspecified rather than invented.
