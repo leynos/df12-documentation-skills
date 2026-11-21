@@ -215,32 +215,38 @@ state-changing checkout, and the checkout it objected to runs after the
 milestone commit. The other 25 were substantiated, wholly or partly. They fall
 into six groups:
 
-- A check whose scope does not reach the claim it is said to establish: C2
-  states `INV-absence` as a symbol search, which cannot show that no alias or
-  wrapper preserves the old surface; C3 records "no alias" as an outcome its
-  own steps never observe; C4 names the `git grep` commands as the evidence
-  rather than their output; and C1 lists the compile-time axiom as a dependency
-  without an order that establishes it before the check relying on it.
+- A check whose scope does not reach the claim it is said to establish: C1's
+  compile-time axiom promises that a swapped argument is rejected, which a type
+  checker does only where the swapped parameters differ in type; C2 keys
+  `INV-absence` to the old symbol, so a reshape that keeps the name makes the
+  required empty search unsatisfiable; C2's `L-behaviour` generalises one
+  seeded fault to every observable change; C3 records "no alias" as an outcome
+  the run did not observe; C4's negative control searches tracked files for an
+  untracked seed; and C5's compatibility invariant accepts a deprecation
+  diagnostic in place of the baseline outcome.
 - A gate that can close before its condition holds: C1's `EP-M0` approval and
   placeholder sequencing, C4's split of `EP-M1` and `EP-M2` atomicity, C5's
   unqualified `EP-M2` acceptance, C6's prerequisite ordering, E1's D1 gate
-  ordering, and E2's red-step sequencing.
-- A law stated so that the recorded evidence cannot falsify it: C2's
-  `L-behaviour`, E2's `L-VER-001`, and S2's `L-COMPLETE`, whose statement is
-  inverted; S2's non-vacuity condition can only be met by an invalidation the
-  plan does not schedule.
+  ordering, and E2's red step, which uses a fixture that cannot fail at the
+  stated chunk limit.
+- A law stated so that the recorded evidence cannot falsify it: E2's
+  `L-VER-001`, which counts reads rather than checking the chunk boundary, and
+  S2's `L-COMPLETE`, whose statement is inverted; S2's non-vacuity condition
+  fails an audit that correctly finds no invalidated obligation.
 - Evidence carried forward without renewal: E4's "Current" batch-atomicity row,
   E4's `error_translation_is_total` row linked to the wrong obligation, and
   E2's expiry recorded without a fresh performance measurement.
 - A cleanup, restoration, or status claim that overstates the plan: E1's worker
   cleanup, which contradicts the plan's own statement that it leaves no lasting
-  state; E4's `pipefail` without a stop; S2's partial ADR text restoration; and
-  S2's handoff reading `BLOCKED` as the plan's status where another artefact
-  records a different one.
-- Constraints that pull against each other: C5's `TOR-CONSTRAINT-004` against
-  `ASSUMPTION-002`, mitigated by the "or a longer window" in the statement it
-  qualifies, and C6's UTC storage schema, which leaves the offset unrecorded
-  without a mitigation.
+  state; E4's `pipefail` without a stop; S2's ADR text restoration, which can
+  remove an addendum added during the plan; and S2's handoff reporting
+  `BLOCKED` for a plan it could not read.
+- A decision relaxed or a constraint left unresolved: C4 treats a discovered
+  consumer of the unreleased branch as grounds to revisit the no-alias
+  prohibition, which the policy does not permit; C5's `TOR-CONSTRAINT-004`
+  pulls against `ASSUMPTION-002`, mitigated by the "or a longer window" in the
+  statement it qualifies; and C6's UTC storage schema leaves the offset
+  unrecorded without a mitigation.
 
 None of these defects contradicts its scenario's oracle. The verdict table
 above therefore still records what the artefact shows about the guidance: each

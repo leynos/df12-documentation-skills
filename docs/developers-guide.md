@@ -170,13 +170,16 @@ fresh-agent scenarios in
 Their artefacts are published under `docs/validation/`, so a reader can inspect
 what the reviewer judged, but rerunning a scenario still needs an agent: the
 verdicts are manual evidence, not CI results.
-`tests/test_workflow_boundary_contract.py` decides one boundary mechanically
-from those artefacts: a record that carries an unaccepted deviation must not
-claim `COMPLETE` or `ACTIVE`, a `BLOCKED` record must log the deviation as a
-concrete entry rather than a placeholder template, and a handoff must state its
-approval state, readiness, stable identifiers, and a feedback route that is not
-declared absent. That check decides the recorded output, not whether an agent
-obeys the skill.
+`scripts/check_workflow_boundary.py` decides one boundary mechanically from
+those artefacts, and `tests/test_workflow_boundary_contract.py` drives it
+through its command line: a record that carries an unaccepted deviation must
+not claim `COMPLETE` or `ACTIVE`, a `BLOCKED` record must log the deviation as
+a concrete entry rather than a placeholder template, and a handoff must state
+its approval state, readiness, stable identifiers, and a feedback route that is
+not declared absent. The script reads the governing sentences from the shipped
+skills and reports one that is missing, so a rule cannot be deleted from a
+skill while the check keeps passing. That check decides the recorded output,
+not whether an agent obeys the skill.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard
