@@ -166,8 +166,8 @@ reviewer compared the artefacts with the oracle. C3 has two runs, one at
 
 The first C3 input conflicts with itself: it permits three skill directories
 and then forbids reading anything under `/home/leynos/.lody/repos`, which
-contains all three. The input is published verbatim, because it is what the run
-received. A replay correction at
+contains two of them. The input is published verbatim, because it is what the
+run received. A replay correction at
 [`replay-corrections/c3-271b0f8.md`](validation/2026-11-19-agent-scenarios/replay-corrections/c3-271b0f8.md)
 supplies a reconciled isolation rule for the same scenario, and the second C3
 prompt already states the rule without the contradiction.

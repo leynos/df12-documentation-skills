@@ -197,6 +197,14 @@ _DECISION_LOGS: dict[str, str] = {
         "  Rationale: the policy owner approved the amended target.\n"
         "  Date/Author: 2026-11-20, policy owner.\n"
     ),
+    "future-acceptance": (
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: D1 will be accepted.\n"
+        "  Rationale: the policy owner has not ruled yet.\n"
+        "  Date/Author: 2026-11-20, authoring agent.\n"
+    ),
     "none": "\n## Decision log\n\n- D1. Renamed the module.\n",
 }
 
@@ -208,7 +216,7 @@ def _expected_status_problems(status: str, condition: str) -> list[str]:
         problems.append(f"unknown status {status}")
     if condition == "absent":
         problems.append("no Decision log")
-    elif condition == "unaccepted":
+    elif condition in {"unaccepted", "future-acceptance"}:
         if status in {"ACTIVE", "COMPLETE"}:
             problems.append(
                 f"{status} with an unaccepted deviation in the Decision log"

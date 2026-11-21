@@ -65,11 +65,13 @@ _ACCEPTANCE_CUE = re.compile(
     r"\b(?:accept|accepts|accepted|approve|approves|approved|approval of)\b",
     re.IGNORECASE,
 )
-# Acceptance is what the plan records, not what it awaits, so conditional or
-# negated wording leaves the deviation pending.
+# Acceptance is what the plan records, not what it awaits, so conditional,
+# future, modal, or negated wording leaves the deviation pending.
 _ACCEPTANCE_HEDGE = re.compile(
     r"\b(?:not|never|no longer|await(?:s|ing)?|pending|proposed|require[sd]?"
-    r"|after|until|before|once|when|if|unless)\b",
+    r"|after|until|before|once|when|if|unless"
+    r"|will|shall|would|should|could|may|might|can)\b"
+    r"|\b(?:is|are)\s+to\s+be\b",
     re.IGNORECASE,
 )
 _DEVIATION_ANAPHOR = re.compile(

@@ -62,9 +62,9 @@ verdict; the review of the output in
 is what supplies that comparison.
 
 The first C3 prompt carries a conflict. Its isolation rule forbids reading
-anything under `/home/leynos/.lody/repos`, and the three skill directories it
-permits all lie under that path. The file is kept verbatim as the record of
-what the run received; a replay correction at
+anything under `/home/leynos/.lody/repos`, and two of the three skill
+directories it permits lie under that path. The file is kept verbatim as the
+record of what the run received; a replay correction at
 [`replay-corrections/c3-271b0f8.md`](replay-corrections/c3-271b0f8.md) supplies
 a reconciled isolation rule without altering the scenario.
 
