@@ -4,16 +4,19 @@
 The skills state two boundaries that a record decides rather than a reviewer
 judges. An ExecPlan that carries an unaccepted deviation records it in its
 Decision log and enters ``BLOCKED``; it may not claim ``ACTIVE`` or
-``COMPLETE`` until the deviation is accepted. A handoff states its approval
-state, its readiness classification, the stable identifiers downstream work
-inherits, and the route back when an assumption fails.
+``COMPLETE`` until a later entry accepts the deviation. A handoff states its
+approval state, its readiness classification, the stable identifiers
+downstream work inherits, and the route back when an assumption fails.
 
 A third boundary is a phrase check over the recorded proposals, not a
 semantic one: a record for a private, test-only, pre-1.0, or unreleased
 surface must not permit compatibility machinery, and the released-contract
-record must state that a layer or migration is admissible. Those checks find
-a permissive sentence in the recorded output; they do not prove that the plan
-implements nothing else.
+record must state affirmatively that a layer or migration is admissible. A
+sentence that justifies compatibility for a released external contract with an
+explicit commitment is guidance rather than a permission; one that also names
+a prohibited surface is still reported. These checks find a permissive
+sentence in the recorded output; they do not prove that the plan implements
+nothing else.
 
 The governing sentences are read from the shipped skills rather than repeated
 here, so a skill whose rule has been removed or softened fails the check
@@ -53,6 +56,26 @@ _UNACCEPTED_DEVIATION = re.compile(
 )
 _FENCE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
 _DECISION_STATEMENT = re.compile(r"Decision:\s*(?!<)[^<\n]{20,}", re.IGNORECASE)
+_ENTRY_START = re.compile(r"^\s*(?:[-*]\s*)?\**D(?P<id>\d+)\**\.", re.MULTILINE)
+_DECISION_CLAUSE = re.compile(
+    r"Decision:\s*(?P<clause>.*?)(?:Rationale:|Date/Author:|$)",
+    re.IGNORECASE | re.DOTALL,
+)
+_ACCEPTANCE_CUE = re.compile(
+    r"\b(?:accept|accepts|accepted|approve|approves|approved|approval of)\b",
+    re.IGNORECASE,
+)
+# Acceptance is what the plan records, not what it awaits, so conditional or
+# negated wording leaves the deviation pending.
+_ACCEPTANCE_HEDGE = re.compile(
+    r"\b(?:not|never|no longer|await(?:s|ing)?|pending|proposed|require[sd]?"
+    r"|after|until|before|once|when|if|unless)\b",
+    re.IGNORECASE,
+)
+_DEVIATION_ANAPHOR = re.compile(
+    r"\b(?:the|this|that)\s+(?:proposed\s+)?(?:deviation|proposal|decision)\b",
+    re.IGNORECASE,
+)
 _APPROVAL_STATE = re.compile(
     r"\b(?:not accepted|accepted revision|approv(?:al|ed))\b", re.IGNORECASE
 )
@@ -66,30 +89,74 @@ _FEEDBACK_ROUTE = re.compile(
     r"|absent|tbd|unknown)\b)",
     re.IGNORECASE,
 )
+#: Permission and possibility modals, including the passive "is permitted" and
+#: "is allowed" forms with or without "to". "Can" is primarily a capability
+#: modal ("a maintainer can read the call site"), so it counts only when it
+#: governs a grant verb ("can retain compatibility wrappers").
 _COMPATIBILITY_MODALITY = (
-    r"(?:may|should|is permitted to|are permitted to|is allowed to|are allowed to)"
+    r"(?:(?:may|should|might)\b"
+    r"|can\s+(?:(?!\b(?:not|never|no)\b)\w+\s+){0,3}?"
+    r"(?:add|retain|keep|carry|preserve|provide|introduce|maintain|offer"
+    r"|include|implement|ship|use|expose|publish|create)\b"
+    r"|(?:is|are)\s+(?:permitted|allowed)(?:\s+to)?\b)"
 )
 _COMPATIBILITY_TERMS = (
     r"compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?"
 )
-# A permission is one clause: a clause boundary between the modality and the
-# surface means the sentence is not proposing that machinery, as in "the
-# authority may resolve the conflict, and is the alias owner".
+# A permission is one clause. A coordinated verb phrase continues it, as in
+# "may retain the old name, or add compatibility shims", while a new subject or
+# copula starts an independent clause, as in "may resolve the conflict, and is
+# the alias owner".
+_CLAUSE_BREAK = (
+    r"(?:;|,\s*(?:and|but|or|then|so)\s+(?:"
+    r"(?:is|are|was|were|be|remains?|becomes?|has|have|had|owns?|holds?)"
+    r"\b|(?:the|a|an|this|that|these|those|it|they|we|you|he|she|its|their"
+    r"|our|your)\b))"
+)
 _COMPATIBILITY_CLAIM = re.compile(
     rf"\b{_COMPATIBILITY_MODALITY}\b"
     r"(?P<gap>(?:(?![.!?](?:\s|$))"
     rf"(?!(?:\b{_COMPATIBILITY_MODALITY}\b))"
-    r"(?![;]|,\s*(?:and|but|or|then|so)\b).)*?)"
+    rf"(?!{_CLAUSE_BREAK}).)*?)"
     rf"\b(?:{_COMPATIBILITY_TERMS})\b",
     re.IGNORECASE,
 )
 _NEGATED_MODALITY = re.compile(
-    r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
+    r"\b(?:not|never|no|without)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
 )
-_RELEASED_PERMISSION = re.compile(
-    r"\b(?:layer|migration)\b[^.]{0,60}\bis admissible\b"
-    r"|\bcompatibility or a deliberate migration\b",
+# The prohibitions name surfaces that never get compatibility machinery, while a
+# released external contract with an explicit commitment is assessed instead of
+# denied. A sentence that only names the latter is guidance, not a permission to
+# report; one that names a prohibited surface is reported even when it also
+# mentions a release. "Unreleased" is matched by its negated forms too, so "API
+# changes that have not yet been released" cannot borrow the word "released".
+_PROHIBITED_SURFACE = re.compile(
+    r"\b(?:private|internal|test-only|unreleased|pre-1\.0)\b"
+    r"|(?<![\d.])0\.\d+\b"
+    r"|\bnot\s+(?:yet\s+)?(?:been\s+)?released\b"
+    r"|\byet\s+to\s+be\s+released\b"
+    r"|\bpre-release\b",
     re.IGNORECASE,
+)
+_JUSTIFIED_SURFACE = re.compile(
+    r"\b(?:released|compatibility commitment|deployed external consumer)\b",
+    re.IGNORECASE,
+)
+# The released-contract permission must be affirmative: the statement names a
+# layer or migration and a positive predicate, and its clause carries no
+# negation.
+_RELEASED_PERMISSION = re.compile(
+    r"\b(?:layer|migration)\b[^.;]{0,60}\bis admissible\b"
+    r"|\bcompatibility or a deliberate migration\b[^.;]{0,40}"
+    r"\b(?:is|are|remains?)\s+(?:admissible|permitted|allowed)\b",
+    re.IGNORECASE,
+)
+_CLAUSE_START = re.compile(r"[.;:]|,\s*(?:and|but|or|then|so)\b", re.IGNORECASE)
+# A released-permission statement is one sentence or one table cell, so a
+# negation in a neighbouring cell cannot disqualify it.
+_CLAUSE_SPLIT = re.compile(r"(?<=[.!?])\s+|\s*\|\s*")
+_PERMISSION_NEGATION = re.compile(
+    r"\b(?:no|not|never|forbidden|prohibited|without)\b", re.IGNORECASE
 )
 
 #: Each rule the checks below depend on, with the sentence that states it.
@@ -160,12 +227,85 @@ def _section_named(text: str, needle: str) -> str:
     return ""
 
 
-def _records_unaccepted_deviation(region: str) -> bool:
-    """Return whether the Decision log records an unaccepted deviation.
+def _surface_is_justified(sentence: str) -> bool:
+    """Return whether the sentence permits compatibility for a released surface."""
+    return (
+        _JUSTIFIED_SURFACE.search(sentence) is not None
+        and _PROHIBITED_SURFACE.search(sentence) is None
+    )
+
+
+def _decision_entries(region: str) -> list[tuple[str, str]]:
+    """Return the Decision log entries in order, as identifier and text."""
+    starts = list(_ENTRY_START.finditer(region))
+    if not starts:
+        return [("", region)]
+    entries: list[tuple[str, str]] = []
+    for index, start in enumerate(starts):
+        end = starts[index + 1].start() if index + 1 < len(starts) else len(region)
+        entries.append((start.group("id"), region[start.start() : end]))
+    return entries
+
+
+def _entry_records_deviation(entry: str) -> bool:
+    """Return whether one Decision log entry records a pending deviation.
 
     A fenced block is the plan format's template, so it counts as a recorded
     entry only when it states a concrete decision. A placeholder-only template
     is illustrative, and its "pending acceptance" marks the form, not an entry.
+
+    Parameters
+    ----------
+    entry : str
+        The text of one Decision log entry.
+
+    Returns
+    -------
+    bool
+        Whether the entry records a deviation awaiting acceptance.
+
+    """
+    prose = _FENCE.sub("", entry)
+    if _UNACCEPTED_DEVIATION.search(prose):
+        return True
+    return any(
+        _UNACCEPTED_DEVIATION.search(block)
+        and _DECISION_STATEMENT.search(block) is not None
+        for block in _FENCE.findall(entry)
+    )
+
+
+def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
+    """Return the pending deviations one later entry records as accepted."""
+    clause = _DECISION_CLAUSE.search(entry)
+    if clause is None:
+        return []
+    statement = _normalise(clause.group("clause"))
+    if (
+        _ACCEPTANCE_CUE.search(statement) is None
+        or _ACCEPTANCE_HEDGE.search(statement) is not None
+    ):
+        return []
+    named = [
+        identifier
+        for identifier in pending
+        if identifier and re.search(rf"\bD-?{identifier}\b", statement)
+    ]
+    if named:
+        return named
+    if len(pending) == 1 and _DEVIATION_ANAPHOR.search(statement) is not None:
+        return list(pending)
+    return []
+
+
+def _records_unaccepted_deviation(region: str) -> bool:
+    """Return whether any deviation in the Decision log is still pending.
+
+    A deviation is pending while its entry awaits acceptance. A later entry
+    accepts it when that entry's Decision states the acceptance explicitly and
+    names the deviation's identifier, or names the only pending deviation.
+    Conditional, future, or negated wording records no acceptance, so the
+    deviation stays pending.
 
     Parameters
     ----------
@@ -175,17 +315,18 @@ def _records_unaccepted_deviation(region: str) -> bool:
     Returns
     -------
     bool
-        Whether the section records a deviation awaiting acceptance.
+        Whether the section records a deviation that is still pending.
 
     """
-    prose = _FENCE.sub("", region)
-    if _UNACCEPTED_DEVIATION.search(prose):
-        return True
-    return any(
-        _UNACCEPTED_DEVIATION.search(block)
-        and _DECISION_STATEMENT.search(block) is not None
-        for block in _FENCE.findall(region)
-    )
+    pending: dict[str, bool] = {}
+    for identifier, entry in _decision_entries(region):
+        if _entry_records_deviation(entry):
+            pending[identifier] = True
+            continue
+        outstanding = [key for key, waiting in pending.items() if waiting]
+        for key in _accepted_ids(entry, outstanding):
+            pending[key] = False
+    return any(pending.values())
 
 
 def status_problems(text: str) -> list[str]:
@@ -269,12 +410,28 @@ def compatibility_problems(text: str) -> list[str]:
     """
     problems: list[str] = []
     for sentence in re.split(r"(?<=[.!?])\s+", _normalise(text)):
+        if _surface_is_justified(sentence):
+            continue
         problems.extend(
             f"permits compatibility machinery: {match.group(0)}"
             for match in _COMPATIBILITY_CLAIM.finditer(sentence)
             if _NEGATED_MODALITY.search(match.group("gap")) is None
         )
     return problems
+
+
+def _states_released_permission(text: str) -> bool:
+    """Return whether a clause states affirmatively that a layer is admissible."""
+    for clause in _CLAUSE_SPLIT.split(_normalise(text)):
+        for match in _RELEASED_PERMISSION.finditer(clause):
+            starts = [
+                boundary.end()
+                for boundary in _CLAUSE_START.finditer(clause, 0, match.start())
+            ]
+            prefix = clause[starts[-1] if starts else 0 : match.start()]
+            if _PERMISSION_NEGATION.search(prefix) is None:
+                return True
+    return False
 
 
 def permission_missing(texts: Sequence[str]) -> bool:
@@ -291,7 +448,7 @@ def permission_missing(texts: Sequence[str]) -> bool:
         Whether every text omits the released-contract permission.
 
     """
-    return not any(_RELEASED_PERMISSION.search(_normalise(text)) for text in texts)
+    return not any(_states_released_permission(text) for text in texts)
 
 
 _CHECKS = {

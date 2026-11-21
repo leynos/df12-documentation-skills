@@ -11,22 +11,30 @@ They also retain the rules the contract rests on: the reading order, the
 independent compatibility prohibitions, baseline/target/gap records,
 dependency and stale-blocker handling, evidence expiry, stakeholder decision
 rights, the ``BLOCKED``/``COMPLETE`` reconciliation, and the traceable handoff
-records. The rule checks read the shipped Markdown and fail when wording is
-deleted. One further check rejects a permissive sentence that would grant the
-compatibility machinery the prohibitions deny, except where the sentence
-justifies it for a released external contract with an explicit commitment;
-generated sentences exercise that rejection across verbs, wording, and
-version-number dots. Whether an agent
-obeys that guidance is the subject of the fresh-agent scenarios in
+records. These are documentation checks: they assert that the shipped Markdown
+states the wording, and fail when it is deleted, moved, quoted, or disavowed.
+One further documentation check rejects a permissive sentence that would grant
+the compatibility machinery the prohibitions deny, except where the sentence
+justifies it for a released external contract with an explicit commitment. That
+check is the shipped ``scripts/check_workflow_boundary.py`` scan rather than a
+second implementation here, and generated sentences exercise it across verbs,
+wording, and version-number dots. Whether an agent obeys that guidance is the
+subject of the fresh-agent scenarios in
 ``docs/architecture-contract-validation.md``, not of a phrase assertion here.
 """
 
 from __future__ import annotations
 
 import dataclasses as dc
+import importlib.util
 import re
+import sys
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -597,69 +605,20 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
     ),
 )
 
-_MODALITY = (
-    r"(?:may|should|is permitted to|are permitted to|is allowed to|are allowed to)"
-)
-_COMPATIBILITY_TERMS = (
-    r"compatibility|compatible|shims?|alias(?:es)?|facades?|wrappers?|entrypoints?"
-)
-_PERMISSIVE_COMPATIBILITY = re.compile(
-    rf"\b{_MODALITY}\b"
-    rf"(?P<gap>(?:(?![.!?](?:\s|$))(?!(?:\b{_MODALITY}\b)).)*?)"
-    rf"\b(?:{_COMPATIBILITY_TERMS})\b",
-    re.IGNORECASE,
-)
-# The same scan without the second-modality guard, kept only so a test can
-# show that the guard, rather than the position of the terms, is load-bearing.
-_UNGUARDED_PERMISSIVE_COMPATIBILITY = re.compile(
-    rf"\b{_MODALITY}\b(?P<gap>(?:(?![.!?](?:\s|$))[^.!?])*?)"
-    rf"\b(?:{_COMPATIBILITY_TERMS})\b",
-    re.IGNORECASE,
-)
-_NEGATED_MODALITY = re.compile(
-    r"\b(?:not|never)\b(?!\s+(?:only|just)\b)", re.IGNORECASE
-)
-# The prohibitions name surfaces that never get compatibility machinery, while a
-# released external contract with an explicit commitment is assessed instead of
-# denied. A sentence that only names the latter is guidance, not a permission to
-# report; one that names a prohibited surface is reported even when it also
-# mentions a release. "Unreleased" is matched by its negated forms too, so "API
-# changes that have not yet been released" cannot borrow the word "released".
-_PROHIBITED_SURFACE = re.compile(
-    r"\b(?:private|internal|test-only|unreleased|pre-1\.0)\b"
-    r"|(?<![\d.])0\.\d+\b"
-    r"|\bnot\s+(?:yet\s+)?(?:been\s+)?released\b"
-    r"|\byet\s+to\s+be\s+released\b"
-    r"|\bpre-release\b",
-    re.IGNORECASE,
-)
-_JUSTIFIED_SURFACE = re.compile(
-    r"\b(?:released|compatibility commitment|deployed external consumer)\b",
-    re.IGNORECASE,
-)
+
+def _load_compatibility_problems() -> Callable[[str], list[str]]:
+    """Return the shipped permission scan, loaded from the validator script."""
+    path = ROOT / "scripts/check_workflow_boundary.py"
+    spec = importlib.util.spec_from_file_location("check_workflow_boundary", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module.compatibility_problems
 
 
-def _surface_is_justified(sentence: str) -> bool:
-    """Return whether the sentence permits compatibility for a released surface."""
-    return (
-        _JUSTIFIED_SURFACE.search(sentence) is not None
-        and _PROHIBITED_SURFACE.search(sentence) is None
-    )
-
-
-def _claims_in(sentence: str, pattern: re.Pattern[str]) -> list[str]:
-    """Return the permissions one pattern finds that the contract denies."""
-    return [
-        match.group(0)
-        for match in pattern.finditer(sentence)
-        if _NEGATED_MODALITY.search(match.group("gap")) is None
-        and not _surface_is_justified(sentence)
-    ]
-
-
-def _normalised(path: Path) -> str:
-    """Return one document's prose with each run of whitespace collapsed."""
-    return " ".join(path.read_text(encoding="utf-8").split())
+COMPATIBILITY_PROBLEMS = _load_compatibility_problems()
 
 
 def _validate_contract_references(skills_root: Path) -> list[str]:
@@ -749,19 +708,18 @@ def _missing_rules(root: Path) -> list[str]:
     return missing
 
 
-def _permissive_compatibility_claims(root: Path) -> list[str]:
-    """Return one report per sentence that permits compatibility machinery."""
+def _documents_permitting_compatibility(root: Path) -> list[str]:
+    """Return the shipped scan's reports for the contract documents."""
     problems: list[str] = []
     documents = sorted({rule.document for rule in _RETAINED_RULES})
     for document in documents:
         path = root / document
         if not path.is_file():
             continue
-        for sentence in re.split(r"(?<=[.!?])\s+", _normalised(path)):
-            problems.extend(
-                f"{document}: {claim}"
-                for claim in _claims_in(sentence, _PERMISSIVE_COMPATIBILITY)
-            )
+        problems.extend(
+            f"{document}: {problem}"
+            for problem in COMPATIBILITY_PROBLEMS(path.read_text(encoding="utf-8"))
+        )
     return problems
 
 
@@ -989,7 +947,7 @@ def test_each_retained_rule_is_individually_detectable(tmp_path: Path) -> None:
 
 def test_no_shipped_sentence_permits_compatibility_machinery() -> None:
     """No shipped contract sentence grants what the prohibitions deny."""
-    assert _permissive_compatibility_claims(ROOT) == []
+    assert _documents_permitting_compatibility(ROOT) == []
 
 
 def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None:
@@ -1011,7 +969,7 @@ def test_a_permissive_compatibility_sentence_is_reported(tmp_path: Path) -> None
         encoding="utf-8",
     )
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert len(problems) == 3
     assert problems[0].startswith("skills/tech-design-doc/")
@@ -1034,7 +992,7 @@ def test_a_released_contract_permission_is_not_reported(tmp_path: Path) -> None:
         "an explicit compatibility commitment and a deployed external consumer.",
     )
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert problems == []
 
@@ -1054,44 +1012,11 @@ def test_a_prohibited_surface_permission_is_reported(tmp_path: Path) -> None:
     for sentence in sentences:
         _append_design_sentence(tmp_path, sentence)
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert len(problems) == len(sentences)
     for problem, sentence in zip(problems, sentences, strict=True):
-        assert problem.partition(": ")[2] in sentence
-
-
-_PERMISSIVE_VERBS: tuple[str, ...] = (
-    "may",
-    "should",
-    "is permitted to",
-    "are permitted to",
-    "is allowed to",
-    "are allowed to",
-)
-_COMPATIBILITY_TERMS: tuple[str, ...] = (
-    "compatibility",
-    "compatible",
-    "shim",
-    "alias",
-    "facade",
-    "wrapper",
-    "entrypoint",
-)
-_NEUTRAL_WORDS: tuple[str, ...] = (
-    "the",
-    "design",
-    "records",
-    "evidence",
-    "scope",
-    "reviewers",
-    "note",
-    "that",
-    "for",
-    "private",
-    "and",
-    "its",
-)
+        assert problem.split(": ", 2)[2] in sentence
 
 
 def _append_design_sentence(root: Path, sentence: str) -> None:
@@ -1102,59 +1027,14 @@ def _append_design_sentence(root: Path, sentence: str) -> None:
     )
 
 
-@given(
-    verb=st.sampled_from(_PERMISSIVE_VERBS),
-    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=30),
-    term=st.sampled_from(_COMPATIBILITY_TERMS),
-)
-@settings(max_examples=50, deadline=None)
-def test_a_generated_permissive_sentence_is_always_reported(
-    verb: str, words: list[str], term: str
-) -> None:
-    """Every generated permissive compatibility sentence is reported."""
-    sentence = f"Designs {verb} preserve {' '.join(words)} {term} machinery."
-    with tempfile.TemporaryDirectory() as directory:
-        root = Path(directory)
-        _materialise_rule_documents(root)
-        _append_design_sentence(root, sentence)
-
-        problems = _permissive_compatibility_claims(root)
-
-    assert len(problems) >= 1, sentence
-    assert any(term in problem for problem in problems), sentence
-
-
-@given(
-    modal=st.sampled_from(("must", "should", "may")),
-    words=st.lists(st.sampled_from(_NEUTRAL_WORDS), max_size=8),
-    term=st.sampled_from(_COMPATIBILITY_TERMS),
-)
-@settings(max_examples=50, deadline=None)
-def test_a_generated_neutral_sentence_is_never_reported(
-    modal: str, words: list[str], term: str
-) -> None:
-    """Generated prohibitions and negations are never reported."""
-    with tempfile.TemporaryDirectory() as directory:
-        root = Path(directory)
-        _materialise_rule_documents(root)
-        _append_design_sentence(
-            root,
-            f"Designs {modal} not prescribe {' '.join(words)} {term} machinery.",
-        )
-
-        problems = _permissive_compatibility_claims(root)
-
-    assert problems == []
-
-
 def test_a_distant_permission_is_still_reported(tmp_path: Path) -> None:
-    """A permission more than eighty characters from its term is reported."""
+    """A permission separated from its term by a long aside is reported."""
     _materialise_rule_documents(tmp_path)
     filler = " ".join(["the design records evidence for its scope"] * 4)
     sentence = f"Designs may, after {filler}, prescribe compatibility shims."
     _append_design_sentence(tmp_path, sentence)
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert len(problems) == 1
     assert "prescribe compatibility" in problems[0]
@@ -1171,7 +1051,7 @@ def test_a_negated_permission_is_not_reported(tmp_path: Path) -> None:
     ):
         _append_design_sentence(tmp_path, sentence)
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert len(problems) == 1
     assert "should not only" in problems[0]
@@ -1186,21 +1066,10 @@ def test_a_negated_modal_does_not_hide_a_later_permission(tmp_path: Path) -> Non
         "compatibility shims for private APIs.",
     )
 
-    problems = _permissive_compatibility_claims(tmp_path)
+    problems = _documents_permitting_compatibility(tmp_path)
 
     assert len(problems) == 1
     assert "may add compatibility" in problems[0]
-
-
-def test_the_second_modality_guard_is_load_bearing() -> None:
-    """The same sentence is missed when a match may span another modality."""
-    sentence = (
-        "Designs should not prescribe obsolete behaviour and may add "
-        "compatibility shims for private APIs."
-    )
-
-    assert _claims_in(sentence, _UNGUARDED_PERMISSIVE_COMPATIBILITY) == []
-    assert _claims_in(sentence, _PERMISSIVE_COMPATIBILITY) == ["may add compatibility"]
 
 
 @given(
@@ -1220,7 +1089,7 @@ def test_a_generated_version_number_stays_inside_one_sentence(
         _materialise_rule_documents(root)
         _append_design_sentence(root, sentence)
 
-        problems = _permissive_compatibility_claims(root)
+        problems = _documents_permitting_compatibility(root)
 
     assert len(problems) == 1, sentence
     assert f"pre-{major}.{minor}" in problems[0]

@@ -143,15 +143,24 @@ contract through named reference files.
   than a statement, and does not satisfy the check.
 - No sentence in those documents permits the compatibility machinery the
   prohibitions deny. The check rejects permissive wording such as "may
-  prescribe … compatibility", "should impose … compatibility", or "may preserve
-  pre-1.0 APIs with compatibility wrappers", so a later edit cannot reopen a
-  prohibited category without deleting the prohibition itself. The scan is
+  prescribe … compatibility", "should impose … compatibility", "can retain …
+  compatibility wrappers", or "might add … compatibility shims", so a later
+  edit cannot reopen a prohibited category without deleting the prohibition
+  itself. The permission words are `may`, `can`, `should` and `might`, together
+  with `is`/`are permitted` and `is`/`are allowed`, each with or without `to`;
+  `can` counts only when it governs a grant verb, so a capability such as "a
+  maintainer can read the call site" is not a permission. The scan is
   sentence-scoped, so distance from the verb cannot hide a permission, and a
   negated modality such as "should not prescribe … compatibility" is not
-  treated as one. A sentence that justifies compatibility for a released
-  external contract with an explicit commitment and a deployed consumer is
-  guidance rather than a permission, so it is not reported; a prohibited
-  surface is reported even when the same sentence mentions a release.
+  treated as one. A coordinated verb phrase stays in the same clause, so "may
+  retain the old name, or add compatibility shims" is reported, while a new
+  subject or copula starts an independent clause, so "may resolve the conflict,
+  and is the alias owner" is not. A sentence that justifies compatibility for a
+  released external contract with an explicit commitment and a deployed
+  consumer is guidance rather than a permission, so it is not reported; a
+  prohibited surface is reported even when the same sentence mentions a
+  release. The scan is the validator's `compatibility_problems`, which
+  `tests/test_skill_reference_contract.py` loads rather than reimplements.
 
 The packaging and rule checks read the shipped Markdown, so they fail when a
 reference disappears or a rule is deleted or inverted; the test module proves
@@ -172,18 +181,21 @@ what the reviewer judged, but rerunning a scenario still needs an agent: the
 verdicts are manual evidence, not CI results.
 `scripts/check_workflow_boundary.py` decides one boundary mechanically from
 those artefacts, and `tests/test_workflow_boundary_contract.py` drives it
-through its command line: a record that carries an unaccepted deviation must
-not claim `COMPLETE` or `ACTIVE`, a `BLOCKED` record must log the deviation as
-a concrete entry rather than a placeholder template, and a handoff must state
-its approval state, readiness, stable identifiers, and a feedback route that is
-not declared absent. It also runs two phrase checks over the same output: a
-record for a private, test-only, pre-1.0, or unreleased surface may not permit
-compatibility machinery, and the C5 records must keep their statement that a
-layer or migration is admissible. The script reads the governing sentences from
-the shipped skills and reports one that is missing, so a rule cannot be deleted
-from a skill while the check keeps passing. These checks decide the recorded
-output, not whether an agent obeys the skill: the phrase checks find a
-permissive sentence, not a plan that implements compatibility without saying so.
+through its command line: a record with a pending deviation must not claim
+`COMPLETE` or `ACTIVE` until a later Decision log entry accepts that deviation,
+a `BLOCKED` record must still log a pending deviation as a concrete entry
+rather than a placeholder template, and a handoff must state its approval
+state, readiness, stable identifiers, and a feedback route that is not declared
+absent. It also runs two phrase checks over the same output: a record for a
+private, test-only, pre-1.0, or unreleased surface may not permit compatibility
+machinery, and the C5 records must keep their affirmative statement that a
+layer or migration is admissible, so a negated form such as "no layer or
+migration is admissible" does not satisfy the check. The script reads the
+governing sentences from the shipped skills and reports one that is missing, so
+a rule cannot be deleted from a skill while the check keeps passing. These
+checks decide the recorded output, not whether an agent obeys the skill: the
+phrase checks find a permissive sentence, not a plan that implements
+compatibility without saying so.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard

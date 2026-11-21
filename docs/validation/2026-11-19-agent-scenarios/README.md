@@ -61,6 +61,25 @@ verdict; the review of the output in
 [the validation document](../../architecture-contract-validation.md#defects-recorded-in-the-output)
 is what supplies that comparison.
 
+The first C3 prompt carries a conflict. Its isolation rule forbids reading
+anything under `/home/leynos/.lody/repos`, and the three skill directories it
+permits all lie under that path. The file is kept verbatim as the record of
+what the run received; a replay correction at
+[`replay-corrections/c3-271b0f8.md`](replay-corrections/c3-271b0f8.md) supplies
+a reconciled isolation rule without altering the scenario.
+
+## Replay corrections
+
+`replay-corrections/` records corrections that make a published scenario
+replayable without changing what the original run received. A correction
+restates the part of a prompt that cannot be followed as written; the published
+input and the artefacts stay as they were produced, and the correction is not
+evidence about the behaviour of the original run.
+
+| File                               | Run                  | Correction                                               |
+| ---------------------------------- | -------------------- | -------------------------------------------------------- |
+| `replay-corrections/c3-271b0f8.md` | C3, commit `271b0f8` | Isolation rule reconciled with the permitted skill paths |
+
 ## Conventions
 
 Markdown outputs are stored as `.md.txt`. They are evidence, so they are kept
