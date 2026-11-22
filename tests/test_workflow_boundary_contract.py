@@ -42,11 +42,12 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 if TYPE_CHECKING:
@@ -667,3 +668,55 @@ def test_a_generated_clause_boundary_ends_the_permission(
     problems = COMPATIBILITY_PROBLEMS(sentence)
 
     assert problems == [], sentence
+
+
+@given(
+    major=st.integers(min_value=1, max_value=99),
+    minor=st.integers(min_value=0, max_value=99),
+)
+@settings(max_examples=50, deadline=None)
+def test_a_generated_version_number_stays_inside_the_permission(
+    major: int, minor: int
+) -> None:
+    """A version number's full stop does not end the released permission."""
+    with tempfile.TemporaryDirectory() as directory:
+        record = _fixture(
+            Path(directory),
+            f"A compatibility layer for released {major}.{minor} APIs is admissible.\n",
+        )
+
+        result = _run("permission", record)
+
+    assert result.returncode == 0, _diagnostics(result)
+    assert result.stdout == "", _diagnostics(result)
+
+
+@given(
+    first=st.integers(min_value=1, max_value=9),
+    second=st.integers(min_value=1, max_value=9),
+)
+@settings(max_examples=50, deadline=None)
+def test_a_generated_partial_acceptance_leaves_the_other_deviation_pending(
+    first: int, second: int
+) -> None:
+    """Only the deviation named in the acceptance clause is cleared."""
+    assume(first != second)
+    with tempfile.TemporaryDirectory() as directory:
+        record = _fixture(
+            Path(directory),
+            "Status: ACTIVE\n"
+            "\n## Decision log\n\n"
+            f"- D{first}. Decision: rename the module. "
+            "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+            f"- D{second}. Decision: replace the module. "
+            "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+            f"- D10. Decision: approve D{first}; retain D{second} for "
+            "separate review.\n"
+            "  Rationale: only one proposal was approved.\n"
+            "  Date/Author: 2026-11-20, policy owner.\n",
+        )
+
+        result = _run("status", record)
+
+    assert result.returncode == 1, _diagnostics(result)
+    assert "ACTIVE with an unaccepted deviation" in result.stdout, _diagnostics(result)

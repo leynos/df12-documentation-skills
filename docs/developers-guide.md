@@ -167,14 +167,17 @@ reference disappears or a rule is deleted or inverted; the test module proves
 that sensitivity against temporary fixtures, including one generated case per
 retained rule, fixtures that move a rule into another section or quote it, and
 a fixture that injects a permissive sentence into each prohibition section.
-Hypothesis properties then exercise the permissive-claim scanner over generated
-sentences: every permissive verb paired with a compatibility term is reported
-however far apart they sit, a negated or prohibition-only sentence is not, and
-a generated version number does not end the match window. The checks assert
-wording, not semantics: no behavioural claim is guarded. Whether a concern
-warrants a view, whether evidence is adequate, whether a target is honest, and
-whether a handoff is proportionate are judgement calls covered only by the
-fresh-agent scenarios in
+Hypothesis properties then exercise both phrase checks over generated input.
+For the permissive-claim scanner, every permissive verb paired with a
+compatibility term is reported however far apart they sit, a negated or
+prohibition-only sentence is not, and a generated version number does not end
+the match window. For the released-permission check, a generated version number
+inside the statement does not end it, and a generated partial acceptance clears
+only the deviation its clause names while the other stays pending. The checks
+assert wording, not semantics: no behavioural claim is guarded. Whether a
+concern warrants a view, whether evidence is adequate, whether a target is
+honest, and whether a handoff is proportionate are judgement calls covered only
+by the fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
 Their artefacts are published under `docs/validation/` for the 19 November and
 21 November campaigns, so a reader can inspect what the reviewer judged, but
