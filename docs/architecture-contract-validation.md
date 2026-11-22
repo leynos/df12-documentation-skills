@@ -211,20 +211,20 @@ recorded output; they do not show that an agent obeys the skill, and the
 compatibility checks find a permissive sentence rather than proving that a plan
 implements nothing else.
 
-| Scenario | Result               | Artefacts                    | Evidence recorded by the reviewer                                                                                                                                                                                                                                                           |
-| -------- | -------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1       | pass                 | `c1/`                        | Surface classified application-private; atomic caller update with ordinary validation; no alias, deprecation wrapper, or dual path.                                                                                                                                                         |
-| C2       | pass                 | `c2/`                        | Suggested shim recorded as a conflict and rejected; test callers migrated; per-test dispositions preserve assertions rather than old signatures.                                                                                                                                            |
-| C3       | pass                 | `c3-271b0f8/`, `c3-29cd658/` | Policy/RFC conflict escalated to the decision authority; RFC retained; the executing plan records the proposed deviation and enters `BLOCKED`.                                                                                                                                              |
-| C4       | pass with limitation | `c4/`                        | No alias for the unreleased addition; release baseline recorded and distinguished from released APIs in the same package. The run then records that a discovered consumer triggers escalation and the released-surface compatibility rules apply instead, which the policy does not permit. |
-| C5       | pass                 | `c5/`                        | Released contract recognised despite the branch being ahead of the tag; obligation named with a justified compatibility approach.                                                                                                                                                           |
-| C6       | pass                 | `c6/`                        | No source-API shim; persisted-data obligation recorded separately with conversion, recovery, and evidence.                                                                                                                                                                                  |
-| E1       | pass                 | `e1/`                        | Approved intent and contradictory observation kept as separate records; gap opened and deviation routed for acceptance; plan `BLOCKED`.                                                                                                                                                     |
-| E2       | pass                 | `e2/`                        | Vacuous pass rejected as evidence; witnesses or iteration evidence, controls, and the original acceptance threshold required; claim not marked proven.                                                                                                                                      |
-| E3       | pass                 | `e3/`                        | Only the satisfied implementation blocker proposed for conditional retirement; deployment-evidence blocker retained; summary not treated as authority.                                                                                                                                      |
-| E4       | pass                 | `e4/`                        | Affected evidence marked stale, axiom and verification obligation revisited, dead assertion not preserved to keep milestones ticked.                                                                                                                                                        |
-| S1       | pass                 | `s1/`                        | Proportionate records; no invented legacy migration, stakeholder board, scenario catalogue, or numerical non-goal quota.                                                                                                                                                                    |
-| S2       | pass                 | `s2/`                        | No self-approval of expanded scope; `COMPLETE` withheld until the accepted design change and its links are reconciled.                                                                                                                                                                      |
+| Scenario | Result               | Artefacts                    | Evidence recorded by the reviewer                                                                                                                                                                                                                                                                  |
+| -------- | -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1       | pass                 | `c1/`                        | Surface classified application-private; atomic caller update with ordinary validation; no alias, deprecation wrapper, or dual path.                                                                                                                                                                |
+| C2       | pass                 | `c2/`                        | Suggested shim recorded as a conflict and rejected; test callers migrated; per-test dispositions preserve assertions rather than old signatures.                                                                                                                                                   |
+| C3       | pass                 | `c3-271b0f8/`, `c3-29cd658/` | Policy/RFC conflict escalated to the decision authority; RFC retained; the executing plan records the proposed deviation and enters `BLOCKED`.                                                                                                                                                     |
+| C4       | pass with limitation | `c4/`                        | No alias for the unreleased addition; release baseline recorded and distinguished from released APIs in the same package. The run then records that a discovered consumer triggers escalation and the released-surface compatibility rules apply instead, which the policy does not permit.        |
+| C5       | pass                 | `c5/`                        | Released contract recognised despite the branch being ahead of the tag; obligation named with a justified compatibility approach.                                                                                                                                                                  |
+| C6       | pass                 | `c6/`                        | No source-API shim; persisted-data obligation recorded separately with conversion, recovery, and evidence.                                                                                                                                                                                         |
+| E1       | pass                 | `e1/`                        | Approved intent and contradictory observation kept as separate records; gap opened and deviation routed for acceptance; plan `BLOCKED`.                                                                                                                                                            |
+| E2       | pass                 | `e2/`                        | Vacuous pass rejected as evidence; witnesses or iteration evidence, controls, and the original acceptance threshold required; claim not marked proven.                                                                                                                                             |
+| E3       | pass                 | `e3/`                        | Only the satisfied implementation blocker proposed for conditional retirement; deployment-evidence blocker retained; summary not treated as authority.                                                                                                                                             |
+| E4       | pass with limitation | `e4/`                        | Affected evidence marked stale, axiom and verification obligation revisited, dead assertion not preserved to keep milestones ticked. Two trace links were not renewed: `error_translation_is_total` sits on the wrong obligation (`:311`) and the batch-atomicity row is carried forward (`:509`). |
+| S1       | pass                 | `s1/`                        | Proportionate records; no invented legacy migration, stakeholder board, scenario catalogue, or numerical non-goal quota.                                                                                                                                                                           |
+| S2       | pass                 | `s2/`                        | No self-approval of expanded scope; `COMPLETE` withheld until the accepted design change and its links are reconciled.                                                                                                                                                                             |
 
 ### Revalidation of 21 November 2026
 
@@ -248,25 +248,25 @@ November inputs apart from the output directory; the C3 prompt is the earlier
 campaign's second C3 run, which states the isolation rule without the first
 run's contradiction.
 
-The `Defects` column counts the confirmed findings recorded
-[below](#defects-recorded-in-the-output). It does not change the result, which
-records the position the artefact took on its oracle, not the soundness of
-every sentence it contains.
+The `Defects` column counts the confirmed findings from both review passes,
+recorded [below](#defects-recorded-in-the-output). It does not change the
+result, which records the position the artefact took on its oracle, not the
+soundness of every sentence it contains.
 
 | Scenario | Result | Artefacts | Evidence recorded by the reviewer                                                                                                                                                                           | Defects |
 | -------- | ------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | C1       | pass   | `c1/`     | Surface classified as an application-internal public declaration, so a private API; no alias, deprecated entrypoint, wrapper, or dual path; the signature and all three callers change atomically.          | none    |
-| C2       | pass   | `c2/`     | Suggested shim recorded as `TOR-CONFLICT-001` and rejected; every test caller migrates; no old interface, alias, or dual path survives.                                                                     | none    |
+| C2       | pass   | `c2/`     | Suggested shim recorded as `TOR-CONFLICT-001` and rejected; every test caller migrates; no old interface, alias, or dual path survives.                                                                     | 1       |
 | C3       | pass   | `c3/`     | Policy/RFC conflict escalated to the decision authority; RFC not rewritten, deleted, or retro-edited; the plan record sets `BLOCKED` with a proposed deviation entry and names the upstream resolution.     | 1       |
-| C4       | pass   | `c4/`     | Release baseline recorded and left `[OPEN]` for the unnamed tag; no alias for the unreleased export; a development-branch consumer creates no obligation.                                                   | 3       |
-| C5       | pass   | `c5/`     | Released 2.1 contract recognised despite the branch being ahead of the tag; compatibility or a deliberate migration stated as required and permitted; new entry point, deprecation, and consumer migration. | none    |
-| C6       | pass   | `c6/`     | No source-API shim; persisted records handled as a separate deployed-data obligation with a v2 format, read path, and migration.                                                                            | 2       |
-| E1       | pass   | `e1/`     | Promise and probe kept as separate records; gap and affected properties scoped; deviation `D1` routed for acceptance; plan `BLOCKED`.                                                                       | 2       |
-| E2       | pass   | `e2/`     | Passing results rejected as evidence for both claims; witnesses, iteration evidence, a negative control, and the original threshold required; claims recorded as unproven.                                  | none    |
+| C4       | pass   | `c4/`     | Release baseline recorded and left `[OPEN]` for the unnamed tag; no alias for the unreleased export; a development-branch consumer creates no obligation.                                                   | 4       |
+| C5       | pass   | `c5/`     | Released 2.1 contract recognised despite the branch being ahead of the tag; compatibility or a deliberate migration stated as required and permitted; new entry point, deprecation, and consumer migration. | 3       |
+| C6       | pass   | `c6/`     | No source-API shim; persisted records handled as a separate deployed-data obligation with a v2 format, read path, and migration.                                                                            | 3       |
+| E1       | pass   | `e1/`     | Promise and probe kept as separate records; gap and affected properties scoped; deviation `D1` routed for acceptance; plan `BLOCKED`.                                                                       | 3       |
+| E2       | pass   | `e2/`     | Passing results rejected as evidence for both claims; witnesses, iteration evidence, a negative control, and the original threshold required; claims recorded as unproven.                                  | 1       |
 | E3       | pass   | `e3/`     | Only the implementation-scoped blocker conditionally retired; deployment blocker retained; daily summary treated as a lead, not authority; external state unchanged.                                        | none    |
-| E4       | pass   | `e4/`     | Revision-A evidence marked stale; the dependency axiom revisited as `AXIOM-DEP-B`; the unreachable failure obligation replaced; plan `BLOCKED`.                                                             | 3       |
+| E4       | pass   | `e4/`     | Revision-A evidence marked stale; the dependency axiom revisited as `AXIOM-DEP-B`; the unreachable failure obligation replaced; plan `BLOCKED`.                                                             | 6       |
 | S1       | pass   | `s1/`     | Proportionate records; explicit no-baseline; material gaps marked `[OPEN]`; no invented migration, stakeholder board, catalogue, or numerical non-goal quota.                                               | 1       |
-| S2       | pass   | `s2/`     | Recommendation not self-approved; the architectural change recorded as claimed-unverified; `COMPLETE` withheld; plan `BLOCKED` pending reconciliation.                                                      | 1       |
+| S2       | pass   | `s2/`     | Recommendation not self-approved; the architectural change recorded as claimed-unverified; `COMPLETE` withheld; plan `BLOCKED` pending reconciliation.                                                      | 2       |
 
 The mechanical boundary checks stay scoped to the 19 November artefacts,
 because their phrase patterns were calibrated against that wording. Run over
@@ -323,23 +323,39 @@ into six groups:
   statement it qualifies; and C6's UTC storage schema leaves the offset
   unrecorded without a mitigation.
 
-None of these defects contradicts its scenario's oracle. The 19 November
-verdict table above therefore still records what the artefact shows about the
-guidance: each run took the required position on the compatibility question,
-the deviation route, and the closure condition, even where its plan for getting
-there is unsound. C4 is the qualification to that claim. It rejects the alias
-for the unreleased addition, then records an escalation rule under which a
-discovered consumer would hand the question to the released-surface
-compatibility rules, which the policy does not permit. Its row therefore reads
-"pass with limitation", with the initial rejection and the later exception
-distinguished in the C4 row above. The artefacts are not edited to remove any
-of this, because they were produced under the isolation rule and a correction
-here would no longer be the run's output. The line-level findings remain on the
-review threads attached to those files.
+Those defects do not contradict most scenarios' oracles, but two rows need a
+qualification. The 19 November verdict table above therefore records what the
+artefact shows about the guidance: each run took the required position on the
+compatibility question, the deviation route, and the closure condition, even
+where its plan for getting there is unsound. Two rows are the qualification to
+that claim.
 
-### Revalidation of 21 November 2026
+The first is C4. It rejects the alias for the unreleased addition, then records
+an escalation rule under which a discovered consumer would hand the question to
+the released-surface compatibility rules, which the policy does not permit. Its
+row reads "pass with limitation", with the initial rejection and the later
+exception distinguished in the C4 row above.
 
-A second review compared the revalidation artefacts with the same oracles and
+The second is E4, whose oracle requires the affected trace links to be updated.
+Its `error_translation_is_total` link is attached to the wrong obligation
+(`e4/execplan.md.txt:311` chains `REQ-batch-atomic` to a test of error
+translation rather than of batch atomicity), and its "Current" batch-atomicity
+row is carried forward without renewal (`:509`). Those are two of the defects
+catalogued above, and they sit inside the oracle rather than beside it, so the
+row records a partly met oracle rather than a pass. The run did mark the
+recovery obligation stale and did revisit the axiom; what it did not do is
+renew every affected link, which is what the oracle asks. Its row therefore
+reads "pass with limitation", and a later campaign can settle whether the two
+rows fall outside the oracle's scope.
+
+The artefacts are not edited to remove any of this, because they were produced
+under the isolation rule and a correction here would no longer be the run's
+output. The line-level findings remain on the review threads attached to those
+files.
+
+### Revalidation of 21 November 2026: first review
+
+The first review compared the revalidation artefacts with the same oracles and
 recorded thirteen defects in seven of the twelve runs. Each cited line was read
 before it was accepted, and two reviewer claims were not sustained: that S1 had
 to record acceptance criteria it could not derive from the supplied statement,
@@ -393,4 +409,78 @@ to an input that supplies none. The 21 November C4 run also removes the 19
 November limitation: a development-branch consumer creates no exception, and a
 function later found in a release tag falsifies the classification and sends
 the question back through the released-contract rules rather than around them.
-The artefacts are again published unedited.
+
+### Revalidation of 21 November 2026: second review
+
+A second pass raised twenty-one findings. Eighteen concern these artefacts:
+twelve are new defects, four repeat the first pass and are counted once, and
+two were not sustained. The other three are not artefact defects. One qualified
+the 19 November E4 verdict in this document. Two fixed the boundary checker's
+handling of a version-number full stop and of a partial acceptance in the
+Decision log; neither changes a verdict here. Confirmed defects now stand at
+twenty-five in ten of the twelve runs; C1 and E3 carry none. The added defects
+fall into five groups.
+
+- A red stage the change cannot produce. C2's `EP-M1` requires a missing-symbol
+  failure, while its preferred mechanism A only narrows the helper's
+  visibility, so a migrated test caller still resolves the symbol
+  (`c2/execplan.md.txt:490` against `c2/tech-design.md.txt:176`). C4's fallback
+  replaces the API dump with a consumer fixture that calls `NEW_NAME` and fails
+  on `OLD_NAME`, which cannot establish `L-SURFACE`'s "no other delta" condition
+  (`c4/execplan.md.txt:384` against `:370`). E2's `VO-001` asserts that a
+  sentinel crosses the configured `C` boundary, but its only precondition is
+  `|F| > C`; short reads can put every actual chunk boundary elsewhere
+  (`e2/tech-design-verification-update.md.txt:133`).
+- A classification or state asserted where the run marks it open. C5's verdict
+  says the function "is not a private or application-internal interface, not a
+  test-only surface", while its intake records the library-public versus
+  application-internal question as `[OPEN]` (`c5/02-technical-design.md.txt:68`
+  against `c5/00-intake-and-elicitation.md.txt:36`). C6's format contract
+  requires a store-level marker to agree with every record's discriminator, but
+  migration replaces records one at a time, so a mixed store has no marker
+  value that satisfies the rule, and the contract does not define the marker
+  state at an interruption point (`c6/record-format-v2.md.txt:48`).
+- A verification claim whose method cannot reach it. C5's `TDD-OBL-001` states
+  equivalence "for every input in the documented 2.1 domain" and links it to a
+  sampled differential with no bounds or residual uncertainty, which the
+  architecture contract prohibits (`c5/02-technical-design.md.txt:257`).
+- A sequence that cannot execute as written. E1's progress list requires D1
+  acceptance before `EP-M0`, while D1's option 1 depends on what `EP-M0` finds
+  and `EP-M0`'s acceptance includes an assessment of each D1 option
+  (`e1/03-execplan-supervisor-worker-shutdown.md.txt:163` against `:206`). C5's
+  `EP-M2` records that "the commitment is still unread" although the plan's own
+  risk mitigation requires the commitment text to be read before `EP-M2`
+  (`c5/03-execplan.md.txt:550` against `:110`). E4's decision table requires
+  `VO-ERRMAP` evidence before resuming, but the plan implements `VO-ERRMAP`
+  only after the decision authorises resumption
+  (`e4/03-decision-request.md.txt:64` against
+  `e4/01-execplan-revision.md.txt:514`).
+- A surface that records only one of the offered choices. E4's replacement
+  interfaces state that "revision B is the only authorized revision", so the
+  revision pack cannot be applied under Option C, which pins revision A and
+  retains the failure path (`e4/01-execplan-revision.md.txt:469`). Its
+  suggested acceptance record authorises revision B, withdraws the revision-A
+  obligation, and records the total-outcome mapping regardless of the option
+  chosen (`e4/03-decision-request.md.txt:107`). S2's reconciliation gate
+  requires approval evidence and an amended design or ADR before `COMPLETE`,
+  which its option 2, reverting the implementation to the approved design,
+  cannot supply (`s2/execplan-deviation-entry.md.txt:153` against `:73`).
+
+The pass repeated four first-pass findings, which are not counted twice: C3's
+checked progress entries for a plan it did not inspect
+(`c3/execplan-record.md.txt:113`), C4's release inspection at the latest tag
+alone (`c4/execplan.md.txt:544`), E1's "accepted upstream intent" for a promise
+whose approval state was not verified
+(`e1/01-terms-of-reference-feedback.md.txt:90`), and S2's checked `BLOCKED`
+entry for a plan it could not locate (`s2/execplan-deviation-entry.md.txt:96`).
+Two claims were not sustained. C1's red stage does not have to admit a
+source-compatible signature: the scenario replaces the signature and updates
+all three modules, and the approved signature is confirmed at `EP-M0` before
+`EP-M2` is planned against it. S1's greenfield constraint is scoped to
+obligations inherited from a legacy implementation, which does not exist; the
+document records none and does not assert that no data or peer-format
+obligation can arise.
+
+Neither pass changes a 21 November result: every added defect lies in the plan
+for reaching the oracle's position, not in the position itself. The artefacts
+are again published unedited.

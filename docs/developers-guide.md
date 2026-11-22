@@ -191,11 +191,16 @@ over the same output: a record for a private, test-only, pre-1.0, or unreleased
 surface may not permit compatibility machinery, and the C5 records must keep
 their affirmative statement that a layer or migration is admissible, so a
 negated form such as "no layer or migration is admissible" does not satisfy the
-check. The script reads the governing sentences from the shipped skills and
-reports one that is missing, so a rule cannot be deleted from a skill while the
-check keeps passing. These checks decide the recorded output, not whether an
-agent obeys the skill: the phrase checks find a permissive sentence, not a plan
-that implements compatibility without saying so.
+check. The affirmative form must keep the term and its predicate in one
+unnegated clause, and a full stop inside a version number, as in "released 2.1
+APIs", does not end that clause. An acceptance in the Decision log clears only
+the deviations named in the clause that carries the acceptance, so "approve D2;
+retain D1 for separate review" leaves D1 pending. The script reads the
+governing sentences from the shipped skills and reports one that is missing, so
+a rule cannot be deleted from a skill while the check keeps passing. These
+checks decide the recorded output, not whether an agent obeys the skill: the
+phrase checks find a permissive sentence, not a plan that implements
+compatibility without saying so.
 
 The guards cover the two `SKILL.md` files and the two contract references. Four
 further reference documents carry operative guidance that no phrase guard

@@ -19,9 +19,9 @@ record of the text those runs read.
 These verdicts are manual evidence, not CI results. `make test` does not run
 the scenarios, no file here is an independent human review, and the verdicts in
 the validation document are a reviewer's comparison of these artefacts with its
-oracles. Seven of the twelve runs carry confirmed defects, catalogued in the
-same document, so a verdict records the position a run took, not the soundness
-of every sentence in its output. The mechanical boundary checks in
+oracles. Ten of the twelve runs carry confirmed defects, catalogued in the same
+document, so a verdict records the position a run took, not the soundness of
+every sentence in its output. The mechanical boundary checks in
 `tests/test_workflow_boundary_contract.py` remain scoped to the 19 November
 artefacts, whose phrasing they were calibrated against; their behaviour on this
 campaign is recorded in the validation document rather than used as a gate.

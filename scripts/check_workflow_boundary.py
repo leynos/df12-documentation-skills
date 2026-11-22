@@ -65,6 +65,13 @@ _ACCEPTANCE_CUE = re.compile(
     r"\b(?:accept|accepts|accepted|approve|approves|approved|approval of)\b",
     re.IGNORECASE,
 )
+# Only the clause that carries the acceptance cue clears a deviation. A later
+# clause that merely names it, as in "approve D2; retain D1 for separate
+# review", records a different decision.
+_ACCEPTANCE_CLAUSE_SPLIT = re.compile(
+    r";|\b(?:but|however|whereas)\b|,\s*(?:then|so)\b", re.IGNORECASE
+)
+_DEVIATION_REFERENCE = re.compile(r"\bD-?(\d+)\b")
 # Acceptance is what the plan records, not what it awaits, so conditional,
 # future, modal, or negated wording leaves the deviation pending.
 _ACCEPTANCE_HEDGE = re.compile(
@@ -146,14 +153,19 @@ _JUSTIFIED_SURFACE = re.compile(
 )
 # The released-contract permission must be affirmative: the term and its
 # positive predicate sit in one clause, and neither that clause nor the match
-# itself carries a negation.
+# itself carries a negation. A full stop inside a version number ("released 2.1
+# APIs") is not a clause boundary.
+_DECIMAL_POINT = r"(?<=\d)\.(?=\d)"
 _RELEASED_PERMISSION = re.compile(
-    r"\b(?:layer|migration)\b[^.;]{0,60}\bis admissible\b"
-    r"|\bcompatibility or a deliberate migration\b[^.;]{0,40}"
+    rf"\b(?:layer|migration)\b(?:[^.;]|{_DECIMAL_POINT}){{0,60}}\bis admissible\b"
+    rf"|\bcompatibility or a deliberate migration\b"
+    rf"(?:[^.;]|{_DECIMAL_POINT}){{0,40}}"
     r"\b(?:is|are|remains?)\s+(?:admissible|permitted|allowed)\b",
     re.IGNORECASE,
 )
-_CLAUSE_START = re.compile(r"[.;:]|,\s*(?:and|but|or|then|so)\b", re.IGNORECASE)
+_CLAUSE_START = re.compile(
+    rf"(?:(?!{_DECIMAL_POINT})[.;:]|,\s*(?:and|but|or|then|so)\b)", re.IGNORECASE
+)
 # A released-permission statement is one sentence or one table cell, so a
 # negation in a neighbouring cell cannot disqualify it.
 _CLAUSE_SPLIT = re.compile(r"(?<=[.!?])\s+|\s*\|\s*")
@@ -278,24 +290,35 @@ def _entry_records_deviation(entry: str) -> bool:
 
 
 def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
-    """Return the pending deviations one later entry records as accepted."""
+    """Return the pending deviations one later entry records as accepted.
+
+    Only the clause that carries the acceptance cue can clear a deviation.
+    Naming a deviation in another clause, such as "approve D2; retain D1 for
+    separate review", records a different decision and leaves that deviation
+    pending.
+    """
     clause = _DECISION_CLAUSE.search(entry)
     if clause is None:
         return []
     statement = _normalise(clause.group("clause"))
-    if (
-        _ACCEPTANCE_CUE.search(statement) is None
-        or _ACCEPTANCE_HEDGE.search(statement) is not None
-    ):
-        return []
-    named = [
-        identifier
-        for identifier in pending
-        if identifier and re.search(rf"\bD-?{identifier}\b", statement)
-    ]
-    if named:
-        return named
-    if len(pending) == 1 and _DEVIATION_ANAPHOR.search(statement) is not None:
+    accepted: list[str] = []
+    anaphor = False
+    for acceptance in _ACCEPTANCE_CLAUSE_SPLIT.split(statement):
+        if (
+            _ACCEPTANCE_CUE.search(acceptance) is None
+            or _ACCEPTANCE_HEDGE.search(acceptance) is not None
+        ):
+            continue
+        anaphor = anaphor or _DEVIATION_ANAPHOR.search(acceptance) is not None
+        named = set(_DEVIATION_REFERENCE.findall(acceptance))
+        accepted.extend(
+            identifier
+            for identifier in pending
+            if identifier and identifier in named and identifier not in accepted
+        )
+    if accepted:
+        return accepted
+    if len(pending) == 1 and anaphor:
         return list(pending)
     return []
 

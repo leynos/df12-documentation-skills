@@ -205,6 +205,16 @@ _DECISION_LOGS: dict[str, str] = {
         "  Rationale: the policy owner has not ruled yet.\n"
         "  Date/Author: 2026-11-20, authoring agent.\n"
     ),
+    "partial-acceptance": (
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: replace the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D3. Decision: approve D2; retain D1 for separate review.\n"
+        "  Rationale: the policy owner approved only the second proposal.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n"
+    ),
     "none": "\n## Decision log\n\n- D1. Renamed the module.\n",
 }
 
@@ -216,7 +226,7 @@ def _expected_status_problems(status: str, condition: str) -> list[str]:
         problems.append(f"unknown status {status}")
     if condition == "absent":
         problems.append("no Decision log")
-    elif condition in {"unaccepted", "future-acceptance"}:
+    elif condition in {"unaccepted", "future-acceptance", "partial-acceptance"}:
         if status in {"ACTIVE", "COMPLETE"}:
             problems.append(
                 f"{status} with an unaccepted deviation in the Decision log"
@@ -242,6 +252,27 @@ def test_every_status_is_decided_against_every_decision_log(
 
     assert result.returncode == (1 if expected else 0), _diagnostics(result)
     assert _messages(result) == expected, _diagnostics(result)
+
+
+def test_one_decision_accepts_every_deviation_it_names(tmp_path: Path) -> None:
+    """A coordinated acceptance clears each deviation the same clause names."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: replace the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D3. Decision: accept D1 and D2 as the approved resolution.\n"
+        "  Rationale: the policy owner approved both proposals.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 0, _diagnostics(result)
+    assert result.stdout == "", _diagnostics(result)
 
 
 _HANDOFF_ELEMENTS: dict[str, str] = {
@@ -511,6 +542,16 @@ def test_the_prohibition_scan_decides_each_permission_form(
             "A compatibility layer is required, but the design is admissible.",
             True,
             id="predicate-in-another-clause",
+        ),
+        pytest.param(
+            "A compatibility layer for released 2.1 APIs is admissible.",
+            False,
+            id="version-number-in-statement",
+        ),
+        pytest.param(
+            "No compatibility layer for released 2.1 APIs is admissible.",
+            True,
+            id="version-number-negated",
         ),
     ],
 )
