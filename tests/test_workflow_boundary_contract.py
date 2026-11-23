@@ -809,7 +809,15 @@ def test_a_generated_partial_acceptance_leaves_the_other_deviation_pending(
     assert complete_result.returncode == 0, _diagnostics(complete_result)
 
 
-_ACCEPTANCE_FORMS = ("named", "unrelated", "anaphoric", "hedged", "placeholder")
+_ACCEPTANCE_FORMS = (
+    "named",
+    "unrelated",
+    "unrelated-named",
+    "anaphoric",
+    "hedged",
+    "hedged-anaphor",
+    "placeholder",
+)
 
 
 def _acceptance_entry(index: int, form: str, target: int) -> str:
@@ -820,11 +828,17 @@ def _acceptance_entry(index: int, form: str, target: int) -> str:
     elif form == "unrelated":
         decision = "Decision: accept the unrelated proposal."
         rationale = "  Rationale: the owner approved it.\n"
+    elif form == "unrelated-named":
+        decision = "Decision: accept D99 as the approved resolution."
+        rationale = "  Rationale: a different proposal was approved.\n"
     elif form == "anaphoric":
         decision = "Decision: accept the deviation."
         rationale = "  Rationale: the owner approved it.\n"
     elif form == "hedged":
         decision = f"Decision: D{target} will be accepted."
+        rationale = "  Rationale: the owner has not ruled yet.\n"
+    elif form == "hedged-anaphor":
+        decision = "Decision: the proposal will be approved."
         rationale = "  Rationale: the owner has not ruled yet.\n"
     else:
         decision = "Decision: record the outcome."
@@ -915,6 +929,50 @@ def test_a_hedged_acceptance_leaves_the_deviation_pending(tmp_path: Path) -> Non
         "- D2. Decision: D1 will be accepted.\n"
         "  Rationale: the owner has not ruled yet.\n"
         "  Date/Author: 2026-11-20, authoring agent.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 1, _diagnostics(result)
+    assert "COMPLETE with an unaccepted deviation" in result.stdout, _diagnostics(
+        result
+    )
+
+
+def test_a_hedged_anaphor_leaves_the_deviation_pending(tmp_path: Path) -> None:
+    """A future-tense anaphoric approval records no acceptance."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: the proposal will be approved.\n"
+        "  Rationale: the owner has not ruled yet.\n"
+        "  Date/Author: 2026-11-20, authoring agent.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 1, _diagnostics(result)
+    assert "COMPLETE with an unaccepted deviation" in result.stdout, _diagnostics(
+        result
+    )
+
+
+def test_a_named_but_unrelated_acceptance_leaves_the_deviation_pending(
+    tmp_path: Path,
+) -> None:
+    """An acceptance that names a non-pending identifier clears nothing."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: accept D99 as the approved resolution.\n"
+        "  Rationale: a different proposal was approved.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n",
     )
 
     result = _run("status", record)
