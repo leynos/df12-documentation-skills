@@ -1,0 +1,142 @@
+# Gap register and design change request
+
+Status: proposed, not accepted.
+
+Date: 2026-11-19.
+
+This record supplies the design-side response required when implementation
+reports an approved architectural change that the design and ADRs do not carry,
+alongside an unauthorized hardening recommendation. It records gaps and a
+change request. It does not edit the design, and it does not accept either
+input.
+
+## Upstream inputs
+
+| Field                    | Value                                              |
+| ------------------------ | -------------------------------------------------- |
+| Terms of reference       | `UNAVAILABLE` in this session                      |
+| Technical design         | `UNAVAILABLE` in this session                      |
+| ADR set                  | `UNAVAILABLE` in this session                      |
+| Executing ExecPlan       | `UNAVAILABLE` in this session                      |
+| Approval record for IN-2 | `UNAVAILABLE`; claimed                       |
+| Implementation baseline  | Observed by the implementing agent; revision not pinned |
+
+Requirement and design identifiers are `UNASSIGNED` until the authoritative
+design revision is supplied. This session does not invent them. The chain shape
+below must be completed with real identifiers, not placeholders, before the
+change is accepted:
+
+```plaintext
+[TOR requirement] -> [TDD requirement] -> [TDD component] -> EP-Mn -> [evidence]
+```
+
+## Gap register
+
+### `GAP-ARCH-001` – approved architecture absent from design and ADR
+
+| Field                | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| Upstream requirement | `UNASSIGNED`; the approved decision is the candidate source  |
+| Baseline evidence    | Implementation as reported; revision unpinned                |
+| Target state         | Design and ADR both record the approved change, with its requirement, rationale, consequences, and verification obligations |
+| Missing capability   | The design and ADR are stale relative to an approved decision |
+| Disposition          | `blocked`; change request `CR-ARCH-001` raised               |
+| Resolution owner     | `[OPEN]`: the decision owner or architecture authority        |
+| Unblock condition    | Either the approval record is produced and reconciled, or the owner explicitly accepts the change as a new decision |
+| Verification obligation | Every design obligation the change touches is reopened and re-discharged, not inherited |
+
+### `GAP-HARDEN-001` – hardening recommendation not authorized
+
+| Field                | Value                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| Upstream requirement | None established; the recommendation is a proposal            |
+| Baseline evidence    | Discovery agent report, not supplied as a primary record      |
+| Target state         | `[OPEN]`; no accepted target exists                          |
+| Missing capability   | `[OPEN]`; the claimed weakness is unconfirmed                 |
+| Disposition          | `proposed work, not authorized`                               |
+| Resolution owner     | `[OPEN]`: design owner plus the security or risk owner        |
+| Unblock condition    | Explicit acceptance as a requirement, or explicit rejection with recorded residual risk |
+| Verification obligation | `[OPEN]`; none can be stated before the claim is examined   |
+
+The two gaps are deliberately kept separate. Bundling them would let an
+unapproved proposal travel on the back of an approved decision, and would make
+the approved change's impact analysis ambiguous.
+
+## Change request `CR-ARCH-001`
+
+### What the change request asks for
+
+1. Record the approved decision in the authoritative design revision, or
+   record it as an explicit proposed deviation if approval cannot be evidenced.
+2. Record a candidate ADR, or update the existing ADR it supersedes.
+3. Re-derive the affected requirement, design-element, gap, and verification
+   links in both directions.
+4. Revise the executing ExecPlan's conformance basis and keep it `BLOCKED`
+   until the accepted state is propagated.
+
+### Baseline, target, and retained elements
+
+| Element             | Baseline                         | Target                          | Classification |
+| ------------------- | -------------------------------- | ------------------------------- | -------------- |
+| Architectural decision | Absent from design and ADR     | Recorded, with rationale        | `added`        |
+| Requirement links   | Assume current design revision   | Re-derived after the change     | `changed`      |
+| Verification obligations | Existing set                | Reopened and reassessed         | `changed`      |
+| Components the change touches | Current implementation | Conform to the approved decision | `[OPEN]` until the change's scope is stated |
+| Components outside the change | Current implementation | Unchanged             | `retained`     |
+
+The component rows cannot be completed without the approved decision's actual
+text. Classifying elements from an implementation report would reverse-engineer
+intent from code, which the problem contract prohibits.
+
+### Compatibility classification
+
+The design and the plan must classify the changed surface before prescribing
+any compatibility machinery. The classification is a required field, not a
+formality:
+
+| Surface class                                  | Finding | Consequence                                      |
+| ---------------------------------------------- | ------- | ------------------------------------------------ |
+| Private or application-internal API            | `[OPEN]` | Compatibility machinery is prohibited           |
+| Test-only API or support surface               | `[OPEN]` | Compatibility machinery is prohibited           |
+| Pre-1.0 API                                    | `[OPEN]` | Compatibility machinery is prohibited           |
+| Unreleased change ahead of the latest formal tag | `[OPEN]` | Compatibility machinery is prohibited          |
+| Released 1.0+ API with named external consumers | `[OPEN]` | Preserve compatibility or plan a deliberate migration |
+| Persisted data or wire format                  | `[OPEN]` | Separate migration obligation may apply even without source compatibility |
+
+No shim, alias, facade, deprecated entrypoint, or dual implementation is
+prescribed here. A later claim for one must name its consumer and the
+commitment that requires it.
+
+### Verification obligations to reopen
+
+The approved change invalidates any verification evidence gathered against the
+older architecture, even where the tests still pass. The design must state, for
+each affected obligation:
+
+1. The invariant over inputs, states, orderings, or transitions that the
+   change introduces or preserves.
+2. The lemma that connects it to the required behaviour.
+3. Any external axiom, including the real interface boundary it depends on.
+4. The method, artefact, discharge condition, and non-vacuity argument.
+
+Existing unit and behavioural tests do not discharge a design-level property
+they never exercised. A green suite from before the change is not current
+evidence for it.
+
+### Failure modes the design must state
+
+- The approved decision is recorded in the design but not the ADR, leaving a
+  durable decision with no durable rationale.
+- The design is updated from the implementation without the approval record,
+  converting an unapproved deviation into apparent intent.
+- The hardening proposal is folded into the same revision, obscuring which
+  requirement authorized which element.
+- Verification evidence from the pre-change architecture is carried forward
+  unchanged.
+
+### Acceptance gate
+
+This change request is accepted only when the design owner or architecture
+authority accepts it, the approval provenance for IN-2 is recorded, and the
+affected identifiers and links are updated. A passing build or merged change
+does not accept it.

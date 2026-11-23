@@ -1,0 +1,312 @@
+# Test-only helper reshape – technical design
+
+Status: Draft for review. Design acceptance is not implementation approval.
+
+Audience: the engineer implementing the change, and the reviewer checking that
+no accidental public surface or compatibility layer appears.
+
+Companion documents: `terms-of-reference.md` (v0.1 draft, this directory),
+`intake-note.md`, `execplan.md`. No ADR, roadmap, or repository design document
+was available.
+
+Date: 2026-11-19.
+
+## Conformance basis
+
+| Input | Revision inspected | State |
+| --- | --- | --- |
+| `terms-of-reference.md` | v0.1 draft, dated 2026-11-19, uncommitted | Draft; not accepted |
+| `intake-note.md` | Dated 2026-11-19, uncommitted | Working note |
+| `~/.claude/skills/execplans/SKILL.md` | Inspected 2026-11-19 | No repository revision available for that path |
+| `~/.claude/skills/execplans/references/execplan-template.md` | Inspected 2026-11-19 | No repository revision available for that path |
+| ADRs, roadmap, `docs/context.md`, source tree, release tags | Not inspected | Unavailable under the authoring isolation rule |
+
+No repository revision can be pinned. The execution plan records the actual
+base revision at its inventory milestone and treats this document's placeholders
+as replaced from that moment.
+
+Research phase: not applicable. The change selects no library, protocol, or
+third-party interface, so no ecosystem or standards research can inform a
+decision. External artefacts: not applicable. The change defines no schema,
+wire format, or configuration shape, so no artefact needs separate validation.
+Diagrams: none. No representation here answers a question that prose
+enumeration does not, and nixie has no Mermaid input to validate.
+
+## 1. Problem and scope
+
+`TOR-GOAL-001` and `TOR-GOAL-002` define the work: reshape a helper that only
+tests call, and keep the behaviour those tests assert. The brief's suggested
+shim is rejected by `CR-1`; the design must therefore specify how the tests
+survive without the old interface.
+
+In scope: the helper's interface, its visibility, every test call site, and the
+dispositions of tests that cannot migrate mechanically. Out of scope:
+production behaviour, unrelated modules, new dependencies, and any compatibility
+surface.
+
+## 2. Baseline, target, and gaps
+
+The baseline is described only at the level the brief supports. Exact symbols
+are unknown and are recorded as a gap rather than guessed.
+
+| Element | Baseline | Target |
+| --- | --- | --- |
+| Helper interface | Current shape, reached only by tests | One interface defined by `TDD-REQ-001`; old shape removed |
+| Helper visibility | Unknown; asserted to be test-only | Minimum the current test locations require |
+| Callers | Test call sites, count unknown | All migrated in the same change; none remaining |
+| Test assertions | Existing suite, content unknown | Same asserted behaviours, or a recorded retirement |
+| Compatibility surface | None observed; the brief proposes adding one | None admitted |
+| Production behaviour | Presumably unchanged by tests alone | Unchanged |
+
+### Gap register
+
+| ID | Requirement | Baseline evidence | Target state | Missing capability | Disposition | Unblock condition | Verification |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| GAP-inventory | TOR-GOAL-001 | None; tree not inspected | Recorded symbol, visibility, callers, test count, toolchain, base revision | Reconnaissance | Proposed work, `EP-M0` | Inventory transcript recorded | Review of the inventory record |
+| GAP-reachability | TOR-ASSUMPTION-001 | Brief says tests only | Audit shows reachability or its absence | Release-tag and manifest audit | Blocked on `EP-M0`; escalates if reachable | Audit result | `INV-visibility` |
+| GAP-dispositions | TOR-SUCCESS-002 | None | Every pre-change test classified | Reading each test | Proposed work, `EP-M2` | Disposition table complete | `INV-coverage` |
+| GAP-behaviour-contract | TOR-GOAL-001 | The suite is the only stated evidence of behaviour | Behaviour defined by the migrated assertions | No prose contract exists | Accepted with residual risk | Mutation control passes | `L-behaviour` |
+
+`GAP-behaviour-contract` is not closed by this design. The helper's intended
+behaviour has never been written down outside its tests. The design accepts
+that risk because the change does not alter behaviour, and mitigates it with a
+sensitivity check rather than pretending the suite is exhaustive.
+
+A gap is not automatically roadmap work. All four are part of this change; none
+justifies a broader programme.
+
+## 3. Requirements and trace
+
+| ID | Requirement | Upstream | Verified by |
+| --- | --- | --- | --- |
+| TDD-REQ-001 | Exactly one callable helper interface exists after the change. No forwarding path preserves the old shape. | TOR-GOAL-001, TOR-NONGOAL-001 | `INV-absence` |
+| TDD-REQ-002 | Every call site is migrated in the same change; no commit leaves both surfaces live. | TOR-CONSTRAINT-002 | `INV-absence`, gate sequence |
+| TDD-REQ-003 | Every pre-change test has a disposition: migrated, rewritten to assert behaviour, or retired with a stated reason and a check that the behaviour is covered elsewhere or no longer an obligation. | TOR-GOAL-002, TOR-SUCCESS-002 | `INV-coverage` |
+| TDD-REQ-004 | No residual old symbol, alias, deprecated entrypoint, dual implementation, or wrapper exists, even transiently in a committed state. | TOR-NONGOAL-001, TOR-SUCCESS-001, TOR-SUCCESS-003 | `INV-absence` |
+| TDD-REQ-005 | Observable results are unchanged for every behaviour the suite asserts; visibility is no wider than the current test locations require. | TOR-GOAL-001, TOR-NONGOAL-002, TOR-SUCCESS-004 | `L-behaviour`, `INV-visibility` |
+
+Each requirement maps to `TDD-COMP-helper` or `TDD-COMP-tests` and to an
+execution milestone; the trace chain continues in `execplan.md`.
+
+## 4. Design
+
+### 4.1 Helper contract
+
+`TDD-COMP-helper` owns one callable surface. Its responsibility is the
+behaviour the tests already assert; the reshape changes how callers describe
+their inputs and receive results, not what the helper computes.
+
+The executing agent records the concrete signature at `EP-M0`. The contract the
+design imposes is:
+
+1. One entry point. No second function, method, trait, or constructor exists
+   solely to accept the old argument shape.
+2. No forwarding body. A function whose only statement calls the new entry
+   point with translated arguments is a shim with extra steps.
+3. A doc comment states that the surface exists for tests, so the next reader
+   does not mistake it for a supported API.
+4. No `allow(dead_code)` or equivalent suppression added to hide it.
+
+### 4.2 Test migration and dispositions
+
+`TDD-COMP-tests` owns the call sites. Three dispositions are permitted:
+
+1. *Migrated*: the test's call text changes, its assertions do not. This is the
+   expected case and the cheapest evidence that behaviour is preserved.
+2. *Rewritten*: the test asserted the old shape, an internal call count, or
+   another incidental detail. The rewrite asserts the behaviour the test was
+   standing in for. The original assertion and the reason for replacing it are
+   recorded.
+3. *Retired*: the behaviour is no longer an obligation, or an equivalent test
+   covers it. Retirement requires the covering test to be named, or the
+   obligation to be shown obsolete. "It was hard to migrate" is not a reason.
+
+Mechanical migration is preferred because it keeps the assertion fixed while
+the call changes, which is exactly the evidence `L-behaviour` needs. The
+design does not require tests to keep their names, and does not treat a renamed
+test as a coverage loss.
+
+### 4.3 Visibility
+
+The target visibility is the narrowest form that the current test locations can
+compile against. If unit tests live inside the module, a module-private or
+crate-private surface suffices. If integration tests compile as separate
+crates, exported visibility is required; in that case the surface stays
+exported and is documented as test support, not as a public contract. Widening
+beyond the current requirement is a design violation, not a convenience.
+
+### 4.4 Decisions
+
+`D1` – No compatibility machinery. Alternative considered: a shim or alias that
+keeps the old tests compiling. Rejected because the surface is test-only,
+because no external consumer exists (`TOR-ASSUMPTION-001`), because the
+prohibition is categorical, and because it would preserve the old shape after
+its only purpose had gone. Compatibility is not required if this lands as one
+change, so none is introduced to manufacture a plateau.
+
+`D2` – Preserve test intent, not test text. Alternative considered: keep the
+literal old tests and adapt the helper to them. Rejected: that inverts the
+dependency and lets test text dictate the production shape.
+
+`D3` – One coherent change. Alternative considered: add the new interface, then
+delete the old one in a later change. Rejected because the intermediate state is
+a dual interface with no beneficiary. The plan sequences construction inside
+one milestone and one commit.
+
+`D4` – Proportional verification, no prover. The change introduces no new
+algorithm, protocol, or concurrency; the live risk is coverage loss, which a
+mapping record plus a seeded fault addresses more directly than a formal
+argument would.
+
+## 5. Compatibility assessment
+
+| Question | Answer |
+| --- | --- |
+| What is the surface? | A helper reached only by tests |
+| Classification | Test-only support surface |
+| Is it a released 1.0+ contract? | Not asserted; `TOR-OPEN-001` audits the release lineage. Repository stability does not convert test support into a consumer contract. |
+| External consumers | None asserted; audited in `EP-M0` |
+| Persisted data or wire format affected? | None |
+| Is compatibility required? | No |
+| Compatible with whom or what? | Nobody. The only callers are tests inside the same change. |
+| Disposition of the suggested shim | Rejected; see `CR-1` in `intake-note.md` |
+
+If `EP-M0` finds a real external consumer, this table is wrong, not merely
+incomplete. The plan must enter `BLOCKED`, the classification must be
+reassessed, and any compatibility decision must name the consumer, the
+commitment, and the migration approach. A named consumer alone still would not
+create an exception for a test-only surface, but a genuine external contract
+would change the surface's classification.
+
+## 6. Verification obligations
+
+Ordinary unit and behavioural test work belongs to `execplan.md`. The
+obligations below are the design-level claims that make the migration
+trustworthy.
+
+### 6.1 Invariants and lemmas
+
+`INV-absence` – After the change, no reference to the old symbol resolves
+anywhere in the tree, and no alias, forwarding function, or deprecated
+entrypoint carries its name. Deleting the surface is the mechanism; a successful
+build is the proof obligation.
+
+`INV-coverage` – For every assertion class present before the change, exactly
+one of the following holds after it: a test asserts the same class, or a
+recorded disposition names the test that now covers it, or the class is shown
+no longer to be an obligation. Every pre-change test appears in the disposition
+record; an unlisted test is a coverage failure by definition.
+
+`INV-visibility` – The helper is not reachable from any context from which it
+was unreachable before the change. Narrowing is permitted; widening requires
+the integration-test justification in §4.3.
+
+`L-behaviour` – If the helper's observable behaviour changes for an input the
+suite exercises, at least one migrated test fails. This lemma connects
+`INV-coverage` to actual detection rather than to a claim of intent.
+
+### 6.2 Axioms
+
+`AXIOM-build` – The build or type checker fails when a referenced symbol does
+not resolve, and succeeds only when all references in the compiled set resolve.
+Repository-owned migration logic depends on this when `INV-absence` is checked
+by deleting the old surface.
+
+`AXIOM-runner` – The test runner executes each collected test and reports a
+failure when an assertion fails; a passing count reflects tests that ran, not
+tests that were skipped or filtered away.
+
+`AXIOM-search` – The repository's search tool matches identifier occurrences in
+the source tree under the stated globs. This corroborates `INV-absence`; it is
+not the primary check.
+
+No third-party interface is being verified. The change exercises the project's
+own compiler and test runner, and those are treated as documented contracts.
+
+### 6.3 Methods and non-vacuity
+
+| Obligation | Method | Artefact | Evidence | Non-vacuity |
+| --- | --- | --- | --- | --- |
+| `INV-absence` | Build with the old surface deleted, plus an identifier search over the source tree | The source tree itself | Build succeeds; search returns no matches | Re-add one reference in a scratch change and observe the build fail and the search hit; revert. If neither happens, the check is not measuring anything. |
+| `INV-coverage` | Structural comparison of the pre-change test list against the disposition record, reviewed test by test | Disposition table in `execplan.md` | Every pre-change test has a disposition; no blank rows; retirements name a covering test or an obsolete obligation | At least one test is migrated per asserted behaviour class, including a boundary or failure case if the suite has one. A record with only migrated happy-path tests is flagged. |
+| `L-behaviour` | Seeded behavioural fault in the helper, then the focused suite | A temporary mutation, reverted afterwards | At least one migrated test fails, naming the affected assertion | The fault is applied to logic a migrated test claims to observe. If nothing fails, the suite is insensitive at that point and `INV-coverage` is not discharged for that class. |
+| `INV-visibility` | Comparison of reachability before and after, from the module and manifest structure | Inventory record | No new reachable path; any retained export is justified by an integration test location | A witness exists for the retained visibility: at least one test that fails to compile if the export is removed. If no test needs the export, it must be narrowed. |
+
+The seeded fault is the negative control for the whole migration. Without it,
+"the tests pass" is equally consistent with a suite that no longer tests
+anything. The fault must be reverted, and the reverted tree re-run, before the
+milestone is accepted.
+
+Residual uncertainty: `INV-coverage` reasons about classes as classified by a
+human reader. A behaviour class nobody thought to assert before the change
+remains unasserted after it, and no method here finds it. That gap is recorded,
+not closed, and it is why `INV-coverage` is scoped to the existing suite rather
+than to the helper's true contract.
+
+### 6.4 Formal verification decision
+
+No model checking or formal proof is warranted. The change introduces no new
+state machine, arithmetic, or concurrency, and the strongest available property
+is a correspondence between two lists of tests and assertions. A prover would
+add cost without addressing the actual risk, which is a missing assertion, not
+an unproven one. The decision is recorded as `D4`.
+
+### 6.5 Proposed acceptance scenarios
+
+Proposed only; no runner or framework is added.
+
+```gherkin
+Feature: Test-only helper reshape
+  Scenario: The old surface is gone and the suite still exercises the helper
+    Given the helper is called only from tests before the change
+    When the helper is reshaped and every test call site is migrated
+    Then the tree builds with the old surface deleted
+    And no source file references the old symbol
+    And every migrated test asserts the behaviour its predecessor asserted
+
+  Scenario: A behavioural regression is detected
+    Given the migrated suite passes
+    When a seeded fault changes the helper's result for an exercised input
+    Then at least one migrated test fails
+```
+
+## 7. Failure modes
+
+*Coverage loss during migration.* A test is simplified to make it compile. The
+disposition record makes the loss visible, and the seeded fault makes the suite
+prove it can still fail.
+
+*Incidental coupling.* A test depends on the old shape because the shape
+happened to make the assertion easy. Rewrite it against the behaviour; do not
+retain the shape to keep the test text.
+
+*Hidden production caller.* `EP-M0` finds a non-test caller. The premise of the
+design fails; stop and escalate rather than adding a compatibility path.
+
+*Visibility creep.* The surface is widened because a test was awkward to place.
+Narrow it, or justify the export with a test that needs it.
+
+*Stale prose.* Doc comments and guides refer to the old name. Search for it in
+the closure milestone.
+
+## 8. Handoff and readiness
+
+Ready for an implementation plan at problem-statement and design level. Not
+approved for implementation. The plan inherits:
+
+- Conformance basis: this draft and the draft terms of reference, both
+  uncommitted, both dated 2026-11-19.
+- Requirements: `TDD-REQ-001` through `TDD-REQ-005`.
+- Gaps: `GAP-inventory`, `GAP-reachability`, `GAP-dispositions`, and the
+  accepted residual risk `GAP-behaviour-contract`.
+- Obligations: `INV-absence`, `INV-coverage`, `INV-visibility`,
+  `L-behaviour`, and axioms `AXIOM-build`, `AXIOM-runner`, `AXIOM-search`.
+- Compatibility: none required; no consumer to name; no shim.
+- Unresolved decisions: `TOR-OPEN-001` (reachability) gates the first
+  milestone; `TOR-OPEN-002` (dispositions) is resolved inside the plan's
+  reconciliation milestone.
+
+The receiving plan maps these to its own milestones and acceptance evidence. It
+must not invent an approval, a measured result, or a consumer. If the inventory
+contradicts this design, the plan records a proposed deviation in its `Decision
+log`, sets its status to `BLOCKED`, and waits for acceptance.

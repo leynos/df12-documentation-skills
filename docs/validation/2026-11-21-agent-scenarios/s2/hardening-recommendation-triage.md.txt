@@ -1,0 +1,94 @@
+# Hardening recommendation triage
+
+Status: Open proposal – advisory input, not approved scope
+
+Date: 2026-11-21
+
+Source: Discovery agent recommendation, reported in the scenario.
+
+Record-local ID: `OPEN-HARDEN-01`. No upstream identifier is assigned.
+
+## 1. What is established
+
+A discovery agent recommends extra hardening. That is the whole claim. The
+recommendation does not identify the protected asset, the threat or failure
+mode, the current control's deficiency, the proposed control, its cost, or the
+authority that would accept it.
+
+## 2. Authority
+
+A discovery agent may recommend a change without approving it or completing the
+parent goal. Repetition, confidence, or detail in the recommendation does not
+create approval. The decision authority is unknown and must be named before any
+disposition other than "open" is recorded.
+
+## 3. Why it is not folded into the design or plan
+
+Doing so would:
+
+- expand scope without an approving authority;
+- convert an advisory input into an accepted requirement by repetition;
+- pre-empt the ToR's ownership of risk appetite and hard constraints;
+- hide a potential design gap inside implementation work.
+
+Ignoring it would discard risk information. The record preserves it as an open
+proposal.
+
+## 4. Precision required before a decision
+
+Ask in dependency order, one question at a time.
+
+1. Which asset, trust boundary, or failure mode is under-protected?
+2. What evidence shows that the current control is insufficient?
+3. Which approved ToR goal, constraint, success criterion, or design
+   requirement does the gap threaten, or which new one would the change create?
+4. What control is proposed, and what alternatives were considered?
+5. What are the cost, operational, performance, compatibility, verification, and
+   schedule impacts?
+6. Who owns the residual risk, and who may accept, defer, or reject the change?
+
+## 5. Classification
+
+| Classification | Test | Destination if chosen |
+| --- | --- | --- |
+| ToR-level | Changes a hard constraint, risk appetite, success criterion, or scope boundary | ToR revision under the owning authority |
+| Design-level | Adds or changes a control, component, contract, trust boundary, or verification obligation | Technical design revision or ADR; gap record |
+| Implementation-level | An approved requirement already covers it and the work stays within plan tolerances | ExecPlan `Decision log`, with rationale |
+| Out of scope | Does not serve an approved goal and no authority accepts it | Recorded rejection or deferral with rationale and redirect |
+
+## 6. Disposition options
+
+- Accept into scope: requires a named authority, an upstream ToR or design
+  revision, and updated trace links.
+- Defer: record the owner, trigger, and expiry condition.
+- Reject: record the rationale and any redirect.
+- Implement within an existing approved requirement: record why it is not new
+  scope and stay within ExecPlan tolerances.
+
+## 7. Gating
+
+`OPEN-HARDEN-01` does not by itself block completion of the current work. It
+blocks completion if:
+
+- the authority accepts it into scope, requiring a design or plan revision; or
+- it demonstrates that an approved requirement, acceptance criterion, or hard
+  constraint is unmet.
+
+If neither holds, it remains an open proposal in the handoff and does not
+prevent the current plan from completing once its own gates are met.
+
+## 8. What must not happen
+
+- Implementing the recommendation because a discovery agent suggested it.
+- Recording it in the design as an accepted requirement.
+- Dropping it without a recorded decision.
+- Letting the recommendation's urgency substitute for the missing threat
+  evidence.
+- Treating the decision authority as implied by the person who relayed the
+  recommendation.
+
+## 9. Handoff
+
+Decision authority: unknown. Required decision: accept, defer, reject, or
+confirm existing coverage. Inputs: the answers to §4 and the affected upstream
+identifiers. Until then, the item stays open and visible.

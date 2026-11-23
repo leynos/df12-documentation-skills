@@ -1,0 +1,183 @@
+# ExecPlan deviation record: unrecorded approved architecture change
+
+Status: `BLOCKED`
+
+Date: 2026-11-21
+
+Purpose: This is a ready-to-apply amendment to the executing ExecPlan. It
+records the discovery, blocks execution, and defines what must happen before
+the plan can return to `IN PROGRESS` and later claim `COMPLETE`.
+
+Plan path and revision: unknown in this workspace. Insert the exact
+repository-relative path and revision from the receiving plan. Apply the next
+free decision number; `D-RECON-01` is a placeholder.
+
+## 1. What happened
+
+At the current milestone, implementation reported an architectural change that
+has been approved but is absent from the technical design and ADRs. The design
+and ADR record was not inspected in this workspace, so this is a report to
+verify. The plan's `Conformance basis` still cites the design revision that
+predates the change. The plan can no longer demonstrate design conformance
+against its declared basis while the report stands.
+
+## 2. Constraints
+
+- Do not continue implementation past the milestone boundary while the plan is
+  `BLOCKED`.
+- Do not treat the implementation report, working code, a merged change, or an
+  agent summary as approval evidence.
+- Do not invent upstream identifiers, owners, dates, paths, revisions, or
+  acceptance results.
+- Do not add aliases, facades, deprecated entrypoints, dual implementations, or
+  wrappers. Compatibility machinery for private, test-only, pre-1.0, or
+  unreleased source APIs is prohibited. Persisted and wire formats are assessed
+  separately.
+- Do not edit the design to legitimize the implementation, or rewrite ToR
+  intent to match what the code does.
+- Do not claim completion while an upstream change or deviation remains
+  unrecorded or unaccepted.
+
+## 3. Risks
+
+- Risk: execution resumes on an unverified approval claim.
+  Severity: high. Likelihood: medium.
+  Mitigation: attach the decision record and confirm the approving authority
+  before removing `BLOCKED`.
+- Risk: the design and ADRs continue to describe a superseded architecture.
+  Severity: high. Likelihood: medium.
+  Mitigation: amend the design or ADR before any completion claim, then update
+  every affected link.
+- Risk: prior verification evidence is reused against a changed architecture.
+  Severity: medium. Likelihood: high.
+  Mitigation: reopen affected obligations and tie each result to its revision.
+- Risk: the advisory hardening recommendation is conflated with the approved
+  change.
+  Severity: medium. Likelihood: medium.
+  Mitigation: keep separate records and separate decision authorities.
+
+## 4. Decision log entry
+
+- `D-RECON-01`. Decision: set the plan to `BLOCKED` and stop implementation
+  pending reconciliation of the approved architectural change.
+  - Trigger: the implementation report states that the change is approved; the
+    design and ADRs are reported not to record it; approval evidence is not
+    attached.
+  - Affected identifiers: populate from the plan's `Conformance basis`. This
+    record does not invent upstream requirement, design, ADR, milestone, or
+    acceptance identifiers.
+  - Options:
+    1. Reconcile upstream, preferred when approval evidence is valid and the
+       change is within ToR intent: amend the design and/or ADR, re-check
+       affected links, update `Conformance basis`, record acceptance, resume.
+    2. Revert or rework the implementation to match the approved design, if the
+       approval cannot be evidenced or the change conflicts with the approved
+       architecture.
+    3. Seek fresh design approval if the change was not authorized by the design
+       authority. The change then becomes a proposal, not an approved change.
+  - Trade-offs: option 1 preserves delivery and restores traceability, but
+    requires design-owner work and may reopen verification. Option 2 restores
+    conformance quickly but discards approved work and may repeat the discovery.
+    Option 3 resolves an authority defect but delays delivery and may reject the
+    change.
+  - Required upstream changes: technical design revision or ADR; ToR impact
+    check if a goal, constraint, success criterion, or assumption is affected;
+    roadmap check if sequencing or a phase outcome changes.
+  - Approving authority: unknown. The authority that approved the change and the
+    design authority must be named, and their relationship confirmed.
+  - Status: `BLOCKED` pending explicit acceptance of the reconciled deviation.
+  - Date/author: 2026-11-21 / authoring agent.
+
+## 5. Progress
+
+- [x] (2026-11-21) Recorded discovery of the unrecorded approved architectural
+  change.
+- [x] (2026-11-21) Set the plan to `BLOCKED` and stopped implementation at the
+  milestone boundary.
+- [ ] Attach approval evidence and name the approving authority.
+- [ ] Amend the technical design and/or ADR.
+- [ ] Re-check every affected upstream and downstream link.
+- [ ] Update `Conformance basis` to the amended revision.
+- [ ] Obtain explicit acceptance of the reconciled deviation.
+- [ ] Resume execution and verification.
+
+## 6. Tolerances triggered
+
+- Architecture: the work no longer matches the design decision recorded in the
+  plan.
+- Ambiguity: multiple valid resolutions exist and materially change the
+  outcome.
+- Authority: the approval claim has no attached decision record.
+
+No further implementation proceeds while these remain unresolved.
+
+## 7. Surprises and discoveries
+
+- Observation: an approved architectural change is missing from the technical
+  design and ADRs.
+  Evidence: the implementation report, and the reported absence of the change
+  from the design and ADR record. The design revision and ADR paths were not
+  inspected in this workspace.
+  Impact: the plan's `Conformance basis` and every dependent trace link are
+  stale; prior verification evidence may no longer correspond to the
+  architecture.
+
+## 8. Milestone conformance check
+
+- Requirements satisfied: not assessable until affected identifiers are
+  populated.
+- Design still followed: no, while the reported absence stands. The design does
+  not record the approved change.
+- Upstream assumptions still valid: not verified. The ToR impact check is
+  outstanding.
+- Unapproved public interface or dependency change: unknown.
+- Unapproved trust boundary or persisted-format change: unknown; classify before
+  resuming.
+- Trace links current: no.
+- Verification evidence current: no.
+
+## 9. Verification plan impact
+
+The architecture change may invalidate invariants, lemmas, axioms, or test
+boundaries. Treat earlier results as historical evidence tied to the earlier
+revision, not as current evidence. Reopen each affected obligation, restate its
+domain and method if the decomposition changed, and mark unexecuted checks as
+planned. Do not claim a check passed because it passed against the previous
+design.
+
+## 10. Reconciliation gate before `COMPLETE`
+
+The plan must not move from `BLOCKED` to `COMPLETE` until all of the following
+hold:
+
+1. Approval evidence is attached and the authority is confirmed.
+2. The technical design and/or ADR records the change.
+3. ToR impacts are assessed and any accepted revision is recorded.
+4. All affected trace links are current.
+5. `Conformance basis` cites the amended revision.
+6. Verification obligations are re-planned and discharged to their stated scope.
+7. The reconciled deviation is explicitly accepted.
+
+## 11. Outcomes and retrospective (interim)
+
+- Outcome: execution stopped at the milestone boundary. No completion is
+  claimed, and no design or verification state is certified.
+- Lesson: an approval decision and its authoritative upstream record are
+  separate states. A plan's `Conformance basis` is invalid as soon as an
+  approved architectural decision is missing from the design or ADR.
+- Remaining: every item in the reconciliation gate, followed by resumed
+  execution and re-verification.
+
+## 12. What this record does not do
+
+It does not approve the architectural change, the design amendment, or any
+resumed implementation. It does not assign owners, dates, identifiers, or
+revisions. It does not treat the implementation report as evidence that the
+change was authorized.
+
+## 13. Revision note
+
+- 2026-11-21: Initial record created after implementation reported an approved
+  architectural change absent from the design and ADRs. The record blocks
+  execution. Remaining work is upstream reconciliation and explicit acceptance,
+  then re-verification and resumption.

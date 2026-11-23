@@ -1,0 +1,809 @@
+# Library API rename – ExecPlan (blocked revision)
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: BLOCKED (the inherited RFC demands an alias that the governing df12
+policy prohibits; awaiting explicit upstream resolution and acceptance of the
+proposed deviation)
+
+Branch: `<not supplied – recover from the executing plan>`
+
+Roadmap item: none supplied. Inherited requirement: the old RFC, identifier and
+revision not supplied.
+
+Reconstruction note: this revision reconstructs the required state from the
+supplied scenario. The original plan identifier, branch, repository paths,
+symbol names, build commands, toolchain versions, budgets, and approval
+evidence were not supplied, and no repository inspection was performed for this
+record. None of them is invented below. The executing agent must recover them
+before resuming. This revision does not assert whether any rename edits have
+already landed in the working tree.
+
+## Purpose / big picture
+
+The library is published at version 0.8. Its API rename is the current
+milestone of an ExecPlan that is already executing. A downstream consumer uses
+the old interface. An old RFC requires the rename to preserve an alias for the
+old API name. The governing df12 policy prohibits source-API compatibility
+machinery for pre-1.0 APIs, and a published 0.8 release remains pre-1.0.
+
+The intended observable outcome is that a caller of the library uses one name,
+the new one, and the library build, tests, and API surface agree. For example,
+a consumer that previously called `old_api_name` calls `new_api_name` after the
+change, and no exported alias, deprecated entrypoint, facade, wrapper, or shim
+keeps `old_api_name` alive. The placeholders `old_api_name` and `new_api_name`
+stand in for the actual identifiers, which were not supplied; replace them
+with the repository's real symbols before executing.
+
+This plan is blocked before that outcome is claimed. The old RFC's demand is an
+inherited commitment. The policy prohibits satisfying it with an alias, but the
+plan may not silently omit it either. Only the RFC's decision authority, or the
+policy owner acting within their authority, can resolve the conflict. Until that
+resolution is recorded and the deviation is accepted, implementation does not
+resume.
+
+The deliberately changed behaviour is the removal of the old source name. The
+release notes and migration guide must say so. Persisted data and wire formats
+are not known to be affected; if they are, they require a separate migration
+assessment and are not covered by the source-API decision.
+
+## Constraints
+
+Hard invariants that must hold throughout implementation. These are not
+suggestions; violation requires escalation, not a workaround.
+
+- The governing df12 policy prohibits source-API compatibility machinery for
+  private APIs, test-only APIs, pre-1.0 APIs, and unreleased changes ahead of
+  the latest applicable formal release tag. The 0.8 surface is pre-1.0. A
+  published 0.x release does not make it a 1.0+ contract, and one named consumer
+  does not create an exception.
+- The rename must change the interface and every affected caller together. The
+  repository must not be left in a state that needs both the old and the new
+  source names to work.
+- Do not add an alias, deprecated entrypoint, facade, wrapper, shim, dual
+  implementation, compatibility adapter, or migration layer for the old source
+  name.
+- Do not remove, delete, or rewrite the old RFC. Its status changes only through
+  its owner's decision. Do not declare it obsolete on the plan's own authority.
+- Do not implement the rename while `TOR-CONFLICT-001` is open, and do not
+  resume until the deviation is explicitly accepted. A blocked plan is the
+  correct state, not a problem to route around.
+- Only the authorized rename may change the public interface. Any other public
+  API change requires escalation.
+- No new dependency is authorized. If one is needed, stop and escalate.
+- Existing approved file, code, configuration, and documentation budgets remain
+  in force. This revision does not invent or raise them. If the original plan's
+  numeric budgets cannot be recovered, stop before execution.
+- The plan is already executing, but approval of this blocked revision and of
+  the proposed deviation is still required before work resumes.
+
+If satisfying the objective appears to require violating a constraint, do not
+proceed. Record the conflict in `Decision log` and escalate.
+
+## Tolerances (exception triggers)
+
+Thresholds that trigger escalation when breached. These define the boundaries
+of autonomous action, not quality criteria.
+
+The original plan's numeric budgets and counting commands were not supplied.
+Recover them from the executing plan before resuming. This revision does not
+substitute invented numbers. If they cannot be recovered, stop and escalate;
+do not guess a budget.
+
+- Files: use the original approved non-ExecPlan file-count limit. Exclude this
+  ExecPlan file from the count.
+- Code: use the original approved net-line or churn limit for production source
+  and tests.
+- Configuration: use the original approved limit for manifests, lockfiles,
+  deployment descriptors, and CI workflow configuration.
+- Documentation: use the original approved limit for prose, guides, and
+  reference material, excluding ExecPlan files.
+- Interface: if a public API change beyond the authorized rename is needed,
+  stop and escalate.
+- Dependencies: if a dependency beyond those authorized in `Constraints` is
+  needed, stop and escalate.
+- Architecture: if the work requires a compatibility layer or any other
+  protected design decision, stop and escalate. This is also a constraint
+  violation, not a negotiable tolerance.
+- Iterations: if the focused tests still fail after the original approved
+  attempt limit, stop and escalate.
+- Time: if a milestone exceeds the original approved time limit, stop and
+  escalate.
+- Ambiguity: if the RFC's authority, the consumer scope, or the release
+  lineage admits multiple materially different interpretations, stop and
+  present the options with their trade-offs.
+
+Enforce each category independently. Spare capacity or deletions in one category
+must not offset another category exceeding its limit.
+
+## Risks
+
+Known uncertainties that might affect the plan.
+
+- Risk: pressure to satisfy the RFC by adding an alias.
+  Severity: high. Likelihood: medium. Mitigation: the policy prohibition is a
+  hard constraint; the plan is blocked and the conflict is escalated rather
+  than implemented.
+- Risk: the downstream consumer breaks on the renamed release.
+  Severity: medium. Likelihood: medium. Mitigation: publish a migration note,
+  coordinate the release, and require the consumer to build against the real
+  renamed interface. An alias is not a permitted mitigation.
+- Risk: the RFC's decision authority cannot be identified, so the conflict
+  lingers.
+  Severity: high. Likelihood: medium. Mitigation: identify the owner during
+  bounded discovery; keep the plan blocked; do not proceed on the plan's own
+  authority.
+- Risk: additional consumers exist beyond the one named.
+  Severity: medium. Likelihood: low to medium. Mitigation: survey contracts,
+  registries, and maintainers. The alias prohibition applies to every consumer.
+- Risk: a persisted record or deployed peer depends on the old name.
+  Severity: medium. Likelihood: low. Mitigation: inventory stored data and wire
+  formats; if found, plan a separate migration. Do not turn it into a source
+  alias.
+- Risk: the plan resumes with its original identifiers, commands, or budgets
+  still missing.
+  Severity: medium. Likelihood: medium. Mitigation: recover them from the
+  executing plan and repository before any implementation step.
+
+Risks are anticipated. Findings that were not anticipated belong in
+`Surprises & discoveries`.
+
+## Progress
+
+Use this list to record the actual current state. Every stopping point must be
+documented.
+
+- [x] (2026-11-19, time not recorded) Reconnaissance from the supplied scenario
+  completed.
+- [x] (2026-11-19) Terms of reference draft v0.1 written, including the
+  compatibility conflict record.
+- [x] (2026-11-19) Compatibility assessment completed: the surface is pre-1.0
+  at 0.8; the named consumer is not an exception; an alias is prohibited.
+- [x] (2026-11-19) Conflict recorded and the plan set to `BLOCKED`; escalation
+  drafted.
+- [x] (2026-11-19) The original plan was already approved and executing, per
+  the supplied scenario. Its approval evidence was not supplied.
+- [ ] Recover the original plan identifier, branch, repository paths, symbols,
+  commands, toolchain versions, budgets, and approval evidence.
+- [ ] `TOR-OPEN-001` and `TOR-OPEN-002`: identify the RFC, its revision, and its
+  decision authority.
+- [ ] RFC decision authority resolves `TOR-CONFLICT-001` in writing.
+- [ ] Terms of reference v0.1 is accepted.
+- [ ] This blocked revision is accepted, including the proposed deviation (no
+  alias).
+- [ ] `EP-M1` atomic rename completed and validated.
+- [ ] `EP-M2` downstream consumer migration completed or migration note
+  accepted.
+- [ ] `EP-M3` release notes, migration guide, and upstream reconciliation
+  completed.
+
+The working tree state was not supplied. Inspect it before resuming. Do not
+revert or extend existing edits until the RFC conflict and the deviation are
+resolved.
+
+## Surprises & discoveries
+
+- Observation: the old RFC's alias demand conflicts with the governing policy
+  rather than being an approved exception.
+  Evidence: the supplied scenario states both the demand and the prohibition.
+  Impact: the rename milestone is blocked pending explicit upstream resolution.
+- Observation: publishing a 0.8 release does not move the surface into the
+  1.0+ compatibility category.
+  Evidence: the version is 0.8; the policy classifies pre-1.0 APIs separately.
+  Impact: no compatibility machinery is permitted merely because the library
+  was published.
+- Observation: the single named consumer does not create an exception.
+  Evidence: the policy excludes pre-1.0 APIs independently of whether a
+  consumer is named.
+  Impact: the consumer must migrate; the old name is not preserved for them.
+- Observation: the executing plan's original facts were not supplied to this
+  reconstruction.
+  Evidence: only the scenario was available, and repository inspection was out
+  of scope for this record.
+  Impact: the plan cannot be executed until those facts are recovered.
+
+## Decision log
+
+- D1. Decision: classify the affected surface as a pre-1.0 source API at 0.8,
+  and therefore within the policy prohibition on compatibility machinery.
+  Rationale: version 0.8 is below 1.0; publication does not create a 1.0+
+  contract; the named consumer is expressly not an exception. The rejected
+  alternative was to treat the published 0.8 release or the one consumer as an
+  implicit compatibility commitment.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D2. Decision: do not implement the alias, deprecated entrypoint, facade,
+  wrapper, shim, dual implementation, or compatibility adapter.
+  Rationale: every such device is source-API compatibility machinery for a
+  pre-1.0 surface and is prohibited. The rejected alternatives were an alias
+  for the old name, a temporary wrapper, and a dual implementation; each
+  violates the same constraint and would create an obsolete interface to
+  maintain.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D3. Decision: do not silently proceed with the rename while omitting the
+  RFC's alias requirement.
+  Rationale: the RFC is an inherited commitment. The governing documents
+  require the conflict to be exposed for explicit resolution; they do not
+  authorize a unilateral deletion or an undeclared omission. The rejected
+  alternative was to treat the policy as self-executing and continue without
+  telling the RFC's owner.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D4. Decision: set the plan status to `BLOCKED` and escalate the conflict.
+  Rationale: the conflict cannot be resolved by the plan. The RFC's decision
+  authority can retire or supersede the alias requirement; the policy owner can
+  interpret or amend the policy. Options considered: (a) the RFC is retired or
+  superseded, in which case the rename resumes atomically without an alias;
+  (b) the policy is amended, in which case a fresh compatibility assessment is
+  required; (c) the rename is deferred, in which case the plan remains blocked;
+  (d) the alias is implemented anyway, which is rejected as a policy violation.
+  This is an escalation, not a removal of the RFC and not a deferral of its
+  requirement to a later milestone. The RFC remains in force until its owner
+  decides otherwise.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D5. Decision: resume only after the RFC resolution is recorded and the
+  deviation is explicitly accepted.
+  Rationale: the approval gate and the deviation rule both require explicit
+  acceptance. Silence, a related issue, or an agent summary is not acceptance.
+  The rejected alternative was to resume on the assumption that the policy
+  would prevail.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D6. Decision: preserve the original plan's identifiers, budgets, and commands;
+  do not invent replacements.
+  Rationale: the executing plan already has stable identifiers and approved
+  tolerances. This revision is a state update, not a new plan. The rejected
+  alternative was to renumber the plan and reset its budgets, which would break
+  traceability and could silently widen the tolerances.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+- D7. Decision: no model checking or formal proof is planned for the rename.
+  Rationale: the material obligations are finite source-tree invariants and
+  build checks; a search plus a compile/test sequence establishes them with
+  less cost than a formal model would require. The decision may be revisited if
+  the rename turns out to have a non-trivial protocol or state-machine
+  obligation. The rejected alternative was to attach a prover to a mechanical
+  rename.
+  Date/Author: 2026-11-19, authoring agent (proposed; not approved).
+
+## Outcomes & retrospective
+
+The plan is not complete. The current outcome is that the conflict surfaced
+before the alias was implemented. No alias was added, the RFC was not deleted
+or rewritten, and the plan was blocked rather than allowed to drift.
+
+The main lesson is that compatibility classification belongs in intake, before
+the rename milestone begins. An inherited RFC is not a waiver, a published 0.8
+release is not a 1.0 contract, and a named consumer does not create an
+exception. A blocked plan with a recorded conflict is the correct outcome when
+the alternative is a prohibited compatibility layer or a silent violation.
+
+Remaining work is the RFC resolution, acceptance of this terms of reference and
+the deviation, recovery of the original plan facts, and then the atomic rename,
+consumer migration, and release closure. The plan must not be set to `COMPLETE`
+while the conflict or the deviation remains unrecorded or unaccepted.
+
+## Context and orientation
+
+The baseline is a published 0.8 library with one downstream consumer. The API
+rename is the current milestone of an executing plan. The old RFC requires an
+alias while the API changes. The governing df12 policy prohibits source-API
+compatibility machinery for pre-1.0 APIs.
+
+The inspected base revision is not available: the scenario supplied no
+repository revision, and this record was produced without repository
+inspection. The owning modules, entrypoints, callers, tests, generated files,
+and toolchain versions are therefore unresolved. Recover them with a real
+reconnaissance pass before execution. Do not rely on this revision for paths,
+symbol names, or commands.
+
+The original plan's budget survey is also unavailable. Recover the existing
+code, comment, and documentation budget history, including any prior increases
+and their causes, before resuming. Distinguish missed scope from approved scope
+growth and repository constraints. If no comparable history exists, say so
+rather than inventing one.
+
+Relevant documents and skills:
+
+- The terms of reference draft delivered with this revision, v0.1, 2026-11-19.
+- The governing df12 compatibility policy, revision not supplied.
+- The old RFC, identifier and revision not supplied.
+- The executing ExecPlan, identifier and revision not supplied.
+- The installed `execplans` skill and its template, inspected for this
+  revision: `/home/leynos/.claude/skills/execplans/SKILL.md` and
+  `/home/leynos/.claude/skills/execplans/references/execplan-template.md`.
+- The `tech-design-doc` skill's `architecture-contract.md`, inspected for the
+  compatibility rules: repository path
+  `skills/tech-design-doc/references/architecture-contract.md` in the
+  documentation-skills repository, revision not pinned to a commit here.
+
+## Conformance basis
+
+This plan is a lightweight architecture contract. Upstream artefacts:
+
+- Terms of reference: `terms-of-reference.md`, draft v0.1, 2026-11-19, not
+  accepted. Delivered with this revision.
+- Technical design: none supplied. No design-level compatibility decision is
+  invented here.
+- ADRs: none supplied.
+- Old RFC: identifier and revision not supplied. Treated as an inherited
+  requirement whose current authority is unverified.
+- Governing df12 policy: revision not supplied. Treated as the governing
+  constraint.
+- Executing plan: identifier and revision not supplied. This revision
+  reconstructs its blocked state; it does not replace its history.
+
+Requirements derived from the upstream intent:
+
+- `REQ-ATOMIC-RENAME`: change the interface and every affected caller together,
+  leaving one coherent source API. Source: `TOR-GOAL-001`,
+  `TOR-CONSTRAINT-001`.
+- `REQ-NO-ALIAS`: do not add an alias, deprecated entrypoint, facade, wrapper,
+  shim, dual implementation, or compatibility adapter for the old source name.
+  Source: `TOR-NONGOAL-001`, `TOR-CONSTRAINT-001`, `TOR-CONSTRAINT-002`.
+- `REQ-CONSUMER-MIGRATION`: give the known downstream consumer a documented
+  migration or a rename they can build against. Source: `TOR-GOAL-002`.
+- `REQ-RFC-RESOLUTION`: record a written resolution of the inherited RFC
+  conflict before implementation resumes. Source: `TOR-GOAL-003`,
+  `TOR-CONFLICT-001`.
+- `REQ-NO-SILENT-OMISSION`: do not proceed while the conflict is open, and do
+  not treat the policy as permission to erase the RFC unilaterally. Source:
+  `TOR-CONSTRAINT-002`.
+
+Observed gaps:
+
+- `GAP-RFC-CONFLICT`: the RFC alias demand is unresolved. Disposition: blocked.
+  Resolution owner: RFC decision authority. Unblock condition: a written
+  retirement, supersession, or policy amendment. Verification: the cited
+  decision.
+- `GAP-CONSUMER-EVIDENCE`: the consumer's identity, contract, and build status
+  are not supplied. Disposition: open. Resolution owner: library maintainers.
+  Unblock condition: consumer evidence attached.
+- `GAP-RELEASE-LINEAGE`: the latest applicable formal release tag and the
+  absence of a 1.0+ contract are not verified. Disposition: open. Resolution
+  owner: library maintainers. Unblock condition: inspected tags recorded.
+- `GAP-PLAN-FACTS`: the original plan identifier, branch, paths, symbols,
+  commands, toolchain versions, budgets, and approval evidence are missing.
+  Disposition: blocked for execution. Resolution owner: plan owner. Unblock
+  condition: recovered from the executing plan and repository.
+- `GAP-PERSISTED-STATE`: no evidence establishes whether persisted records or
+  wire formats encode the old name. Disposition: open. Resolution owner:
+  library maintainers. Unblock condition: an inventory, or a scoped statement
+  that none exists.
+
+Trace links:
+
+```plaintext
+TOR-GOAL-001 -> REQ-ATOMIC-RENAME -> EP-M1 -> build/test plus old-name search
+TOR-NONGOAL-001 -> REQ-NO-ALIAS -> EP-M1 -> API-surface check plus negative control
+TOR-GOAL-002 -> REQ-CONSUMER-MIGRATION -> EP-M2 -> consumer build or accepted note
+TOR-GOAL-003 -> REQ-RFC-RESOLUTION -> milestone gate -> written RFC decision
+TOR-CONSTRAINT-002 -> REQ-NO-SILENT-OMISSION -> all milestones -> BLOCKED status check
+```
+
+A trace link records a relationship. It is not evidence that the obligation has
+been discharged.
+
+## Verification plan
+
+Implementation and verification are planned together. The rename is mechanical,
+but the policy boundary is not: the plan must demonstrate the absence of
+compatibility machinery, not merely the presence of the new name.
+
+### Abstract model
+
+The relevant state is the source tree, its exported API surface, and the
+consumer's build. Inputs are the old identifier and the new identifier.
+Precondition: the compatibility classification is pre-1.0, the RFC conflict is
+resolved, and the deviation is accepted. The transition renames the definition
+and every affected caller. The expected postcondition is that the new name is
+the only source name, no alias preserves the old name, and the build, tests, and
+consumer checks pass.
+
+Allowed occurrences of the old name are the changelog, the migration guide, and
+untouched historical documents such as the RFC. Any other source occurrence is a
+failure. Malformed or partial states are handled by refusing to continue: a
+half-renamed tree is not a plateau.
+
+### Invariants and lemmas
+
+- `INV-NO-ALIAS`: no alias, deprecated entrypoint, facade, wrapper, shim, dual
+  implementation, or compatibility adapter exposes the old name. Linked to
+  `REQ-NO-ALIAS`.
+- `INV-ATOMIC`: every in-repository caller uses the new name; no mixed old/new
+  source state remains. Linked to `REQ-ATOMIC-RENAME`.
+- `INV-NO-OLD-NAME`: no source occurrence of the old name remains outside the
+  allowed documentation exceptions. Linked to `REQ-ATOMIC-RENAME`.
+- `INV-CONSUMER`: the known downstream consumer builds against the renamed
+  release, or an accepted migration note exists. Linked to
+  `REQ-CONSUMER-MIGRATION`.
+- `INV-RFC-GATE`: implementation does not resume while `TOR-CONFLICT-001` is
+  open; a written resolution exists before resumption. Linked to
+  `REQ-RFC-RESOLUTION` and `REQ-NO-SILENT-OMISSION`.
+
+Lemmas:
+
+- `L-NO-COMPAT`: if `INV-NO-ALIAS` holds, the released surface contains no
+  source-API compatibility machinery for the old name. This connects the
+  absence check to the policy obligation.
+- `L-ATOMIC-COHERENCE`: if `INV-ATOMIC` and `INV-NO-OLD-NAME` hold, the
+  repository is in one coherent source-API state and does not require both
+  names to function.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-VERSION`: 0.8 is pre-1.0 under the project's versioning scheme.
+  Source: release tag or versioning policy, revision not supplied. Boundary:
+  the compatibility classification.
+- `AXIOM-CONSUMER-SET`: the one named consumer is the complete known external
+  consumer set. Source: contract, registry, or maintainer survey, not supplied.
+  Boundary: the migration scope.
+- `AXIOM-POLICY`: the governing df12 policy is the applicable constraint.
+  Source: policy text, revision not supplied. Boundary: the prohibition.
+- `AXIOM-RFC`: the old RFC contains the alias demand and remains in force until
+  its owner supersedes or retires it. Source: RFC record, revision not
+  supplied. Boundary: the conflict gate.
+- `AXIOM-TOOLCHAIN`: the repository's build and test commands faithfully
+  exercise the affected interface. Source: repository configuration, not
+  supplied. Boundary: the compile and test evidence.
+- `AXIOM-CONSUMER-BUILD`: the consumer's build actually calls the renamed
+  symbol. Source: consumer code, not supplied. A consumer that never used the
+  symbol is not evidence of migration.
+
+### Methods per obligation
+
+- Obligation: `INV-NO-ALIAS` (no compatibility machinery for the old name).
+  Method: static API-surface inspection plus repository search. Rationale: the
+  surface is finite and the property is an absence; a targeted search plus an
+  exported-symbol diff is proportionate.
+  Domain: all exported symbols and all source paths, with documentation
+  exceptions listed explicitly.
+  Artefact: the API diff and the search pattern, paths to be recovered.
+  Evidence: the search and inspection report zero alias matches; a seeded
+  temporary alias is detected and then removed.
+  Non-vacuity: the seeded alias must be rejected for the intended reason. A
+  search that cannot match the seeded case is a failed check.
+
+- Obligation: `INV-ATOMIC` (every caller uses the new name).
+  Method: compile the tree and run the focused test suite.
+  Rationale: the compiler and tests exercise the real callers; no model is
+  needed for a mechanical rename.
+  Domain: all in-repository callers and the affected test fixtures.
+  Artefact: the build and test logs.
+  Evidence: the build fails before the rename with the new name missing or the
+  old caller unresolved, then passes after the rename.
+  Non-vacuity: add a temporary caller that uses the old name and confirm the
+  build rejects it, or use a compile-fail test; remove the temporary caller
+  afterwards.
+
+- Obligation: `INV-NO-OLD-NAME` (no source occurrence outside documentation).
+  Method: exhaustive repository search with explicit exclusions.
+  Rationale: the property is a finite absence over the source tree.
+  Domain: all tracked source paths, excluding the changelog, migration guide,
+  and historical documents.
+  Artefact: the search command and its exclusion list.
+  Evidence: zero matches after the rename. Seed one occurrence and confirm the
+  search finds it, then remove the seed.
+  Non-vacuity: the seed must be found. An empty result with a broken pattern or
+  an over-broad exclusion is not evidence.
+
+- Obligation: `INV-CONSUMER` (the consumer can adopt the new name).
+  Method: integration check against the consumer's real build, or review of an
+  accepted migration note where the consumer is updated separately.
+  Rationale: a mock of the consumer would not establish that the real caller
+  migrated; the real interface is the relevant boundary.
+  Domain: the one known consumer and its build.
+  Artefact: the consumer CI result or the accepted note.
+  Evidence: the consumer build passes against the renamed release, or the note
+  is accepted by the consumer's authority.
+  Non-vacuity: confirm the consumer calls the renamed symbol. A build that does
+  not exercise the symbol proves nothing about migration.
+
+- Obligation: `INV-RFC-GATE` (no resumption while the conflict is open).
+  Method: document and status review at the milestone boundary.
+  Rationale: the obligation is procedural and evidentiary, not executable.
+  Domain: the RFC record, the policy record, and the plan status.
+  Artefact: the cited resolution and the accepted deviation.
+  Evidence: the plan remains `BLOCKED` until both exist.
+  Non-vacuity: the resolution must name the alias requirement and the policy
+  basis. A generic approval that does not mention the conflict does not
+  discharge it.
+
+### Formal verification decision
+
+No model checking or formal proof is planned. The material obligations are a
+finite source-tree absence, a compile-and-test property, and a document gate.
+The selected methods can fail when the implementation is wrong: a seeded alias,
+a seeded old-name occurrence, or a caller left on the old name is rejected.
+Stronger methods would add cost without covering the policy question, which is
+resolved by an authority, not by a prover. This decision is recorded as D7.
+
+### Suggested BDD features
+
+Label these as proposed; no BDD runner is assumed, and adding one requires
+separate authorization. A proposed path is `features/api_rename.feature`.
+
+```gherkin
+Feature: Pre-1.0 API rename without compatibility machinery
+  Scenario: A consumer uses the renamed interface
+    Given the library is released with the new API name
+    And the consumer calls the new name
+    When the consumer builds against the release
+    Then the build passes
+    And no alias for the old name is exported
+
+  Scenario: The old source name is gone
+    Given the repository source tree after the rename
+    When the source is searched for the old name outside the changelog and migration guide
+    Then no source occurrence is found
+
+  Scenario: The RFC conflict gates the milestone
+    Given the RFC alias demand is unresolved
+    When the plan attempts to resume implementation
+    Then the plan remains blocked
+    And no alias is implemented
+```
+
+## Plan of work
+
+The work proceeds in coherent milestones. The current milestone is blocked at
+its gate; the later milestones remain planned.
+
+### `EP-M0` feasibility probe
+
+No prototype is warranted. The uncertainty is a policy conflict and an
+authority question, not a technical feasibility question. A probe would not
+resolve it, and a prototype that included an alias would violate the
+constraint. Record the decision here rather than spending a milestone.
+
+### `EP-M1` atomic rename
+
+Assigned requirements and gaps: `REQ-ATOMIC-RENAME`, `REQ-NO-ALIAS`,
+`GAP-PLAN-FACTS`, and the compatibility half of `GAP-RELEASE-LINEAGE`.
+
+Status: blocked at the gate. Do not begin or continue implementation until
+`GAP-RFC-CONFLICT` has a written resolution and the deviation is accepted.
+
+Steps after the gate opens:
+
+1. Recover the original plan facts, including the actual symbol names, paths,
+   toolchain, commands, budgets, and any existing working-tree edits.
+2. Inspect the latest applicable formal release tag and record it. Confirm that
+   no already released 1.0+ contract is involved.
+3. Write the smallest red check: a consumer or test that calls the new name, or
+   a compile-fail check that rejects the old name. Run it and record the
+   expected failure.
+4. Rename the definition and every affected caller in the same change. Do not
+   add a second name.
+5. Remove the last old-name source occurrence. Update tests and generated
+   callers as required.
+6. Run the focused check, then the repository gates. Run them sequentially.
+7. Run the API-surface and old-name searches with their negative controls.
+8. Commit the coherent state. Do not leave a half-renamed tree.
+
+Acceptance evidence: the build and focused tests pass; the old-name search is
+empty outside the allowed documentation; the alias search is empty; the seeded
+negative controls are rejected for the intended reason; the API diff shows only
+the authorized rename.
+
+Conformance check for `EP-M1`:
+
+- `REQ-ATOMIC-RENAME` and `REQ-NO-ALIAS` are satisfied.
+- The design, if one is later recovered, is still followed.
+- The upstream assumptions (pre-1.0 version, no 1.0+ contract) remain valid.
+- No unapproved public interface or dependency change has appeared.
+- No unapproved trust boundary or persisted-format change has appeared.
+- Trace links and acceptance evidence are current.
+
+Recovery: revert the rename commit and restore the last green state. Do not
+recover by introducing an alias. If the rename was partially applied, restore
+from the last green commit or complete the single atomic change; do not leave
+both names live.
+
+Remaining gaps: the consumer migration and the release closure.
+
+Compatibility decision: none. No source-API compatibility machinery is
+required or permitted for this pre-1.0 surface.
+
+### `EP-M2` downstream consumer migration
+
+Assigned requirement: `REQ-CONSUMER-MIGRATION`.
+
+Steps: identify the consumer and its contract evidence; publish or draft the
+migration note; update the consumer to the new name if it is in scope; run the
+consumer's build against the renamed release. If the consumer is updated on its
+own schedule, record the accepted migration note and the release the consumer
+will adopt.
+
+Acceptance evidence: the consumer builds against the renamed release, or its
+authority accepts the migration note. The consumer must actually call the
+renamed symbol; a build that does not exercise it is not evidence.
+
+Recovery: the consumer may pin the 0.8 release and migrate later. That is a
+consumer release choice, not a library alias. The library does not keep the old
+source name alive for it.
+
+Remaining gap: release communication and upstream reconciliation.
+
+Compatibility decision: none for the library source API. The consumer's pin is
+a deployment choice, not a source-compatibility layer in this library.
+
+### `EP-M3` documentation and delivery closure
+
+Assigned requirement: `REQ-RFC-RESOLUTION` and the remaining release evidence.
+
+Steps: update the changelog and migration guide; record the RFC resolution and
+its citation; reconcile the terms of reference, any recovered design, and the
+plan; run the wider gates; update the release note to state the breaking change
+plainly. Exclude historical completed plans from any stale-claim search.
+
+Acceptance evidence: the release note and migration guide name the new API and
+state that no alias exists; the RFC resolution is cited; the ToR and plan trace
+links are current; the gates pass.
+
+Do not mark the plan `COMPLETE` while the RFC conflict or the deviation remains
+unrecorded or unaccepted. A merged rename does not prove release, deployment, or
+consumer adoption.
+
+Compatibility decision: none.
+
+## Milestones and plateaus
+
+- `EP-M1` atomic rename.
+  Requirements and gaps: `REQ-ATOMIC-RENAME`, `REQ-NO-ALIAS`,
+  `GAP-PLAN-FACTS`.
+  Acceptance evidence: build and tests pass; old-name and alias searches are
+  empty outside documentation; negative controls are rejected.
+  Conformance check: requirements satisfied; design followed or explicitly
+  absent; upstream assumptions valid; no unapproved interface, dependency,
+  trust-boundary, or persisted-format change; trace links current.
+  Recovery: revert to the last green commit or complete the single atomic
+  change; no alias recovery path.
+  Remaining gaps: consumer migration, release closure.
+  Compatibility decision: none.
+
+- `EP-M2` consumer migration.
+  Requirements and gaps: `REQ-CONSUMER-MIGRATION`, `GAP-CONSUMER-EVIDENCE`.
+  Acceptance evidence: the consumer builds against the renamed release or
+  accepts the migration note.
+  Conformance check: the consumer actually calls the renamed symbol; no
+  compatibility layer has appeared in the library; trace links current.
+  Recovery: consumer pins 0.8 and migrates later; that is not a library alias.
+  Remaining gaps: release communication.
+  Compatibility decision: none for the library source API.
+
+- `EP-M3` documentation and delivery closure.
+  Requirements and gaps: `REQ-RFC-RESOLUTION`, `GAP-RFC-CONFLICT`, and the
+  remaining release-lineage evidence.
+  Acceptance evidence: changelog, migration guide, and release note are
+  accurate; RFC resolution cited; upstream artefacts reconciled.
+  Conformance check: no unrecorded deviation; all affected links current; gates
+  pass.
+  Recovery: revert the documentation change and re-run the gates; do not
+  declare completion while a conflict is open.
+  Remaining gaps: none, if the resolution and acceptance are recorded.
+  Compatibility decision: none.
+
+## Concrete steps
+
+Working directory: the repository root, path not supplied. Recover it before
+running any command. The commands below are placeholders for the repository's
+actual commands; they are not invented toolchain facts.
+
+```plaintext
+Working directory: <repository root, recover from the executing plan>
+Red: <focused build or compile-fail check> -> expected failure because the new name is missing or an old-name caller is rejected
+Green: <same check> -> expected pass after the atomic rename
+Refactor: <format, lint, typecheck, test gates in the repository's documented order> -> expected pass
+Search: <old-name search with documentation exclusions> -> expected zero matches
+Alias check: <API-surface or symbol search> -> expected zero matches
+```
+
+Run the repository's gate sequence sequentially, preferring Makefile targets.
+If output is piped through `tee`, enable `pipefail` in the executing shell so a
+failed gate cannot appear to pass. Name the log paths. Record known baseline or
+host-specific failures separately from regressions; do not waive a gate
+quietly.
+
+Do not run the gates while the plan is blocked by the RFC conflict. The commands
+become valid only after the resolution and the deviation acceptance.
+
+## Validation and acceptance
+
+The rename is accepted when a caller can use the new name and observe that the
+old name is gone, with no compatibility layer:
+
+- The build and the focused test suite pass on the renamed tree.
+- The new name is the only source API name; the old name appears only in the
+  changelog, migration guide, and untouched historical documents.
+- The API surface contains no alias, deprecated entrypoint, facade, wrapper,
+  shim, dual implementation, or compatibility adapter.
+- The seeded negative controls fail for the intended reason and are removed.
+- The known downstream consumer builds against the renamed release, or its
+  authority accepts the migration note.
+- The RFC resolution is written and cited; the plan deviation is explicitly
+  accepted.
+
+For Red-Green-Refactor, record the red command and its expected failure, the
+green command and its expected pass, and the refactor gate sequence with its
+result. For the policy obligation, record the document review and the cited
+resolution.
+
+Quality criteria (what "done" means):
+
+- Tests: the repository's test command passes.
+- Verification: `INV-NO-ALIAS`, `INV-ATOMIC`, `INV-NO-OLD-NAME`,
+  `INV-CONSUMER`, and `INV-RFC-GATE` are discharged with the evidence above.
+- Lint and typecheck: the repository's gates pass.
+- Performance: no performance claim is made; no benchmark is required.
+- Security: no security surface is claimed to change; if the rename touches a
+  trust boundary, stop and escalate.
+
+Quality method (how we check): the focused check, the full gate sequence, the
+old-name and alias searches with negative controls, the consumer build or
+accepted note, and the document review.
+
+## Idempotence and recovery
+
+The rename is not idempotent if it is applied partially. Use one atomic change
+or a short series that ends in a coherent state. Re-running the search and
+build checks is safe once the tree is coherent. If a step fails halfway, restore
+the last green commit or complete the rename; do not leave both names live.
+
+A safe revert is the recovery path, not a permanent dual implementation. The
+consumer may pin the 0.8 release while it migrates. Do not rewrite published
+history to hide the breaking change; publish a migration note instead.
+
+Keep the working tree clean after each milestone. Remove any seeded alias or
+old-name occurrence and any generated regression artefacts before claiming
+acceptance.
+
+## Artefacts and notes
+
+No implementation transcripts exist for this revision; only the scenario and
+the terms of reference draft were available. Expected evidence to capture:
+
+- `EP-M1` red transcript: the focused check failing for the intended reason.
+- `EP-M1` green transcript: the same check passing after the atomic rename.
+- `EP-M1` search report: zero old-name source matches outside the allowed
+  documentation, plus the seeded negative control that was detected and
+  removed.
+- `EP-M1` API-surface report: no alias or compatibility symbol.
+- `EP-M2` consumer build or accepted migration note.
+- `EP-M3` release note, changelog, and RFC resolution citation.
+
+Label each item by milestone, command, and revision. Distinguish expected
+results from observed evidence. Do not present a planned check as a passed one.
+
+## Interfaces and dependencies
+
+The interface change is the authorized rename from `old_api_name` to
+`new_api_name` (placeholders; replace with the real symbols). The new name must
+exist at the definition, every caller, the tests, and the documented public
+surface. The old name must not remain as a second definition, alias,
+deprecated entrypoint, facade, wrapper, shim, dual implementation, or adapter.
+
+No new library, module, service, or dependency is authorized. If the rename
+reveals a need for one, stop and escalate. Reuse the repository's existing
+helpers and conventions rather than introducing a parallel abstraction. Error
+contracts, ownership, and exports otherwise remain unchanged.
+
+Persisted data and wire formats are separate. If the old name appears in either,
+record the deployed state, the conversion or rollback requirement, and the
+acceptance evidence. That work does not authorize an unrelated source alias.
+
+## Revision note
+
+- 2026-11-19: Created the blocked revision. The old RFC demands an alias for a
+  pre-1.0 API, and the governing df12 policy prohibits source-API compatibility
+  machinery. The plan records the conflict, rejects the alias, escalates to the
+  RFC's decision authority, and awaits explicit resolution and acceptance of
+  the deviation. The original plan's identifiers, paths, commands, budgets, and
+  approval evidence were not supplied and must be recovered before execution.
+  Remaining work is blocked; the milestone order and expected acceptance
+  evidence are otherwise unchanged.

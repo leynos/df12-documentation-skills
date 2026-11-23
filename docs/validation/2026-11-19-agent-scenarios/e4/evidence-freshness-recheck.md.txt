@@ -1,0 +1,120 @@
+# Evidence freshness re-check: `stream-ledger` revision A to revision B
+
+This note records the re-check that turned the plan from APPROVED to BLOCKED. It
+is a working note, not the plan, and not an approval record. It preserves what
+revision A established, states what revision B changes, and marks what was not
+inspected.
+
+## Trigger and rule applied
+
+Revision B of the dependency changed a contract the plan cites and removed the
+error variant that the plan's failure path consumes. The skills treat a changed
+external contract, a moved symbol, and an upstream merge as evidence expiry
+triggers: affected claims are re-checked before downstream work uses them, and a
+green result from an earlier tree is not automatically current evidence.
+
+Two consequences follow immediately:
+
+1. Revision-A results for the affected symbols are stale. They remain useful as
+   history and are kept with their revision label; they are not carried into
+   acceptance evidence.
+2. The plan cannot continue on its approved assumptions. A change that
+   falsifies an assumption, or that alters a requirement's feasibility, is
+   recorded as a proposed deviation in the plan's `Decision log`, the plan
+   enters `BLOCKED`, and execution waits for explicit acceptance.
+
+## The change
+
+```plaintext
+Revision A: stream-ledger v2.4.1 (commit a1b2c3d)
+  commit(&mut self, batch: Batch) -> Result<CommitReceipt, CommitError>
+  CommitError::StaleEpoch exists
+  the plan maps StaleEpoch to StoreError::Replan and asserts no partial write
+
+Revision B: stream-ledger v2.5.0 (commit f9e8d7c)
+  commit(&mut self, batch: Batch, guard: EpochGuard<'_>) -> Result<..>
+  CommitError::StaleEpoch removed; a stale epoch cannot reach the call
+```
+
+The revision B block is the reported change. It was not confirmed by reading the
+dependency source or by compiling against `v2.5.0`; see
+`What this re-check did not establish`.
+
+## Claim-by-claim disposition
+
+| Claim from the plan at revision A | Revision A source | Revision B status | Disposition |
+|---|---|---|---|
+| `Ledger::commit` takes a batch and may fail with a stale epoch | `stream-ledger` `v2.4.1` | Signature changed; variant removed | Superseded. Retained as history. |
+| `CommitError::StaleEpoch` is a variant the store must translate | `v2.4.1` source symbol | Variant absent from the type | Stale. The match arm cannot exist. |
+| A batch meeting a stale epoch yields `StoreError::Replan` | Plan requirement `REQ-stale-epoch-recovery` | Precondition unreachable through the dependency | Broken trace link; feasibility questioned. |
+| `tests::persist::stale_epoch_replans` fails before the change and passes after | Plan's red/green plan | Test cannot fail for the intended reason; its input helper is gone | Invalid as evidence at revision B. |
+| The error mapping is total over `CommitError` | Plan lemma `L-translation-total` | Still provable; the domain shrank by one variant | Valid but re-scoped. |
+| A failed persist writes no partial batch | Plan invariant `INV-batch-atomic` | Unaffected | Current; re-run at the adopted revision. |
+| The revision-A probe demonstrated the translation | `EP-M0` transcript | The constructor it used no longer exists | Historical only; not replayable. |
+| The store owns stale-epoch recovery | Plan design statement | Feasibility depends on whether the store validates the guard itself | Falsified as written; under D2. |
+
+## Why the unreachable failure path is not a pass
+
+The planned obligation `INV-replan-on-stale` has the form "for every batch
+submitted against a stale epoch, the store returns `Replan` and writes nothing".
+At revision B the antecedent has no satisfying witness: the dependency's type
+prevents a stale epoch from reaching `commit`, and the error variant that
+carried the signal no longer exists.
+
+Every method that could be applied – a parameterized test, a property test, a
+bounded model check – depends on the same precondition. None of them can produce
+a failing case when the implementation is wrong, because the wrong implementation
+is equally unreachable. A green result here would be vacuous, and a vacuous pass
+is a verification failure rather than evidence. The same reasoning rejects three
+tempting substitutes:
+
+- A strict expected-failure marker. `@pytest.mark.xfail(strict=True)`-style and
+  `#[should_panic]`-style markers enforce red only when red is achievable. Here
+  the test body cannot compile, so the marker cannot demonstrate anything.
+- Deleting the test and calling the milestone done. Deleting evidence is not
+  discharging an obligation; it is a requirement change and belongs to the
+  requirement owner.
+- Adding a local replica of the removed error variant so the old branch compiles.
+  That would assert a guarantee the dependency no longer makes, and is
+  compatibility machinery for an obsolete external interface with no named
+  consumer.
+
+## Required evidence at revision B
+
+If option A is accepted, the replacement obligation is discharged by:
+
+1. Type-level evidence that the repository does not reference the removed
+   variant, and that the mapping compiles without a wildcard arm.
+2. A real-interface boundary check that the store accepts the `EpochGuard`
+   interface and submits successfully, exercising the actual dependency rather
+   than a mock.
+3. `AXIOM-ledger-epoch-safety`, recorded with its source revision, the exact
+   guarantee relied on, and the repository boundary that depends on it.
+
+If option B is accepted, the replacement obligation is the repository-owned
+guard check, and it must be red first, with a seeded stale guard rejected for
+the intended reason.
+
+## What this re-check did not establish
+
+- The dependency source was not read and `v2.5.0` was not compiled; the contract
+  change is recorded as reported, not verified. A diff of the dependency's error
+  and ledger modules between `v2.4.1` and `v2.5.0` remains planned.
+- The repository tree was not inspected at either revision, so moved-symbol
+  claims other than the cited ones are unassessed.
+- The upstream Terms of Reference, technical design, and ADRs were not read;
+  the plan's citation of them is carried forward unchanged and unverified.
+- No gate was run. `make check-fmt`, `make lint`, `make typecheck`, and
+  `make test` are recorded as planned for the candidate worktree once work
+  resumes, not as passed.
+- No consumer search was run for `StoreError::Replan` outside the repository.
+  None is claimed to exist, and D2 must not assume one in either direction.
+
+## Effect on the plan
+
+Status moved from APPROVED to BLOCKED. The deviation is D2 in the plan's
+`Decision log`, with three options and their costs. Nothing was deleted: the
+failure path, its test name, and its trace link are retained and marked
+unreachable. Execution resumes only after the technical design and Terms of
+Reference owners accept an option and the affected identifiers are reconciled in
+their documents.

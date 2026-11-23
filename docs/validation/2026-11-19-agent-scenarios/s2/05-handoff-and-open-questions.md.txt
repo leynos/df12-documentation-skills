@@ -1,0 +1,113 @@
+# Handoff and open questions
+
+Status: blocked. This is a handoff for decision, not a delivery.
+
+Date: 2026-11-19.
+
+## Readiness classification
+
+The reconciliation is `blocked`, not ready for design closure and not ready for
+execution. Two independent conditions hold:
+
+1. The approved architectural change has no approval record in hand, so its
+   status as an accepted decision is unverified.
+2. The terms of reference, technical design, ADR set, roadmap, and executing
+   plan were unavailable, so no upstream statement can be reconciled against a
+   real revision in this session.
+
+The hardening recommendation is at a different point: it is ready for a
+disposition decision by its owner, and ready for bounded discovery if the owner
+wants the claim examined. It is not ready for design inclusion or
+implementation.
+
+## What is complete
+
+- The two inputs are separated and their evidence status is recorded.
+- The gaps are registered, with dispositions and unblock conditions.
+- A design change request and an ADR candidate are drafted for review.
+- The executing plan's deviation entry is drafted and its status is `BLOCKED`.
+- No design, ADR, roadmap, or code change was made.
+
+## Open questions
+
+| ID   | Question                                                                 | Why it matters (what it gates)                                  | Who can resolve it              |
+| ---- | ------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------- |
+| OQ-1 | What is the approval record for the architectural change: signer, date, scope, and revision? | Gates branch selection, and every design and ADR edit | Original decision owner or architecture authority |
+| OQ-2 | Does the approval cover the change as implemented, or a narrower decision? | Gates whether the change is a propagation or a deviation        | Decision owner                  |
+| OQ-3 | Which requirement, design-element, gap, and verification identifiers does the change touch? | Gates the link audit and the plan's conformance basis | Design owner                    |
+| OQ-4 | Does the change falsify a terms-of-reference assumption, hard constraint, or success criterion? | Gates a proposed ToR revision and the design impact analysis | ToR owner and sponsor           |
+| OQ-5 | How is the changed surface classified: private, test-only, pre-1.0, unreleased, or released 1.0+ with named consumers? | Gates compatibility machinery, release gating, and migration | Design owner and maintainer     |
+| OQ-6 | Does the change alter persisted data or a wire format, and what deployed state must be preserved? | Gates a migration obligation separate from source compatibility | Maintainer and operator         |
+| OQ-7 | Does the change invalidate verification evidence gathered before it? Which obligations must be re-run? | Gates the verification plan and any completion claim | Design owner and verification owner |
+| OQ-8 | Is the ADR candidate new, or does it supersede an existing ADR?          | Gates ADR authoring and supersession links                      | ADR owner                       |
+| OQ-9 | Who owns the hardening decision, and is the proposal in scope?            | Gates `GAP-HARDEN-001` and any design or roadmap change         | Design owner, security or risk owner, sponsor |
+| OQ-10 | Is the hardening claim technically valid, and does it address a real trust-boundary weakness? | Gates whether acceptance would be meaningful; may need bounded discovery | Security reviewer or discovery owner |
+| OQ-11 | What is the roadmap and release impact of the architectural change?       | Gates sequencing and release notes                              | Roadmap owner                   |
+
+None of these is answered by the scenario input. Each has a named role but no
+named person; the names are for the receiving organisation to fill.
+
+## Proposed terms-of-reference revision
+
+No terms-of-reference revision is asserted. The ToR skill requires proposed
+changes to be recorded without being presented as accepted. The sections that
+may need revision, pending OQ-4, are:
+
+- **Assumptions.** If the change falsifies an assumption, record the failure
+  consequence and expiry trigger, and update the evidence status.
+- **Hard constraints.** If the change conflicts with a constraint, record the
+  conflict and its resolution; do not relax the constraint to fit the
+  implementation.
+- **Success criteria.** If the change alters a measurable outcome, record a
+  proposed revision with its baseline and owner; do not substitute a cheaper
+  metric.
+- **Open questions.** Add any unresolved item that the design cannot decide.
+
+The corresponding decision authority is the ToR owner and, for scope changes,
+the sponsor. A discovery recommendation does not qualify as either.
+
+## Proposed roadmap and design handoff
+
+| Receiving artefact       | Input from this record                                   | State             |
+| ------------------------ | -------------------------------------------------------- | ----------------- |
+| Terms of reference       | Assumption and constraint impact questions               | Not started; `[OPEN]` |
+| Technical design         | `CR-ARCH-001`, `GAP-ARCH-001`, verification reopening    | Proposed          |
+| ADRs                     | `03-adr-candidate.md`                                    | Proposed          |
+| Roadmap                  | Release and sequencing impact, OQ-11                     | Not started       |
+| Executing ExecPlan       | Deviation entry, conformance basis, `BLOCKED` status     | Blocked           |
+| Hardening decision       | `GAP-HARDEN-001` and OQ-9 to OQ-10                       | Proposed only     |
+
+## Completion state
+
+This record has not reached a completion state, and it must not be reported as
+complete. The reasons are structural, not editorial:
+
+1. An upstream architectural change is unrecorded in the design and ADR set.
+   The reconciliation rule forbids `COMPLETE` while an upstream change or
+   deviation remains unrecorded or unaccepted.
+2. The hardening recommendation has no approving authority, so it cannot be
+   closed by the reconciler.
+3. The approving decision for IN-2 belongs to a human role that has not acted
+   in this session. Silence is not approval, and a drafted record is not an
+   accepted one.
+
+The correct current status is `BLOCKED` for the plan and `proposed` for the
+design change and ADR. A passing audit, a merged change, or a green gate would
+not change either status.
+
+## Left for a human or upstream artefact
+
+- Produce the approval record, or decide that the change is an unapproved
+  deviation that must be re-approved.
+- Accept, revise, or reject `CR-ARCH-001`.
+- Accept, revise, or reject the ADR candidate, and identify any superseded ADR.
+- Decide the hardening proposal: accept as a requirement, defer with an owner,
+  or reject with recorded residual risk.
+- Supply the authoritative revisions and identifiers so the link audit can run.
+- Accept or reject the plan's deviation, and only then allow the plan to leave
+  `BLOCKED`.
+- Update the roadmap and release notes for the accepted architecture.
+
+Until those actions occur, the artefacts in this directory remain proposals.
+They are self-contained enough for a reviewer to act on, and they deliberately
+stop short of claiming an authority they do not have.

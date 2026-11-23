@@ -1,0 +1,484 @@
+# Record representation reshape – technical design
+
+| Field | Value |
+| --- | --- |
+| Status | Draft v0.1, for review. Not accepted. Does not authorise implementation. |
+| Audience | Implementers of the source change, codec and migration; design reviewers; operators who perform cutover and rollback. |
+| Companion documents | `terms-of-reference.md` (v0.1 draft), `record-format-v2.md` (draft contract), `execplan.md` (DRAFT), `working-notes.md` (evidence basis). |
+| Date and version | 2026-11-21, v0.1. |
+| Approval state | No approval evidence. Decision authority is `TOR-OPEN-010`. |
+| Evidence state | Every repository-specific fact is `[OPEN]`; no repository, code, fixture or deployed record was inspected. |
+
+## Conformance basis
+
+| Artefact | Revision | State |
+| --- | --- | --- |
+| `terms-of-reference.md` | v0.1, SHA-256 `f68e0d0319f9f400e1732c04ab6a7a871c4a3d8c329b615af14e31cda965155b` | Draft, unapproved |
+| `record-format-v2.md` | draft, SHA-256 `6e3f3bcf7995f215b28b104b14f0b48aabcec0ac8decc1fedde5396ec0ca1f0a` | Draft, unvalidated |
+| `execplans` skill | `/home/leynos/.claude/skills/execplans/SKILL.md`, SHA-256 `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15` | Inspected 2026-11-21 |
+| ExecPlan template | `/home/leynos/.claude/skills/execplans/references/execplan-template.md`, SHA-256 `71df7bbbd4027160b2c35f421fb1360a356c0ec6d0a7a784c11f6784601acc0a` | Inspected 2026-11-21 |
+| Repository baseline | None accessed | Missing input; see `TDD-GAP-001` to `TDD-GAP-008` |
+| ADRs, roadmap, prior designs | None accessed | Missing input |
+| `execplan.md` | DRAFT, authored from this design | Not approved; its revision note records the upstream revisions it used |
+
+The installed `tech-design-doc` skill was inspected at SHA-256
+`ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6`; the
+`terms-of-reference-doc` skill at
+`105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4`.
+
+## 1. Problem and context
+
+The sponsor asks for a private API and its storage representation to be
+reshaped. A binary is already deployed and has written records that must remain
+readable. The design therefore has two coupled but distinct concerns: replacing
+an application-internal source interface, and preserving access to persisted
+data written by an earlier deployed version.
+
+These concerns take different mechanisms. The source interface is private, so
+all callers change together and no compatibility layer is warranted. The
+persisted records are deployed data, so they require an explicit reading and
+migration path even though the source API is not compatibility-bound. Treating
+the persisted obligation as a reason to preserve the old source interface would
+confuse two policies; treating the private source interface as a reason to
+ignore the records would lose data.
+
+Goals and non-goals are owned by the terms of reference:
+`TOR-GOAL-001` to `TOR-GOAL-003`, and `TOR-NONGOAL-001` to
+`TOR-NONGOAL-005`. This design does not widen them.
+
+Prior art was not inspected. No ecosystem survey was performed because no
+library or storage technology is being selected; the design depends on the
+repository's actual baseline, which is an intake gap rather than a research
+gap. Research is recorded as deliberately unperformed in `working-notes.md`.
+
+Design intent: the new source interface is the only source interface; the
+persisted format is explicitly versioned; legacy support exists only as a
+removable persisted-data decode path inside the storage codec. Compatibility
+with the old source interface is never a design objective.
+
+## 2. Scope, baseline, target and gaps
+
+### 2.1 Baseline
+
+`[OPEN]` No baseline was inspected. The following facts must be captured before
+any milestone beyond `EP-M0` can begin:
+
+- the private API's definition, visibility and all callers;
+- the current record type and its invariant;
+- the current on-disk or database representation, its writer, reader and
+  versioning (if any);
+- the storage backend and its documented atomicity and durability guarantees;
+- the deployed binary's version and the records it has written;
+- existing tests, fixtures and gate commands;
+- release tags and any evidence of external consumers;
+- backup, retention and deletion policy.
+
+A technology-version inventory alone would not be an architecture baseline.
+The baseline must cite actual symbols, formats and measurements at a recorded
+revision.
+
+### 2.2 Target
+
+| Element | Disposition | Notes |
+| --- | --- | --- |
+| Private source API `A1` | Removed, replaced by `A2` | Every caller updated in the same plateau; no alias or facade |
+| Record type | Changed | New shape; identity and logical value preserved |
+| Persisted format `F1` | Changed, with a read window | v1 bytes remain readable until migration and retention conditions are met |
+| Persisted format `F2` | Added | Versioned, canonical, checksummed |
+| v1 decode path | Added, temporary | Confined to the codec; removal condition in §6.6 |
+| v2 encode/decode | Added | Current write format |
+| Migration tool | Added, temporary | Offline, idempotent, resumable, reports only |
+| Cutover and rollback runbook | Added | Operational contract |
+| Storage backend | Retained | Replacing it is `TOR-NONGOAL-004` |
+
+### 2.3 Gap register
+
+| ID | Upstream | Baseline | Target | Missing capability | Disposition | Unblock condition | Verification |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `TDD-GAP-001` | `TOR-GOAL-001` | API and callers unknown | Exact symbol and caller map | Baseline inspection | Blocked pending intake | `EP-M0` records paths and symbols | Source map reviewed |
+| `TDD-GAP-002` | `TOR-GOAL-002` | v1 schema unknown | Total field mapping | Schema and meaning | Blocked pending intake | Approved mapping table | Mapping review and corpus |
+| `TDD-GAP-003` | `TOR-CONSTRAINT-002` | Privacy asserted only by brief | Evidence of no external consumer | Consumer and release audit | Blocked pending intake | `TOR-OPEN-002` resolved | Written evidence |
+| `TDD-GAP-004` | `TOR-ASSUMPTION-004` | Storage guarantees unknown | Documented atomic replace | Platform guarantee | Blocked pending intake | Cited documentation and probe | Probe transcript |
+| `TDD-GAP-005` | `TOR-SUCCESS-001` | No corpus | Representative v1 corpus | Deployed fixtures | Blocked pending intake | Corpus manifest | Provenance and coverage review |
+| `TDD-GAP-006` | `TOR-SUCCESS-005` | Retention unknown | Dated retention decision | Policy decision | Blocked pending intake | `TOR-OPEN-006` resolved | Decision record |
+| `TDD-GAP-007` | `TOR-SUCCESS-003` | Rollback untested | Rehearsed restore | Window and procedure | Blocked pending intake | `TOR-OPEN-001`, `TOR-OPEN-005` resolved | Rehearsal transcript |
+| `TDD-GAP-008` | `TOR-OPEN-008` | Volume and duration unknown | Measured migration budget | Measurement | Blocked pending intake | Store measurement | Report |
+
+A gap is not automatically roadmap work. These are discovery obligations that
+gate a later implementation plan; `EP-M0` owns them.
+
+### 2.4 Requirements
+
+| ID | Requirement | Upstream |
+| --- | --- | --- |
+| `TDD-REQ-001` | `A2` replaces `A1` and every caller changes in the same coherent plateau; no compatibility layer or second source interface remains | `TOR-GOAL-001`, `TOR-GOAL-003`, `TOR-CONSTRAINT-002`, `TOR-CONSTRAINT-003` |
+| `TDD-REQ-002` | The reader decodes every v1 record written by the deployed binary in the support window | `TOR-GOAL-002`, `TOR-CONSTRAINT-001` |
+| `TDD-REQ-003` | Every successful write produces v2; no code path creates v1 bytes | `TOR-GOAL-003`, `TOR-NONGOAL-003` |
+| `TDD-REQ-004` | Migration is idempotent, resumable and lossless, with per-record verification and a structured report | `TOR-SUCCESS-002`, `TOR-CONSTRAINT-004` |
+| `TDD-REQ-005` | Unknown versions, malformed records and checksum mismatches produce typed errors and never a default or absent result | `TOR-CONSTRAINT-004` |
+| `TDD-REQ-006` | Format handling is confined to the codec; the domain sees no bytes, format tags or legacy types | `TOR-GOAL-001`, `TOR-NONGOAL-001` |
+| `TDD-REQ-007` | A snapshot restore is rehearsed and documented, with the rollback point and post-snapshot loss stated | `TOR-SUCCESS-003` |
+| `TDD-REQ-008` | The v2 encoding is canonical within a codec version, or a recorded deviation defines the weaker idempotence check | `TOR-SUCCESS-002` |
+
+## 3. Compatibility assessment
+
+| Surface | Classification | Consumers | Commitment | Decision |
+| --- | --- | --- | --- | --- |
+| `A1`, the private source API | Private, application-internal; possibly declared `public` for module visibility | In-application callers only; external evidence `[OPEN]` | None established | No source-API compatibility machinery. `A2` replaces `A1`; all callers change together. No alias, facade, deprecated entrypoint, wrapper or dual interface. |
+| `F1`, records written by the deployed binary | Persisted deployed data | The new binary must read them; the deployed binary after rollback is `[OPEN]` | Readability per `TOR-CONSTRAINT-001` | Versioned dual-read during a bounded window, then an idempotent one-way migration with a verified snapshot and a restore-based rollback. |
+| Wire format or deployed peer | Unknown | Unknown | None established | Separate assessment if `TOR-OPEN-009` finds one. This design assumes none. |
+| Released 1.0+ external contract | None identified | Unknown | None established | If evidence contradicts `TOR-ASSUMPTION-001`, stop and reconcile upstream. Do not add a shim under this design. |
+
+Deploying a binary does not release its private source API. The persisted
+records are an obligation in their own right. The v1 decode path is not a
+source-API shim: it accepts stored bytes, returns the new logical type, is not
+reachable from domain code, exposes no legacy type, and has a removal
+condition. It exists to read data, not to preserve an interface.
+
+The compatibility question for this design therefore has two answers.
+Compatible with whom or what, for the source API: nobody; there is no external
+consumer, so the interface changes atomically. Compatible with whom or what,
+for the data: the records written by the deployed binary, which the new binary
+must read. The second answer does not authorise anything for the first.
+
+## 4. Architecture and components
+
+The change has four components and a linear flow: callers use the new domain
+API; the store delegates encoding and decoding to the codec; the offline
+migrator uses the same codec to rewrite deployed records; the runbook sequences
+quiesce, snapshot, migrate, verify, start and rollback.
+
+No diagram is used. The topology is four components with one direction of
+dependency, and the migration is a linear procedure; a diagram would restate
+the prose without exposing a relationship that the prose leaves unclear. No
+Mermaid validation is therefore required for this draft.
+
+| Component | Responsibility | Requirements | Contract | Failure modes |
+| --- | --- | --- | --- | --- |
+| `TDD-COMP-domain-api` | Define the reshaped record type and the store interface; contain no format types | `TDD-REQ-001`, `TDD-REQ-006` | `A2`; see §10 | Callers left unmigrated; legacy type leaking into the domain |
+| `TDD-COMP-codec` | Encode v2, decode v1 and v2, identify versions, enforce integrity and canonical form | `TDD-REQ-002`, `003`, `005`, `006` | `record-format-v2.md`; §5 | Unknown version accepted; corrupt record partially decoded; ambiguous detection |
+| `TDD-COMP-migrator` | Offline scan, preflight, rewrite, verify, report | `TDD-REQ-004`, `007` | §6; §10 | Partial rewrite; interrupted run; silent skip; non-idempotent encoding |
+| `TDD-COMP-runbook` | Quiesce, snapshot, verify, migrate, start, roll back, retain | `TDD-REQ-007` | §6.5; §8 | Unverified snapshot; lost post-snapshot writes; rollback after new-format writes |
+
+### 4.1 Design decisions
+
+- `TDD-DEC-001` No source-API compatibility layer. Rejected alternative: keep
+  `A1` as a deprecated facade over `A2`. Rejected because `A1` is private, has
+  no external consumer, and a facade would create a second source interface
+  whose removal has no owner or criterion.
+- `TDD-DEC-002` Persisted records are handled by a versioned codec and an
+  explicit migration. Rejected alternative: rely on a permanent dual reader.
+  Rejected because it makes the legacy representation permanent without a
+  retention decision and gives no criterion for removing the legacy decoder.
+- `TDD-DEC-003` The migration is offline, stop-the-world, snapshot-first and
+  one-way. Rejected alternatives are recorded in §6.7.
+- `TDD-DEC-004` The migrator uses a stateless full scan rather than a mutable
+  cursor. Rejected alternative: a progress cursor as the source of truth.
+  Rejected because the cursor can disagree with the store after a crash; a
+  rescan is slower but converges.
+- `TDD-DEC-005` Unknown and malformed records fail closed with typed errors.
+  Rejected alternative: best-effort decoding with defaults. Rejected because a
+  default can silently change a record's meaning and cannot be distinguished
+  from legitimate data.
+- `TDD-DEC-006` No formal prover or model checker is adopted. See §7.5.
+- `TDD-DEC-007` No Mermaid diagram is included; see the paragraph above.
+
+## 5. Persisted record contract
+
+The normative contract is `record-format-v2.md`
+(SHA-256 `6e3f3bcf7995f215b28b104b14f0b48aabcec0ac8decc1fedde5396ec0ca1f0a`).
+The design fixes these obligations:
+
+- `TDD-REQ-002` The reader decodes v1 records written by every deployed binary
+  in the support window, and v2 records written by the new binary.
+- `TDD-REQ-003` The writer emits only v2. No code path creates new v1 bytes.
+- `TDD-REQ-005` Version identification, integrity and structural validity are
+  checked before a payload is trusted. Unknown versions and malformed records
+  return typed errors and never a default value.
+- `TDD-REQ-006` Format handling is confined to the codec. The domain type has
+  no format version, magic, checksum or legacy field, and no legacy type is
+  exported to callers.
+- `TDD-REQ-008` The v2 encoder is canonical within a codec version, so
+  idempotence can be checked byte-for-byte. If canonicalization proves
+  infeasible at intake, the design is revised and byte-level idempotence is not
+  claimed.
+
+Version policy: current format `2`; read `1` and `2` during the window; reject
+`0`, unknown values and versions greater than `2`. Detection prefers a
+store-level generation marker when one exists; otherwise a disjoint magic and
+version field identify v2, and a complete valid v1 decode identifies v1. An
+ambiguous record is an error. The magic's disjointness must be checked against
+the corpus, not reasoned about alone.
+
+## 6. Migration design
+
+### 6.1 Preconditions
+
+1. The writer is stopped and the stop is verified. `TDD-AXIOM-003`.
+2. A snapshot exists and has been restored successfully in a scratch
+   environment.
+3. A representative v1 corpus has been captured with provenance.
+4. The field mapping is approved and total, or every drop is approved.
+5. The retention decision and the rollback point are recorded.
+6. Storage headroom covers temporary copies and the snapshot.
+7. The migration window is approved and long enough for the rehearsal's
+   measured duration plus contingency.
+
+### 6.2 Procedure
+
+1. Quiesce the deployed binary and confirm no writer remains.
+2. Take a snapshot. Record its identity, size and checksum.
+3. Restore the snapshot into scratch storage and verify that the baseline
+   binary can read a sample. Do not proceed on failure.
+4. Run the migrator in preflight mode over the live store. It decodes every
+   record, applies the mapping in memory and reports failures without writing.
+   Abort on any unreadable or unmappable record under the default policy.
+5. Run the migrator. It rescans, writes each v2 record to a temporary
+   location, flushes, atomically replaces the source, and verifies the result.
+6. Run a post-migration scan: no v1 bytes remain; the record count and logical
+   digest match the preflight; the report accounts for every record.
+7. Start the new binary and read a sample through the public store path.
+8. Retain the snapshot until the retention window ends or the rollback point
+   has passed and a forward-fix path is agreed.
+
+### 6.3 Idempotence and resume
+
+The migrator is a stateless scan. For each record it decodes the current bytes,
+validates them, and skips a record already in canonical v2. Any other record is
+mapped and rewritten. Re-running after a crash rescans from the beginning.
+Progress files are advisory and never decide what to migrate. A second
+completed run MUST produce byte-identical storage and report zero changes.
+
+### 6.4 Failure handling
+
+| Failure | Detection | Containment | Recovery | Residual risk |
+| --- | --- | --- | --- | --- |
+| Crash before replacement | Temporary file present, source unchanged | Source still readable | Rescan; temporary file replaced or removed | Orphan temporary files consume space |
+| Crash during replacement | Platform atomicity `TDD-AXIOM-001` | Record is wholly v1 or wholly v2 | Rescan | Platform does not provide the assumed guarantee |
+| Unknown version | Typed error | Record not rewritten | Stop; investigate the producer | A future writer has written into this store |
+| Malformed or corrupt record | Structural or checksum error | Record not rewritten | Stop under the default policy; escalate | Corpus did not cover the class |
+| Mapping error | Typed error | Record remains v1 | Stop; resolve the mapping | Semantic change not approved |
+| Disk full | Write error | Current record untouched; prior ones migrated | Free space; rescan | Mixed store remains, which is a supported intermediate state |
+| Concurrent writer | Lock or precondition failure | Migration aborts | Quiesce and retry | Unverified quiesce |
+| Snapshot cannot restore | Rehearsal failure | No writes performed | Stop; no migration | Backup system is not fit for purpose |
+| Rollback after new writes | Runbook state | Restoring loses post-snapshot writes | Decide the rollback point before cutover; otherwise forward-fix | Data written after the snapshot |
+
+### 6.5 Rollback
+
+Rollback is restore-based, not dual-read-based. Stop the new binary, restore
+the snapshot, start the deployed binary, and verify that a sample of records
+reads correctly. Any record written after the snapshot is lost by this
+procedure. The runbook must therefore define the rollback point as the moment
+before the new binary first accepts a write; after that point the supported
+recovery is a forward fix. If `TOR-OPEN-001` requires the deployed binary to
+read new-format records, this design is insufficient and must be revised before
+implementation.
+
+### 6.6 Legacy decode path removal
+
+The v1 decoder is removed when every live record is v2 and the retention
+window for pre-migration snapshots has ended or those snapshots have been
+converted. Removal is a separate change with its own source search, corpus
+retirement and gate run. It MUST NOT be bundled into the migration milestone,
+because a failed removal must not put the data migration at risk.
+
+### 6.7 Rejected migration alternatives
+
+- **Lazy upgrade on read.** Reads would acquire write duties, read-only
+  replicas could not complete migration, completion would be unobservable, and
+  a crash would leave an indefinite mixed state. Rejected.
+- **Dual write to v1 and v2.** This needs both formats writable, creates a
+  reconciliation problem, and preserves the old representation. It is justified
+  only if the deployed binary must keep writing concurrently, which
+  `TOR-ASSUMPTION-002` denies. Rejected unless that assumption fails.
+- **Permanent dual read.** This preserves the legacy representation without a
+  retention decision and violates `TOR-NONGOAL-003`. Rejected.
+- **Big-bang rewrite without a snapshot.** This has no rollback and violates
+  `TOR-CONSTRAINT-004`. Rejected.
+
+## 7. Verification
+
+### 7.1 Abstract model
+
+A store `S` maps record IDs to stored bytes. Each bytes value is either a v1
+record or a v2 record. `decode_any(b)` returns a logical record or a typed
+error. `M` is the approved mapping from the v1 logical shape to the v2 logical
+shape. `encode_v2(r)` returns canonical v2 bytes. `migrate_all(S)` returns a new
+store and a report. `crash(S, p)` models process death at point `p`.
+`restore(snapshot)` returns the snapshotted store.
+
+Preconditions: the store is quiescent; every live record is structurally valid
+or the default abort policy stops the run. The expected result of migration is
+a store containing only canonical v2 bytes, with the same domain and the same
+mapped logical values. A malformed record violates the preflight precondition
+and is handled by the failure policy in §6.4, not by the migration relation.
+
+### 7.2 Invariants and lemmas
+
+| ID | Statement | Establishes |
+| --- | --- | --- |
+| `TDD-INV-001` | For every fixture `b` in the captured v1 corpus, `decode_any(b)` equals the recorded expected value. | `TOR-SUCCESS-001`, `TDD-REQ-002` |
+| `TDD-INV-002` | For every record in the store domain, after migration, `decode_any(S'[id])` equals `M(decode_any(S[id]))`. | `TOR-GOAL-002`, `TDD-REQ-004` |
+| `TDD-INV-003` | Migration preserves the set of record IDs and the multiset of mapped logical values; it adds and deletes nothing. | `TOR-CONSTRAINT-004`, `TOR-SUCCESS-002` |
+| `TDD-INV-004` | `migrate_all(migrate_all(S))` is byte-identical to `migrate_all(S)`, and the second report records zero changes. | `TOR-SUCCESS-002`, `TDD-REQ-004` |
+| `TDD-INV-005` | For every crash point `p`, `migrate_all(crash(migrate_all(S), p))` equals `migrate_all(S)` in bytes. | Resumability, `TDD-REQ-004` |
+| `TDD-INV-006` | An unknown version, missing version, truncated envelope or checksum mismatch returns a typed error, never a value or a default. | `TDD-REQ-005` |
+| `TDD-INV-007` | Every successful write after `EP-M2` produces v2 bytes; no code path creates v1 bytes. | `TDD-REQ-003` |
+| `TDD-INV-008` | The source tree contains no reference to `A1` and no alias, facade, deprecated entrypoint or dual source interface. | `TOR-SUCCESS-004`, `TDD-REQ-001` |
+| `TDD-INV-009` | Restoring the snapshot yields a store in which every sampled record decodes under the baseline binary. | `TOR-SUCCESS-003`, `TDD-REQ-007` |
+
+Lemmas used in the reasoning:
+
+- `TDD-LEMMA-001` The v1 and v2 decoders are independent code paths; neither
+  delegates its own format to the other. This lets corpus expectations act as
+  an oracle rather than a self-comparison.
+- `TDD-LEMMA-002` If `decode_v1` is total on the corpus, `M` is total, and
+  `decode_v2(encode_v2(r)) = r`, then the migration composition preserves the
+  logical value. This is a reasoning step, not a proof of the implementation.
+- `TDD-LEMMA-003` Under `TDD-AXIOM-001`, any crash state contains, per
+  record, either the original v1 bytes or complete v2 bytes.
+- `TDD-LEMMA-004` A stateless scan visits every record; skipping occurs only
+  after successful v2 validation. This connects scan coverage to
+  `TDD-INV-003` and `TDD-INV-005`.
+
+### 7.3 Axioms
+
+| ID | Assumption | Source or boundary |
+| --- | --- | --- |
+| `TDD-AXIOM-001` | The storage platform replaces one record atomically. | Platform documentation at intake (`TOR-OPEN-004`) |
+| `TDD-AXIOM-002` | Flush and durability operations behave as the platform documents. | Platform documentation; repository-owned calls verified against it |
+| `TDD-AXIOM-003` | No writer runs during snapshot and migration. | Operational procedure; lock or quiesce check |
+| `TDD-AXIOM-004` | The deployed binary or a pinned baseline build can be run faithfully. | Operator-provided artefact; version recorded |
+| `TDD-AXIOM-005` | The captured corpus represents the deployed record classes. | Corpus manifest; not independently provable |
+| `TDD-AXIOM-006` | The chosen serialization library implements its documented canonical form. | Third-party contract; repository configuration verified against it |
+
+Third-party internals are not verified. Repository-owned configuration and
+error handling around them are.
+
+### 7.4 Methods per obligation
+
+| Obligation | Method | Rationale | Domain | Artefact and evidence | Non-vacuity |
+| --- | --- | --- | --- | --- | --- |
+| `TDD-INV-001` | Table-driven corpus test plus property test over generated v1 fixtures | The corpus is the direct evidence of deployed readability; generated cases cover the field classes | Every captured corpus record; generated values per optional, absent, boundary and unicode class | `tests/codec/v1_corpus.*`, expected-value table; red before the decoder, green after | Corpus contains at least one witness per class; a mutated byte must fail with a typed error or a wrong-value assertion; a corpus of only empty records is a verification failure |
+| `TDD-INV-002` | Property test over generated stores and the corpus, oracle `M(decode_v1(b))` | Preservation is a value relation, not a byte relation; the oracle is independent of the v2 encoder | Stores of 0, 1 and many records; all mapped field classes | `tests/migrate/preserves_value.*`; seeded generator and saved regression file | At least one record per mapping row; a seeded mapper that swaps two fields must be rejected |
+| `TDD-INV-003` | Multiset digest before and after; count of IDs | Detects deletion, addition and value drift | Generated stores plus corpus | `tests/migrate/no_loss.*`; before/after digest in report | A store with an empty-optional record to detect collapse; a migrator that drops one ID must fail |
+| `TDD-INV-004` | Property test over two consecutive migrations; byte comparison | Canonical encoding makes byte idempotence observable | Generated stores and corpus | `tests/migrate/idempotent.*`; report count on second run | A non-canonical encoder or a migrator that rewrites to different bytes must fail; a zero-record store is not sufficient |
+| `TDD-INV-005` | Crash-injection state-machine test at each named step | Models the actual interruption points; exhaustive within the named steps | Crash before write, after temp write, before flush, before replace, after replace, before report | `tests/migrate/resume.*`; final-state comparison | Each crash point must be reachable; a migrator that leaves a truncated destination must fail |
+| `TDD-INV-006` | Parameterized matrix of versions and malformations | Finite, explicit partition; exhaustive enumeration is practical | Versions 0, 1, 2, 3, `u16::MAX`; missing field; short header; bad checksum; ambiguous prefix | `tests/codec/fail_closed.*` | Every case has a witness; a decoder that defaults unknown versions to v1 must fail |
+| `TDD-INV-007` | Codec-level property test and store inspection | The write path has a single observable output | Every generated logical record | `tests/codec/writes_v2.*` | At least one write witness; any v1 output fails |
+| `TDD-INV-008` | Source search plus build; red before `EP-M1` | The absence of a symbol is directly observable | Whole source tree, excluding generated and vendor trees | `rg` command and compiler output; review checklist | Before the change the search finds `A1`; after it finds zero. A scratch reintroduction of an alias must be caught |
+| `TDD-INV-009` | Rehearsal transcript with commands and output | Restore is an operational property, not an in-process one | One scratch environment; a sample across field classes | Runbook rehearsal log | At least one rewritten record restored; a restore of only untouched records is not sufficient |
+
+### 7.5 Formal verification decision
+
+No theorem prover or model checker is adopted. The per-record state space is
+small, and the material risks are I/O atomicity, field mapping and corpus
+representativeness, which a prover over an abstract model would not settle. A
+bounded model check of the scan/resume state machine could strengthen
+`TDD-INV-005`; it would still leave the platform and mapping axioms untouched.
+The property tests with crash injection are proportionate. This decision is
+recorded as `TDD-DEC-006` and must be revisited if the migration becomes
+concurrent or the storage guarantee is weaker than assumed.
+
+### 7.6 What the verification cannot establish
+
+The suite cannot detect a semantic misinterpretation shared by the v1 and v2
+decoders and the mapping review. It cannot prove the corpus represents records
+that were never captured. It cannot prove the storage platform's documented
+atomicity. It cannot catch an operator restoring the wrong snapshot. These
+limits are recorded rather than hidden.
+
+## 8. Operations and rollout
+
+- **Observability.** The migrator emits a structured report: scanned, migrated,
+  already current, skipped, failed, bytes written, duration, and record IDs for
+  every failure. It never logs payloads. The report is advisory; the store scan
+  is authoritative.
+- **Cutover.** Follow §6.2. The rollback point is the moment before the new
+  binary first accepts a write.
+- **Rollback.** Follow §6.5. A rollback after the rollback point is a data-loss
+  event and requires incident handling, not a silent restore.
+- **Retention.** Keep the snapshot until the approved window ends. Deleting it
+  earlier requires recorded approval.
+- **Capacity.** The migration needs headroom for one temporary copy per record
+  plus the snapshot. If headroom is insufficient, migrate in verified batches
+  while keeping the same invariants; do not relax atomicity.
+- **Deployment units.** The codec and migrator ship with the new binary or as a
+  pinned tool built from the same revision. A migrator from a different
+  revision is not authorised.
+
+## 9. Security and compliance
+
+Records and snapshots may contain personal or confidential data. The snapshot
+inherits the store's access controls and must not be copied to a less protected
+location. The migration report contains record IDs and error classes, not
+values. The checksum detects accidental corruption and is not an authentication
+control. If retention or deletion obligations apply to the snapshot, the
+retention decision must reconcile them; this is `TOR-OPEN-006` and may require
+compliance input. No new network surface is introduced.
+
+## 10. Interfaces and dependencies
+
+The new source interface has these obligations, independent of language:
+
+```plaintext
+RecordStore:
+  get(record_id) -> Result<Option<Record>, StoreError>
+  put(Record) -> Result<(), StoreError>
+  list_ids() -> Result<Vec<RecordId>, StoreError>
+
+Record:
+  record_id: RecordId        // stable across formats
+  <reshaped fields>          // no format version, magic or checksum
+
+Codec (internal to the store):
+  decode_any(bytes) -> Result<Record, CodecError>
+  encode_v2(Record) -> Result<bytes, CodecError>
+
+Migrator CLI:
+  migrate --store <path> --snapshot <id> --report <path> [--dry-run]
+```
+
+Ownership: the codec owns version dispatch and both decoders; the domain never
+sees bytes or format tags; the migrator uses the codec and never reimplements
+it. No dependency beyond the existing storage and serialization stack is
+authorised. A new runtime dependency, or a new external interface, triggers
+escalation. The baseline binary and the corpus are internal dependencies, not
+external services.
+
+Exact type and function names are `[OPEN]` until `EP-M0` records the actual
+repository symbols. The shape above is a contract, not a claim about existing
+code.
+
+## 11. Handoff
+
+Selected identifiers for the ExecPlan: `TOR-GOAL-001` to `TOR-GOAL-003`;
+`TOR-CONSTRAINT-001` to `TOR-CONSTRAINT-004`; `TDD-REQ-001` to `TDD-REQ-008`;
+`TDD-COMP-domain-api`, `TDD-COMP-codec`, `TDD-COMP-migrator`,
+`TDD-COMP-runbook`; `TDD-GAP-001` to `TDD-GAP-008`; `TDD-INV-001` to
+`TDD-INV-009`; `TDD-LEMMA-001` to `TDD-LEMMA-004`; `TDD-AXIOM-001` to
+`TDD-AXIOM-006`.
+
+Compatibility classification: source API, no compatibility machinery, atomic
+caller update; persisted records, deployed-data migration with a bounded v1
+read window; wire format, none identified; released external contract, none
+identified.
+
+Acceptance boundaries: the design is ready for an implementation plan only
+after `EP-M0` closes `TDD-GAP-001` to `TDD-GAP-008`. It is not accepted, not
+implemented and not verified. Design acceptance, if granted later, does not
+bypass the ExecPlan's approval gate. The ExecPlan owns execution tolerances,
+commands, milestones and acceptance evidence; this design owns the invariants
+and compatibility classification it must inherit.
+
+## 12. References
+
+- `terms-of-reference.md`, draft v0.1, SHA-256
+  `f68e0d0319f9f400e1732c04ab6a7a871c4a3d8c329b615af14e31cda965155b`.
+- `record-format-v2.md`, draft, SHA-256
+  `6e3f3bcf7995f215b28b104b14f0b48aabcec0ac8decc1fedde5396ec0ca1f0a`.
+- Installed `tech-design-doc` skill, SHA-256
+  `ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6`.
+- Installed `terms-of-reference-doc` skill, SHA-256
+  `105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4`.
+- Installed `execplans` skill and template, hashes in the conformance basis.

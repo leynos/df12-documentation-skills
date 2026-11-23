@@ -171,9 +171,10 @@ For non-goals:
 - "What user segments are out of scope?"
 - "What problem in this domain are you *not* solving?"
 
-A goals list of fifteen items with a non-goals list of two is a smell. Force
-the user to either cut goals or expand non-goals until the lists are roughly
-comparable.
+A goals list of fifteen items with a non-goals list of two is a smell, but the
+count is not the test. Ask the user to cut goals or to name exclusions a
+reasonable reader would assume are in scope; never invent non-goals to make the
+lists comparable.
 
 ### Success criteria
 

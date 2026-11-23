@@ -1,0 +1,291 @@
+# Record representation reshape – terms of reference
+
+| Field | Value |
+| --- | --- |
+| Status | Draft v0.1 (provisional, unapproved). Problem-space only; does not authorise design acceptance or implementation. |
+| Audience | Maintainers who own the private API, operators who run the deployed binary, design reviewers, and the sponsor who requested the reshape. |
+| Companion documents | `working-notes.md` (evidence basis), `tech-design.md` (downstream draft), `record-format-v2.md` (downstream draft), `execplan.md` (downstream DRAFT). |
+| Date and version | 2026-11-21, v0.1. |
+| Authority and evidence basis | Sponsor brief supplied 2026-11-21. No approval evidence. No repository artefacts inspected, so prior versions and implementation evidence are unavailable. Policy basis: the installed `terms-of-reference-doc`, `tech-design-doc` and `execplans` skills, inspected 2026-11-21; paths and hashes in `working-notes.md`. |
+| Approval state | Not submitted for approval. `[KNOWN]` means supported within the cited scope, not approved or immutable. |
+
+## 1. Background and motivation
+
+`[KNOWN]` The sponsor has requested that the private API and the storage
+representation be reshaped. Source: the supplied brief.
+
+`[KNOWN]` A binary has already been deployed and has written records that must
+remain readable. Source: the supplied brief. The brief does not name the reader
+or the period, so the resulting obligation is recorded as
+`TOR-CONSTRAINT-001` with an open scope.
+
+`[OPEN]` Why the reshape is requested now, and what deficiency the current
+representation causes. Resolution: maintainer interview (`TOR-OPEN-011`). A
+change request is evidence of intent, not evidence that the current
+representation is defective.
+
+Deployment of a binary creates an obligation to read the data it wrote. It does
+not convert a private source interface into a released external contract. This
+distinction governs the whole document: the source API and the persisted
+records are assessed separately.
+
+## 2. Domain
+
+The work belongs to internal application evolution and persisted-format
+migration. Established conventions in that field include explicit format
+versioning, a migration step before decommissioning an old format, backup and
+restore before destructive rewrites, fail-closed handling of unknown data, and
+a rehearsed rollback. These conventions inform the constraints below; they do
+not select an implementation.
+
+Prior art was not inspected. Relevant prior art would be the existing storage
+codec, its tests, fixtures written by the deployed binary, prior migrations and
+any ADR governing persistence. Their absence is an intake gap, not evidence
+that they do not exist.
+
+`[OPEN]` Whether the records carry regulatory, contractual or audit retention
+obligations beyond remaining readable. If they do, the retention window and
+rollback requirements may be externally imposed rather than discretionary.
+
+## 3. Market context
+
+Not applicable. This is an internal representation change, not a product
+entering a market. No competitor analysis is invented.
+
+The alternatives that occupy the space are: leave the representation unchanged;
+change the code without migrating stored records; or change the code and
+migrate the records. The second alternative fails `TOR-CONSTRAINT-001`. The
+first preserves readability but leaves the maintainability deficiency
+unaddressed. The third is the only alternative consistent with both the request
+and the readability constraint. Choosing among migration techniques belongs in
+the technical design.
+
+## 4. Users and stakeholders
+
+| Role | Context | Cares about | Dislikes | Current alternative | Concern and design question | Evidence needed | Decision rights |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Maintainer / developer (primary) | Works in the application code and calls the private API | A coherent type model, one source interface, no legacy baggage | Aliases, facades, dual interfaces, unexplained compatibility layers | Leave the representation unchanged | Can every caller change together without a shim? | Source search and build showing no old-API references | Technical approval; extent unknown (`TOR-OPEN-010`) |
+| Operator (secondary) | Deploys, upgrades and rolls back the binary | Predictable cutover, observable migration, a tested rollback | Irreversible steps without a verified backup | Redeploy the previous binary | What happens if migration or the application crashes? | Rehearsal transcript, migration report, restore evidence | Release and rollback authority; extent unknown |
+| Data owner (affected party, non-user) | Owns the records but does not operate the system | Records are not lost, truncated or misinterpreted | Silent data loss or silent field drops | None; they depend on the application | Can records written before the upgrade still be read afterwards? | Corpus test results and before/after migration digest | None identified; represented by the sponsor |
+| Sponsor (stakeholder) | Requested the reshape and funds the work | The change delivers the intended representation without unacceptable data risk | Scope growth and unbounded migration work | Leave the representation unchanged | What risk and cost are acceptable? | This document, the design and the plan | Approval authority; identity unknown |
+
+Non-users: external consumers of the private API. `[ASSUMED]` none exist
+(`TOR-ASSUMPTION-001`); if one exists, this document's compatibility
+classification is wrong and must be revised before design continues. Other
+teams or repositories that read the same records are unknown
+(`TOR-OPEN-009`).
+
+## 5. Job to be done
+
+When the internal representation no longer fits the domain, the maintainer
+wants to replace the private API and the persisted representation together, so
+that the codebase stays coherent without making records written by the deployed
+binary unreadable.
+
+The functional dimension is the whole job. The emotional dimension is
+confidence that a failed cutover is recoverable; it is not a separate job. The
+social dimension does not apply to an internal change.
+
+Competing alternatives are the status quo, a code-only change that abandons old
+records, and a migration. The status quo leaves the job undone; the code-only
+change violates the readability constraint.
+
+### Problem-space scenario
+
+Trigger: the representation change is approved. Actors: the maintainer who
+changes the code, the operator who performs the cutover, the deployed binary
+that wrote the existing records, and the new binary. Preconditions: a
+restorable snapshot, a representative corpus of deployed records, and an
+exclusive writer during migration. Normal flow: the operator quiesces the
+writer, takes and verifies a snapshot, runs the migration, checks the report,
+starts the new binary, and confirms that records read back with their previous
+logical values. Important exceptional flows: migration is interrupted; a
+record is malformed or has an unknown version; the snapshot cannot be restored;
+rollback is required after a new-format record has been written. Observable
+outcome: every pre-existing record is readable with the same logical value, and
+the store contains only the current format when the window closes. Measure: the
+corpus pass rate, the before/after digest, and the restore rehearsal result.
+
+This scenario tests the job statement. It does not prescribe the migration
+mechanism.
+
+## 6. Scope
+
+### 6.1 Goals
+
+- `TOR-GOAL-001` Replace the private API with the reshaped interface and update
+  every in-application caller in the same coherent change.
+- `TOR-GOAL-002` Keep every record written by the deployed binary readable,
+  with its logical value preserved, through and after the change.
+- `TOR-GOAL-003` Leave the codebase with one source interface and one current
+  storage representation once the transition required to make existing records
+  readable has completed.
+
+Each goal is falsifiable by a source search, a corpus test, or a store
+inspection.
+
+### 6.2 Non-goals
+
+- `TOR-NONGOAL-001` Preserving the old private API for any caller. No alias,
+  facade, deprecated entrypoint, wrapper, adapter or shim. Callers are updated
+  together. There is no external consumer to redirect; if one is found, this
+  non-goal must be revisited explicitly.
+- `TOR-NONGOAL-002` Rewriting record semantics. The change is structural unless
+  a semantic change is separately approved (`TOR-OPEN-003`).
+- `TOR-NONGOAL-003` Permanent support for two stored representations. Support
+  for reading an earlier representation may exist only for a defined period
+  with a removal condition.
+- `TOR-NONGOAL-004` Replacing the storage product or backend as part of this
+  work. If the current backend cannot satisfy the migration requirements, that
+  is a separate change with its own terms of reference.
+- `TOR-NONGOAL-005` Building an external migration service or supporting
+  arbitrary old binaries indefinitely. Users needing pre-migration archives
+  beyond the retention window must have those archives converted while the
+  earlier representation is still readable.
+
+## 7. Success criteria
+
+| ID | Criterion | Baseline | Target | Measurement and evidence | Owner |
+| --- | --- | --- | --- | --- | --- |
+| `TOR-SUCCESS-001` | Records written by the deployed binary decode correctly under the new binary | Corpus size and provenance `[OPEN]` | 100% of the corpus, including boundary classes | Table-driven corpus test with expected logical values; test output retained | Unknown |
+| `TOR-SUCCESS-002` | Migration preserves every record's identity and logical value, deleting and adding none | Live store state at cutover `[OPEN]` | Exact multiset equality; a second run changes nothing | Before/after digest, idempotence test, migration report | Unknown |
+| `TOR-SUCCESS-003` | Rollback restores a state the deployed binary can read | Rollback untested `[OPEN]` | Restore rehearsal succeeds for every sampled record; time within the window `[OPEN]` | Rehearsal transcript with commands and output | Operator |
+| `TOR-SUCCESS-004` | No old source interface and no compatibility machinery remain | Old API present | Zero references; no alias, facade or dual interface | Source search plus build and review | Maintainer |
+| `TOR-SUCCESS-005` | Support for reading the earlier representation is either removed under the agreed condition or explicitly retained with an end date | Not applicable | Removal condition recorded and met, or a dated retention decision | Design and operational record; removal checklist | Unknown |
+
+Operational success requires the migration to finish within the approved window
+without unplanned downtime. Strategic success does not apply to an internal
+change. Implementation acceptance is separate from later operational outcome;
+no adoption metric exists.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` Records written by the deployed binary must remain
+  readable. Source: the supplied brief. The reader, scope and duration are
+  unresolved (`TOR-OPEN-001`). This is a persisted-data obligation.
+- `TOR-CONSTRAINT-002` The API is private. This document creates no source-API
+  compatibility requirement and authorises no compatibility machinery for it.
+  Every in-application caller changes together. Source: the brief's description
+  of the API as private, and the df12 policy in the installed
+  `terms-of-reference-doc` skill
+  (`105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4`).
+  Even a declaration marked `public` is covered when it is application-internal.
+- `TOR-CONSTRAINT-003` No compatibility theatre: no aliases, facades,
+  deprecated entrypoints, dual source interfaces, wrappers, migration wrappers
+  or temporary shims whose purpose is to keep the old source interface alive.
+  A compatibility layer must name the real consumer or commitment it serves.
+- `TOR-CONSTRAINT-004` No record may be destroyed, truncated or silently have a
+  field dropped. Source: `[ASSUMED]` data-integrity requirement implied by the
+  readability constraint; failure consequence: irreversible data loss. If the
+  sponsor explicitly accepts loss for named fields, this constraint must be
+  revised before migration, not after.
+
+### 8.2 Assumptions
+
+| ID | Assumption | Consequence if false | Verification route | Expiry trigger |
+| --- | --- | --- | --- | --- |
+| `TOR-ASSUMPTION-001` | The API has no external consumer and no released external contract | The compatibility classification is wrong; work stops for a sourced reassessment and possibly a deliberate migration commitment | Evidence of consumers, published packages, ABI use and release lineage (`TOR-OPEN-002`) | Any consumer, package or contract discovered |
+| `TOR-ASSUMPTION-002` | A single writer can be stopped for cutover | Snapshot-and-rewrite is unsafe; the design must change to a concurrency-safe strategy or stop | Confirmed maintenance window and writer inventory (`TOR-OPEN-005`, `TOR-OPEN-009`) | Fleet or deployment model changes |
+| `TOR-ASSUMPTION-003` | The reshape is structural and preserves record semantics | Value equality is the wrong success test; field mapping needs product decisions and may not be lossless | Confirmed field mapping (`TOR-OPEN-003`) | A semantic change is approved |
+| `TOR-ASSUMPTION-004` | The storage medium supports atomic replacement of one record, or an equivalent transaction | A crash can tear a record; the migration needs a journal or two-phase design | Platform documentation and a focused probe (`TOR-OPEN-004`) | Backend change |
+| `TOR-ASSUMPTION-005` | A representative corpus of deployed records can be captured | Readability cannot be demonstrated; `TOR-SUCCESS-001` is undischargeable | Corpus manifest and provenance (`TOR-OPEN-007`) | Corpus becomes unavailable |
+| `TOR-ASSUMPTION-006` | A snapshot can be taken and restored within the window | No rollback path exists after the first rewrite; migration is one-way | Rehearsed restore (`TOR-SUCCESS-003`) | Backup policy changes |
+
+### 8.3 Dependencies
+
+- The deployed binary or a pinned baseline build is needed to capture fixtures
+  and rehearse rollback. Provider and consumer are internal; the unblock
+  condition is a captured corpus with recorded provenance.
+- The storage platform's documented atomicity and durability guarantees are
+  needed before the migration mechanism is fixed. The unblock condition is a
+  cited version of that documentation and a focused probe.
+- No external service dependency was identified. If one exists, it needs a
+  provider, consumer, version, evidence and unblock condition before it gates a
+  milestone.
+
+### 8.4 Compatibility classification
+
+| Surface | Classification | Evidence | Decision |
+| --- | --- | --- | --- |
+| The reshaped API | Private, application-internal | Brief; consumer evidence `[OPEN]` | No source-API compatibility requirement; all callers change together; no shim |
+| Records written by the deployed binary | Persisted deployed data | Brief | Readability obligation to be met by an explicit data migration, assessed separately from the source API |
+| Wire format or deployed peer | Unknown | Not mentioned in the brief | Separate assessment if found (`TOR-OPEN-009`); no assumption of compatibility |
+| Released 1.0+ external contract | None identified | `[OPEN]` | If one exists, record the conflict and stop; do not convert this document into a compatibility authorisation |
+
+## 9. Open questions
+
+| ID | Question | What it gates | Resolution criteria | Owner | Path |
+| --- | --- | --- | --- | --- | --- |
+| `TOR-OPEN-001` | Which reader must remain able to read which records, for how long? | Rollback design, migration direction, retention of readability support | A named reader set and retention period, with evidence | Sponsor / operator | Interview |
+| `TOR-OPEN-002` | Is the API truly private, with no external consumer or released contract? | Compatibility classification; whether this ToR is valid | Named consumers, package/ABI evidence, release tags | Maintainer | Repository and release audit |
+| `TOR-OPEN-003` | Is the reshape structural or semantic? | Lossless mapping; success measure | A field-level mapping approved by the data owner | Maintainer / data owner | Mapping review |
+| `TOR-OPEN-004` | What storage backend and atomicity guarantees apply? | Migration mechanism and axioms | Cited platform documentation plus probe | Operator / maintainer | Research and probe |
+| `TOR-OPEN-005` | Is an exclusive-writer maintenance window available? | Stop-the-world versus concurrent design | Confirmed window and quiesce procedure | Operator | Operations decision |
+| `TOR-OPEN-006` | How long must old records and backups remain readable? | Retention of readability support; archive conversion | A dated retention decision | Sponsor / compliance | Policy decision |
+| `TOR-OPEN-007` | Can a representative corpus of deployed records be captured? | Readability evidence | Corpus manifest with provenance and coverage classes | Operator / maintainer | Data capture |
+| `TOR-OPEN-008` | What are the record count, maximum size and acceptable migration duration? | Resumability, batching, window sizing | Measured values | Operator | Measurement |
+| `TOR-OPEN-009` | Do other deployed readers, writers or peers share the records? | Concurrency, wire-format obligation | A complete reader/writer inventory | Maintainer / operator | Deployment audit |
+| `TOR-OPEN-010` | Who approves the design and plan, and who accepts residual risk? | Readiness and approval | Named authorities | Sponsor | Decision |
+| `TOR-OPEN-011` | Why is the reshape requested now? | Motivation and priority | A stated deficiency and its consequence | Sponsor / maintainer | Interview |
+
+A terms of reference with no open questions is either mature or
+under-interrogated. This one is deliberately explicit about what it does not
+know.
+
+## 10. Handoff and feedback
+
+Revision: v0.1, 2026-11-21. Approval state: draft; not accepted. Readiness:
+ready for design drafting with open questions, and not ready for implementation
+planning until `TOR-OPEN-001` through `TOR-OPEN-005` and `TOR-OPEN-007` close.
+The downstream design and plan drafts exist, but their existence does not
+advance this document's approval state.
+
+Handoff identifiers: `TOR-GOAL-001` to `TOR-GOAL-003`, `TOR-CONSTRAINT-001` to
+`TOR-CONSTRAINT-004`, `TOR-SUCCESS-001` to `TOR-SUCCESS-005`,
+`TOR-ASSUMPTION-001` to `TOR-ASSUMPTION-006`, and `TOR-OPEN-001` to
+`TOR-OPEN-011`.
+
+Stakeholder concerns to carry forward: coherent source code without a shim;
+verified readability of deployed records; recoverable cutover; no silent data
+loss.
+
+Feedback route: if the design shows that the readability obligation cannot be
+met under a one-way migration, or that the API has an external consumer, return
+to §8 and §9. Do not silently narrow `TOR-CONSTRAINT-001` or broaden the
+compatibility classification. Reconcile the affected design and plan links
+before claiming the change complete.
+
+Proposed `context.md` terms: private API, deployed record, readability,
+transition period, rollback. No `context.md` was available, so these are
+proposals, not settled vocabulary.
+
+ADR candidates, not written here: the chosen transition and rollback strategy
+once accepted, and the decision that ends readability of the earlier
+representation. Both are hard to reverse after records are rewritten.
+
+## Appendices
+
+### References
+
+- Supplied brief, 2026-11-21 (quoted in `working-notes.md`).
+- Installed `terms-of-reference-doc` skill, SHA-256
+  `105046d0309f13a6a5e3c5bdf6d75be73f70adeee0aff6ff93d6f2464ee956d4`.
+- Installed `tech-design-doc` skill, SHA-256
+  `ec27fe7f5770c3297ea359247d472f7988b9f1699f7edfe119bb6671b71cf0a6`.
+- Installed `execplans` skill, SHA-256
+  `78a6d11c619aaa6416a8413f47438f72459435d111083d44ab4b8cad11164d15`.
+
+### Glossary
+
+- **Private API** – an application-internal source interface. It may be
+  declared `public` for module visibility; it is not a released external
+  contract.
+- **Deployed record** – a persisted record written by a binary that has run
+  outside the development environment.
+- **Readability** – the ability of a named reader to obtain a record's logical
+  value from its stored representation.
+- **Transition period** – the bounded period during which records in the
+  earlier representation must remain readable.
+- **Rollback** – restoring a prior state that the deployed binary can read.

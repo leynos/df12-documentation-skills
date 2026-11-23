@@ -1,0 +1,224 @@
+# Internal method signature replacement – terms of reference
+
+Status: v0.1 draft. The provisional sketch has not been confirmed with the
+sponsor; elicitation is deferred and the remaining questions are recorded in
+§7.
+
+Audience: the maintainers of the three affected modules, the person who
+approves the change, and the implementer who will execute the ExecPlan.
+
+Companion documents: `02-technical-design.md` and `03-execplan.md`, in this
+working directory. They are drafts derived from this document, not approved
+inputs.
+
+Date and version: 2026-11-19, draft 1.
+
+Authority and evidence basis: the only input is the change request quoted in
+§1. The authoring session was restricted to the installed documentation
+skills and could not inspect the application repository. Phase 0 prior-art
+discovery (README, `docs/terms-of-reference.md`, `docs/context.md`, ADRs,
+designs, roadmap, ExecPlans, release tags) therefore did not run. Facts about
+the repository are `[ASSUMED]` from the brief or `[OPEN]`; none is `[KNOWN]`
+from repository evidence. Approval state: not approved. Delivery state:
+nothing designed in code, implemented, verified, released, or deployed.
+
+## 1. Background and motivation
+
+The request reads:
+
+> A released version 2 application has an internal public method used only by
+> three modules. Replace its signature and update the modules.
+
+`[KNOWN]` The sponsor asks for a signature replacement in one application and
+an update of its three calling modules. Source: the request above.
+
+`[OPEN]` Why the signature must change now, and what problem the new signature
+solves, the request does not say. That matters because a signature change that
+also changes behaviour needs different acceptance than a shape-only change.
+
+`[KNOWN]` The application is at released version 2. This establishes release
+lineage for the application. It does not, by itself, establish an external
+contract for this method; §6 records the classification that follows from the
+method's actual consumers.
+
+`[ASSUMED]` The work is maintenance of the existing application rather than a
+product change. Source: the request names only a signature and its modules.
+Failure consequence: if a product outcome is intended, its success measures
+are missing and this document understates the scope.
+
+## 2. Users and stakeholders
+
+The standard domain and market-context sections are omitted. This is an
+internal source change with no field of practice, competitor, regulatory, or
+commercial surface; retaining those sections would manufacture content.
+
+| Role | Material concern | Question the design must answer | Evidence needed | Decision right |
+| --- | --- | --- | --- | --- |
+| Maintainer of each of the three modules | The call sites change together and no stale call remains | Is every call site updated in one coherent change? | build and test evidence; repository search | technical review |
+| Application maintainer | Behaviour is preserved and no accidental external contract is created | Does the change alter observable behaviour or serialised output? | tests; persisted/wire assessment | technical approval |
+| Release owner for v2 | The released application is not given a new compatibility promise it did not have | Is any external consumer affected? | call-site evidence; confirmed consumer survey | release and residual-risk acceptance |
+| Approver of this change | The change is bounded and reversible | What exactly changes, and what does not? | this document; the technical design; the ExecPlan | authorise implementation; identity `[OPEN]` |
+
+`[OPEN]` The individual holding each decision right is unknown. Advisory
+review, technical approval, and release authority are not interchangeable, so
+§7 records the approver as unresolved rather than inventing one.
+
+## 3. Job to be done
+
+When an internal method's interface must change, a module maintainer wants to
+change the definition and every caller in one coherent edit, so the
+application keeps building and behaving as before without carrying an obsolete
+interface.
+
+The functional dimension is a consistent source change. The emotional
+dimension is confidence that no half-updated call site will surface later. The
+social dimension is a reviewable change that a maintainer can defend as
+complete. No multi-actor scenario probe is recorded: the request has one
+actor class, no integration path, and no exceptional flow beyond the
+verification obligations in the technical design.
+
+## 4. Scope
+
+### 4.1 Goals
+
+- `TOR-GOAL-001` Replace the method's signature with the approved new
+  signature.
+- `TOR-GOAL-002` Update all three calling modules so each supplies and consumes
+  the new contract.
+- `TOR-GOAL-003` Keep the application building and preserve observable
+  behaviour on the affected paths, unless the change request explicitly
+  changes behaviour.
+- `TOR-GOAL-004` Remove the old signature completely; no residual path accepts
+  it.
+
+### 4.2 Non-goals
+
+- `TOR-NONGOAL-001` No source-API compatibility machinery: no overload, alias,
+  deprecated entrypoint, facade, adapter, wrapper, dual implementation, or
+  defaulted parameter retained only so the old call shape still compiles. The
+  surface is an application-internal public method, and §6 explains why the
+  compatibility exclusion applies.
+- `TOR-NONGOAL-002` No change to any external, published, or cross-application
+  interface.
+- `TOR-NONGOAL-003` No unrelated refactoring of the method, its callers, or
+  their modules. Reviewers seeking unrelated improvements should raise them
+  separately.
+- `TOR-NONGOAL-004` No change to persisted records or wire formats as part of
+  this work; any such need is a separate, assessed migration.
+- `TOR-NONGOAL-005` No new dependency.
+
+## 5. Success criteria
+
+- `TOR-SUCCESS-001` The project builds and its tests pass with the old
+  signature deleted. Evidence: the project's gate output.
+- `TOR-SUCCESS-002` A repository search finds no live reference to the old
+  signature outside historical records such as changelogs and completed
+  plans. Evidence: the search command and its empty result.
+- `TOR-SUCCESS-003` Each of the three callers produces the same observable
+  outcome as before for the inputs its tests or manual checks exercise.
+  Evidence: named tests or a recorded manual check.
+- `TOR-SUCCESS-004` The diff touches the definition, the three callers, and
+  only the tests that the change requires. Evidence: diff statistics and
+  review.
+- `TOR-SUCCESS-005` No compatibility layer exists in the final diff. Evidence:
+  review against `TOR-NONGOAL-001`.
+
+No adoption or outcome metric applies: the users are internal maintainers and
+the outcome is a coherent source state, not a measurable product result.
+
+## 6. Constraints and assumptions
+
+### 6.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` The df12 compatibility exclusion is binding. A private
+  API, including an application-internal interface declared `public`, must not
+  receive source-API compatibility machinery. The definition and every caller
+  change together. Sources: `terms-of-reference-doc` "Contract with downstream
+  skills"; `tech-design-doc` "Contract with upstream and execution skills";
+  `execplans` "Milestones are coherent plateaus"; and
+  `terms-of-reference-doc/references/problem-contract.md` "Compatibility is an
+  explicit constraint, never a milestone side effect".
+- `TOR-CONSTRAINT-002` The change lands atomically. No intermediate state
+  leaves both signatures available.
+- `TOR-CONSTRAINT-003` Persisted data and wire formats are assessed
+  separately. A source refactor does not authorise a data or protocol change.
+- `TOR-CONSTRAINT-004` This draft does not authorise implementation. The
+  ExecPlan stays in draft until it is explicitly approved.
+
+### 6.2 Assumptions
+
+Each assumption records its failure consequence, because an assumption without
+one is either a fact or immaterial.
+
+- `TOR-ASSUMPTION-001` "Used only by three modules" means the method has no
+  source consumer outside this application. Source: the brief, which
+  establishes the request but not the empirical claim. Failure consequence: an
+  external consumer exists, the surface classification must be re-assessed,
+  and an existing commitment may change the approach.
+- `TOR-ASSUMPTION-002` The three call sites are discoverable by a static
+  search of the identifier, and no reflection, dynamic dispatch, callback
+  registration by name, FFI binding, or serialisation-driven invocation reaches
+  the method. Failure consequence: a compile-time gate will not catch every
+  caller, and a runtime path can break silently.
+- `TOR-ASSUMPTION-003` The language and build enforce the signature strongly
+  enough that a stale call site fails the build. Source: none; the brief does
+  not name the language. Failure consequence: verification shifts to tests and
+  exhaustive text search, and the static lemma in the technical design does not
+  apply.
+- `TOR-ASSUMPTION-004` The new signature preserves observable behaviour for
+  every caller. Failure consequence: a behavioural requirement exists that this
+  document does not state, and acceptance must be widened before approval.
+- `TOR-ASSUMPTION-005` The method's parameters and return value are not
+  persisted or sent to a deployed peer. Failure consequence: a data or protocol
+  migration is needed, assessed separately from the source change.
+
+### 6.3 Dependencies
+
+None known. `[OPEN]` Whether the application's build or test gate depends on
+another team's deliverable is unverified; the brief names none.
+
+## 7. Open questions
+
+- `TOR-OPEN-001` What is the exact new signature, and does it change
+  behaviour or only the shape of the call contract? Gates design accuracy and
+  the acceptance boundary.
+- `TOR-OPEN-002` Who approves this change? Gates implementation. Resolution
+  path: the sponsor names the approving role.
+- `TOR-OPEN-003` What are the repository paths and the exact method symbol?
+  Gates a self-contained execution plan. Resolution path: reconnaissance in
+  `EP-M0`.
+- `TOR-OPEN-004` Does any dynamic or reflective path invoke the method? Gates
+  the verification method. Resolution path: search and review in `EP-M0`.
+- `TOR-OPEN-005` Do the parameters or return value cross a persisted or wire
+  boundary? Gates a separate migration assessment. Resolution path:
+  reconnaissance in `EP-M0`.
+- `TOR-OPEN-006` What are the language, build tooling, and test framework?
+  Gates the exact commands and the Red-Green-Refactor route. Resolution path:
+  reconnaissance in `EP-M0`.
+- `TOR-OPEN-007` What base revision and branch should the work use? Gates
+  evidence freshness. Resolution path: the implementing agent records them in
+  the ExecPlan.
+
+Next elicitation step (one question per turn): ask `TOR-OPEN-001` first,
+because it gates the design and the acceptance boundary. The remaining
+questions follow in dependency order.
+
+## 8. Handoff and readiness
+
+The problem scope is settled: replace one internal signature and update its
+three callers, with no compatibility machinery. The empirical facts needed for
+an approvable execution plan are not settled; `TOR-OPEN-003` to
+`TOR-OPEN-007` are reconnaissance tasks, not design choices.
+
+Readiness: ready for design with bounded discovery. Not approved, and not
+ready for implementation approval until the reconnaissance questions are
+answered and the ExecPlan's placeholders are filled.
+
+Downstream: `02-technical-design.md` owns the interface contract, the
+compatibility classification, and the verification obligations.
+`03-execplan.md` owns the work breakdown, tolerances, commands, and evidence;
+it is a draft and has not passed its approval gate.
+
+Feedback route: if reconnaissance falsifies `TOR-ASSUMPTION-001`,
+`TOR-ASSUMPTION-002`, or `TOR-ASSUMPTION-005`, the surface classification and
+the compatibility decision must be revisited before any code changes.

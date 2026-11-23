@@ -1,0 +1,79 @@
+# Intake and elicitation record – test-only helper reshape
+
+This is a working note from the terms-of-reference workflow. It is not a
+deliverable and it is not part of the terms of reference. It records what the
+authoring agent could inspect, what it could not, the conflicts found, and the
+state of elicitation at handoff.
+
+Drafted: 2026-11-19.
+
+## Phase 0 – prior art catalogue
+
+| Location | Read? | Section it would inform | Finding |
+| --- | --- | --- | --- |
+| Task brief (scenario input) | yes | All sections | A stable repository exposes a helper solely to its tests; the brief suggests preserving the old tests through a compatibility shim. |
+| `skills/terms-of-reference-doc/` | yes | Workflow and contract rules | Test-only surfaces must not attract source-API compatibility requirements; a shim must not be authorised. |
+| `skills/tech-design-doc/` | yes | Workflow and contract rules, verification shape | Same prohibition; change the interface and every affected caller together; a plateau is coherent, not dual. |
+| `~/.claude/skills/execplans/` | yes | Execution tolerances, handoff shape | Same prohibition; approval gate; verification plan and non-vacuity requirements. |
+| Repository `README.md`, `docs/` | no | Background, domain, constraints | Excluded by the task's isolation rule. |
+| `docs/terms-of-reference.md`, `docs/context.md`, ADRs, design, roadmap | no | Prior intent, vocabulary, decisions, sequencing | Excluded by the isolation rule; none is assumed to exist. |
+| ExecPlans, release tags, merged or open pull requests, acceptance evidence | no | Baseline, dependencies, evidence freshness | Excluded by the isolation rule; no revision can be pinned. |
+| Source tree, test tree, manifests, gate commands | no | Baseline symbols, callers, toolchain, budgets | Excluded by the isolation rule; every symbol name and command in the downstream artefacts is a placeholder until the executing agent inventories the tree. |
+
+There is no observed conflict between the three skills. Each independently
+prohibits source-API compatibility machinery for test-only support surfaces.
+
+## Conflicts to resolve
+
+**CR-1 – the suggested shim.** The brief suggests preserving the old tests
+through a compatibility shim. The helper is exposed solely to its tests. That
+makes it a test-only support surface, a category for which df12 policy
+prohibits compatibility machinery. A named consumer does not create an
+exception, and the repository's stability does not create one either.
+
+Disposition: reject the shim, and preserve the tests' *intent* instead of their
+old call shape. The tests are migrated, rewritten, or retired with a recorded
+reason. The shim suggestion is a proposal in a brief, not an accepted
+requirement, and it does not become one by repetition. If the sponsor asserts a
+real external commitment, the classification must be reassessed before the
+disposition is revised. No artefact here authorises a wrapper.
+
+**CR-2 – "stable repository".** The brief's phrase could be read as "released
+contract". Resolution: stability of the repository says nothing about the
+helper's surface. Classification follows exposed surface and consumers, not
+repository maturity. The released-lineage question remains open as
+`TOR-OPEN-001` and gates the execution plan's first milestone.
+
+## Phase 1 – provisional sketch tags
+
+| Section | Claim | Tag | Source |
+| --- | --- | --- | --- |
+| 1. Background | A stable repository carries a helper that only its tests reach, and its shape is being reshaped. | `[KNOWN]` | Brief |
+| 2. Domain and market | No external market, competitor, or field of practice applies to this maintenance change. | `[KNOWN]` | Brief; the change is internal |
+| 3. Users | Maintainers own the helper; reviewers check that no accidental public surface appears. | `[ASSUMED]` | Inferred from the change's nature |
+| 4. Job to be done | A maintainer needs to change internal shape without carrying an obsolete interface. | `[ASSUMED]` | Inferred from the brief |
+| 5. Scope | Reshape the helper and its test callers together; admit no shim. | `[KNOWN]` | Brief plus policy |
+| 6. Success criteria | The suite passes with the old surface deleted; no test disappears without a reason. | `[ASSUMED]` | Derived from the brief's coverage intent |
+| 7. Constraints | Compatibility is prohibited for this surface; every caller changes in the same change. | `[KNOWN]` | Skill contracts |
+| 7. Assumptions | No consumer outside the repository can reach the helper. | `[ASSUMED]` | Brief's "solely to its tests" |
+| 8. Open questions | Released reachability, and which tests assert incidental detail. | `[OPEN]` | Not answerable without the tree |
+
+## Phase 2 – elicitation record
+
+One unresolved, decision-relevant question was carried forward as
+`TOR-OPEN-001`: whether any part of the helper's current surface is reachable
+by a consumer outside this repository in a released artefact.
+
+No answer was fabricated. Under the isolation rule the authoring agent could
+not inspect the tree, tags, or manifests, and no user was available to answer.
+The workflow's exit condition 3 applies: the remaining item requires external
+input the authoring agent cannot supply, so drafting proceeds at v0.1 with the
+item marked and its resolution path named.
+
+## Evidence limits and freshness
+
+Every statement in these artefacts derives from the brief or from the installed
+skills, inspected on 2026-11-19. All repository facts are unknown until the
+execution plan's `EP-M0` inventory runs. The evidence expires when the tree is
+first inspected, on any rebase, on a changed release tag, or when the helper's
+visibility changes.

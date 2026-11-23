@@ -1,0 +1,297 @@
+# Technical design: compatible change to the version 2.1 function
+
+Status: Draft v0.1 (approach selected by rule; evidence gates recorded).
+
+Audience: Implementers, reviewers, and the release authority. The document
+assumes familiarity with semantic versioning but defines every project-specific
+term it uses.
+
+Companion documents: `terms-of-reference.md` (draft v0.1, 2026-11-19) and
+`execplan.md` (draft, 2026-11-19) in this directory. The installed
+`tech-design-doc` skill, its `architecture-contract.md` reference, and the
+installed `execplans` skill and template were inspected on 2026-11-19.
+
+Date and version: 2026-11-19, v0.1.
+
+## 1. Design context and motivation
+
+The affected function was released in version 2.1. A deployed external consumer
+calls it, and the project made an explicit compatibility commitment for it. The
+working branch is ahead of the release tag. The requested change is not yet
+characterized as additive, source-breaking, or behaviour-breaking.
+
+This document answers one central question before any interface is touched:
+does the release lineage impose a compatibility or migration obligation, and if
+so, what is the smallest approach that discharges it without compatibility
+theatre? It does not restate the problem-space intent owned by the terms of
+reference.
+
+No diagram is included. The classification question is a finite decision over
+release lineage, surface kind, consumer, and commitment; the table in §4 answers
+it with less ambiguity than a graph, so no Mermaid validation was required or
+run.
+
+## 2. Scope
+
+In scope: the classification, the approach, the interface contract shape, the
+migration strategy, and the verification obligations for changing the released
+function.
+
+Out of scope, per `TOR-NONGOAL-001` to `TOR-NONGOAL-004`: permanent dual
+interfaces, unrelated API work, extension of the commitment, and redesign of
+the consumer. Persisted-data and wire-format evolution is separated in §7 and
+is not assumed.
+
+## 3. Terminology
+
+- **Baseline.** The function as published in the 2.1 release tag, including its
+  source signature, documented behaviour, errors, and side effects.
+- **Target.** The changed function and, where needed, the supported path by
+  which the external consumer reaches it.
+- **Compatibility window.** The period stated by the commitment during which
+  the baseline contract remains supported.
+- **Additive evolution.** A change in which existing consumer source and
+  behaviour are unaffected, and new capability appears on a distinct call path.
+- **Deliberate migration.** A breaking change paired with a deprecation period,
+  a migrated and evidenced consumer, and a removal point.
+- **Compatibility layer.** Any alias, wrapper, default parameter, deprecated
+  entrypoint, or adapter retained for an existing caller. It is admissible only
+  when it names the consumer or commitment it serves.
+- **Compatibility theatre.** A layer added to obtain an incremental milestone
+  when an atomic change would not require one.
+
+## 4. Compatibility classification
+
+Four independent prohibitions in the governing contracts forbid source-API
+compatibility machinery for: private or application-internal APIs; test-only
+APIs; pre-1.0 APIs; and unreleased API changes ahead of the latest formal
+release tag. Two separate positive rules follow. A released 1.0-or-later API
+with no known external consumers normally needs no compatibility machinery. A
+genuinely committed external contract requires a named consumer, obligation,
+and deliberate compatibility or migration approach.
+
+| Test | Finding for this surface | Bearing |
+| --- | --- | --- |
+| Surface kind | An external consumer calls it, so it is an externally consumed surface | The private/application-internal exclusion does not apply |
+| Test-only | It ships to a deployed consumer | The test-only exclusion does not apply |
+| Release lineage | It shipped in version 2.1, a formal release; 2.1 is 1.0-or-later | The pre-1.0 exclusion does not apply; it is a released contract |
+| Branch position | The working branch is ahead of the tag | The edit is unreleased, but the 2.1 contract already shipped. The "unreleased ahead of the tag" exclusion targets surface that no formal release has published, not an edit to a published contract. A branch position does not unpublish 2.1. |
+| External consumers | At least one deployed external consumer exists | The released-1.0-plus external-consumer rule is engaged |
+| Explicit commitment | The project made an explicit compatibility commitment | Compatibility or a deliberate migration is required, not optional |
+| Conclusion | A compatibility or migration obligation applies to this change | A layer or migration is admissible and must name the consumer, deployed state, and commitment; it must not be an unnamed shim |
+
+The classification is deliberately not "the branch is ahead of the tag, so the
+API is unreleased". That reading would reverse the governing rule that an edit
+to an already released 1.0-plus API does not erase the existing contract. It
+would also silently discard `TOR-CONSTRAINT-001` and `TOR-CONSTRAINT-002`.
+
+Answer to "compatible with whom or what?": the deployed external consumer named
+in `TOR-OPEN-003`, under the commitment text recorded at `TOR-OPEN-002`, for the
+window approved at `TOR-OPEN-006`. Until those identifiers exist, no
+compatibility layer may be written, because it cannot yet name what it serves.
+
+### 4.1 Gap register
+
+| ID | Upstream requirement | Baseline evidence | Target state | Gap | Disposition | Unblock condition |
+| --- | --- | --- | --- | --- | --- | --- |
+| `GAP-001` | `TOR-CONSTRAINT-001` | Commitment stated to exist in the brief | Quoted commitment with source revision | Terms and location unknown | Blocked for approach finalization | `TOR-OPEN-002` closed |
+| `GAP-002` | `TOR-CONSTRAINT-002` | Consumer stated to be deployed | Named consumer, version, call sites | Identity and deployed state unknown | Blocked for migration design | `TOR-OPEN-003` closed |
+| `GAP-003` | `TOR-GOAL-001` | 2.1 contract not yet captured as a fixture | Frozen 2.1 behavioural fixture | Change type unknown | Proposed work in `EP-M0` | 2.1 tag and symbol recorded |
+| `GAP-004` | `TOR-CONSTRAINT-003` | Branch ahead of tag; lineage rule applies | Classification recorded and reviewed | None; resolved by §4 | Already satisfied by this record | – |
+
+## 5. Approach
+
+### 5.1 Decision rule
+
+The design does not presume that the change is breaking. It selects the least
+costly approach that satisfies the commitment, in this order:
+
+1. **Additive evolution.** If the requested behaviour can be expressed without
+   changing the meaning of existing call sites, keep the 2.1 contract intact and
+   add a new call path. This discharges the commitment with the smallest
+   footprint.
+2. **Deliberate migration.** If the change is irreconcilably source- or
+   behaviour-breaking, deprecate the baseline, migrate the named consumer, and
+   remove the baseline only at the approved removal point. This is a planned
+   break, not a compatibility failure.
+3. **Rejected: silent break.** Shipping a breaking change inside the committed
+   window without migration violates `TOR-CONSTRAINT-001` and
+   `TOR-GOAL-002`.
+4. **Rejected: permanent shim or dual implementation.** Retaining the old path
+   forever violates `TOR-NONGOAL-001` and is compatibility theatre. A wrapper
+   with no removal point cannot answer "compatible with whom or what?" beyond
+   the current commitment.
+
+The branch is chosen by `TOR-OPEN-004`: a before/after call-site comparison
+decides whether existing source and behaviour are affected. The design records
+both branches so implementation cannot drift into a silent break while waiting
+for evidence.
+
+### 5.2 Decision record `TDD-DEC-001`
+
+Decision: classify the surface as a released 1.0-plus external contract with a
+live consumer and an explicit commitment; require compatibility or deliberate
+migration; direct implementation to additive evolution first, then planned
+migration if additive evolution is impossible.
+
+Alternatives considered: treating the surface as unreleased because the branch
+is ahead of the tag (rejected: unpublishes a released contract); treating the
+commitment as advisory (rejected: it is a hard constraint); adding an unnamed
+shim immediately (rejected: cannot name its consumer and would be theatre).
+
+Consequence: no interface edit proceeds until `TOR-OPEN-002` and
+`TOR-OPEN-003` name the commitment and consumer.
+
+### 5.3 Decision record `TDD-DEC-002`
+
+Decision: no permanent dual interface. Any retained baseline path carries a
+deprecation marker, a named consumer, an approved removal release, and
+migration evidence. Rationale: `TOR-NONGOAL-001` and the prohibition on
+gratuitous compatibility layers. Consequence: `EP-M3` removes the path, and the
+ExecPlan treats removal as acceptance work rather than optional cleanup.
+
+## 6. Interface contract
+
+The exact symbol and package are `TOR-OPEN-001` and are not invented here. The
+contract shape is normative:
+
+- The baseline is whatever the 2.1 tag publishes: signature, documented result,
+  error contract, and side effects. It is captured, not paraphrased, before any
+  edit.
+- Under additive evolution, the baseline contract is unchanged, and the new
+  behaviour is reachable only through a new symbol, an added optional parameter
+  whose absence reproduces baseline behaviour exactly, or a new entrypoint. The
+  old call path must not acquire a new required argument or a changed result.
+- Under deliberate migration, the baseline remains callable for the committed
+  window, emits a deprecation diagnostic that names the replacement and the
+  removal release, and is removed only after consumer migration evidence.
+- Every new surface documents its own inputs, outputs, error contract, and
+  failure modes. A deprecated surface is not a second permanent design.
+
+## 7. Persisted data and wire formats
+
+Source compatibility and persisted state are separate obligations. If the
+function writes records or exchanges a wire format, a compatible source edit
+does not by itself preserve deployed data. `TOR-OPEN-005` determines whether a
+byte-level migration, dual-read window, or no data action is needed. This
+document does not authorize a source shim to solve a data problem, and it does
+not treat a data migration as justification for an unrelated wrapper. Both
+questions share the same acceptance discipline: name the deployed state and the
+outcome to preserve.
+
+## 8. Failure modes
+
+| Failure | Detection | Response |
+| --- | --- | --- |
+| Misclassifying the surface as unreleased because the branch is ahead of the tag | Classification review in §4; reviewer challenges any "no compatibility needed" claim | Re-read the 2.1 lineage; the published contract governs |
+| Consumer builds against a version whose behaviour changed silently | Frozen 2.1 consumer fixture fails to compile or observe baseline behaviour | Block release; restore baseline or move to planned migration |
+| Compatibility layer outlives the window | Removal release passes with no migration evidence | Block removal; extend the window only by explicit authority decision |
+| Consumer identity discovered late or incorrectly | Migration evidence names a version the consumer owner does not confirm | Re-open `GAP-002`; do not treat a passing local test as deployment evidence |
+| Semantic drift on an unchanged call path | Differential test against the 2.1 oracle fails for an input class | Fix the implementation, not the oracle; the 2.1 baseline is authoritative |
+| Data written by the old version becomes unreadable | Round-trip migration check fails | Halt; design an explicit data migration before release |
+
+## 9. Verification obligations
+
+### 9.1 Abstract model
+
+The observable contract is a partial function from an input class to an outcome
+(value, error, or side effect) plus a source-level call shape. Two relations
+matter: the baseline relation published at 2.1, and the target relation at the
+change. For a call site that exists in the baseline, the target relation must
+equal the baseline inside the committed window unless a documented deprecation
+intervenes. For a new call site, the target relation must equal the specified
+new behaviour. Malformed input and violated preconditions are observable
+outcomes, not exceptions to the model.
+
+### 9.2 Invariants and lemmas
+
+- `INV-COMPAT-SOURCE`: every call site in the frozen 2.1 consumer fixture
+  compiles unchanged against the supported release. Establishes
+  `TOR-SUCCESS-001` for source compatibility.
+- `INV-COMPAT-BEHAVIOUR`: for every input class in the committed domain,
+  baseline call sites observe the same value, error, and side effect as 2.1,
+  or a documented deprecation diagnostic. Establishes `TOR-SUCCESS-001` for
+  behavioural compatibility and `TOR-SUCCESS-004`.
+- `INV-ADDITIVE`: the new behaviour is unreachable through baseline call shapes;
+  adding it does not alter the baseline relation. Establishes `TOR-GOAL-001`
+  under the additive branch.
+- `INV-MIGRATION`: the baseline path is removed only when recorded migration
+  evidence names the consumer, the migrated version, and the release that
+  removes the path. Establishes `TOR-SUCCESS-003`.
+- `L-REMOVAL-SAFE`: if `INV-MIGRATION` holds and the approved removal release is
+  reached, removing the baseline path cannot break a committed consumer. This
+  is the intermediate contract connecting migration evidence to `EP-M3`.
+
+### 9.3 Axioms (trusted, not verified here)
+
+- `AXIOM-2.1-BASELINE`: the artefacts published at the 2.1 tag are the
+  authoritative baseline. Source: the release tag.
+- `AXIOM-COMPILER`: the language toolchain and semantic-versioning tooling
+  enforce the documented compile and resolution semantics. Source: their
+  documented interfaces.
+- `AXIOM-CONSUMER`: the consumer's declared version corresponds to the code it
+  deploys. Source: consumer-owner confirmation. This is an external assumption
+  and is checked at the boundary by migration evidence, not proved.
+
+### 9.4 Methods per obligation
+
+| Obligation | Method | Artefact | Discharge condition | Non-vacuity |
+| --- | --- | --- | --- | --- |
+| `INV-COMPAT-SOURCE` | Compile the frozen 2.1 consumer fixture against the candidate release | Consumer fixture plus a compile-only target | Fixture compiles with zero edits | Negative control: a deliberate signature mutation must fail the fixture for the expected symbol error |
+| `INV-COMPAT-BEHAVIOUR` | Differential test against a recorded 2.1 oracle, using parameterized cases for finite classes and property tests for the input range | Baseline oracle fixture and a differential harness | Every class matches; property run reports class coverage | Cases must include boundaries, malformed input, and the documented error path; an empty or fully filtered generator is a failure |
+| `INV-ADDITIVE` | Property test that baseline call shapes never reach new behaviour, plus a call-path inspection | Property suite and interface review note | No baseline shape invokes the new path | Witness for each baseline shape; a seeded routing fault must be rejected |
+| `INV-MIGRATION` | Release-gate check against the recorded migration record | Release checklist assertion or CI check | Removal is refused when evidence is absent | Negative control: removal attempt with no recorded evidence must be refused |
+| `L-REMOVAL-SAFE` | Reasoning over the two preceding obligations plus the approved removal release | Conformance note in the ExecPlan | Evidence chain complete before removal | Exhibit a migrated consumer version and the release that permits removal |
+
+### 9.5 Formal verification decision
+
+No model checker or formal prover is warranted. The property is a regression
+and differential relation over a finite interface and a generated input domain;
+parameterized tests plus property tests establish it at proportionate rigour.
+A formal proof would add little because the disputed guarantee concerns
+behaviour of an external consumer deployment, which no local proof can
+establish. The residual gap is real-world consumer diversity beyond the
+declared call sites; consumer-owner confirmation is the boundary evidence.
+
+### 9.6 Suggested acceptance scenarios
+
+```gherkin
+Feature: A committed 2.1 caller survives the change
+
+  Scenario: The deployed consumer compiles and behaves as before
+    Given the frozen 2.1 consumer fixture
+    When it is built against the supported release
+    Then it compiles without edits
+    And every recorded baseline outcome is unchanged
+
+  Scenario: A permanent shim is refused
+    Given a removal release with no migration evidence
+    When the release gate evaluates the deprecated path
+    Then the gate refuses removal
+```
+
+These are proposed acceptance scenarios. Whether a BDD runner exists is
+`[OPEN]`; if none exists, the same cases run as the differential and release-gate
+tests named above. Adding a framework requires separate authorization.
+
+## 10. Handoff
+
+Readiness: bounded discovery only. The design is fixed; the identifiers at
+`TOR-OPEN-001` to `TOR-OPEN-006` are not. The receiving ExecPlan must not
+invent them. It may begin with an evidence-and-baseline milestone, then proceed
+to the additive or migration branch that the evidence selects.
+
+Selected inputs for the ExecPlan: `TDD-DEC-001`, `TDD-DEC-002`, `INV-COMPAT-
+SOURCE`, `INV-COMPAT-BEHAVIOUR`, `INV-ADDITIVE`, `INV-MIGRATION`,
+`L-REMOVAL-SAFE`, `AXIOM-2.1-BASELINE`, `AXIOM-CONSUMER`, and `GAP-001` to
+`GAP-004`. Design acceptance does not approve implementation; the ExecPlan's
+own approval gate remains.
+
+## 11. References
+
+- `terms-of-reference.md`, draft v0.1, 2026-11-19 (this directory).
+- Scenario brief, supplied 2026-11-19.
+- `tech-design-doc` skill and `architecture-contract.md`, inspected 2026-11-19.
+- `execplans` skill and `execplan-template.md`, inspected 2026-11-19.
+- No external sources were consulted; the design makes no ecosystem or
+  benchmark claim, so no research citation is owed.

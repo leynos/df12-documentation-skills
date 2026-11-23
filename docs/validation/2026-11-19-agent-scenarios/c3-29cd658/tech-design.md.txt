@@ -1,0 +1,307 @@
+# LIB rename to NEW – technical design
+
+**Status:** Draft v0.1; not accepted.
+**Audience:** `LIB` maintainers implementing the change, the design reviewer, and
+the release authority.
+**Companion documents:** Terms of reference (draft):
+`/tmp/val-c3/terms-of-reference.md`. ExecPlan revision record:
+`/tmp/val-c3/execplan-record.md`. Historical RFC: `RFC-A` (not inspected).
+**Date and version:** 19 November 2026, v0.1.
+
+## Conformance basis
+
+| Artefact | Location | Revision and state | Items inherited |
+| --- | --- | --- | --- |
+| Terms of reference | `/tmp/val-c3/terms-of-reference.md` | Uncommitted dated draft `TOR-C3-2026-11-19`, v0.1, not accepted | TOR-GOAL-001 to 004; TOR-CONSTRAINT-001 to 006; TOR-SUCCESS-001 to 004; TOR-ASSUMPTION-001 to 005; TOR-OPEN-001 to 005 |
+| ExecPlan skill | `/home/leynos/.claude/skills/execplans/SKILL.md` and `references/execplan-template.md` | Installed copy inspected 19 November 2026; no commit identifier available within this task | Status vocabulary, deviation and `BLOCKED` rules, compatibility prohibitions, revision-note requirement |
+| `RFC-A` | Not inspected | Unknown revision; treated from the brief as an inherited conflicting commitment | Alias demand |
+| Repository baseline | Not inspected, by task constraint | Unknown | All symbol paths, tags, counts, and tooling names are provisional |
+
+The design self-describes as a draft. It does not claim acceptance, and design
+acceptance would not bypass the ExecPlan's approval gate.
+
+## 1. Problem and context
+
+A published pre-1.0 package, `LIB` at version 0.8, is renaming the public name
+`OLD` to `NEW`. The rename is the current milestone of an executing ExecPlan.
+`RFC-A`, written earlier for the same interface, requires an alias that keeps
+`OLD` callable. The governing df12 policy prohibits source-API compatibility
+machinery for pre-1.0 APIs and states that a named consumer does not create an
+exception.
+
+The design therefore has one substantive decision: the disposition of the alias
+demand. The rename itself is mechanically simple. Its risk lies in a contributor
+preserving `OLD` because an inherited document asks for it, or in a plan writing
+a wrapper to keep two milestones viable.
+
+Scope boundaries are the ToR's. This design does not restate them.
+
+## 2. Goals and non-goals
+
+The goals are TOR-GOAL-001 to TOR-GOAL-004 and are not restated. The non-goals
+that shape the design are:
+
+- TOR-NONGOAL-001: no alias, deprecated re-export, facade, wrapper, or shim.
+- TOR-NONGOAL-002: no behaviour change under `NEW`.
+- TOR-NONGOAL-005: no data or wire-format migration in this scope; such an
+  obligation would be assessed separately.
+
+## 3. Terminology
+
+- **Atomic rename.** One change that renames the definition, every
+  in-repository caller, tests, examples, and documentation references together.
+- **Compatibility decision.** The recorded answer to "compatible with whom or
+  what?" For this surface the answer is `none`.
+- **Recovery.** A safe revert of the rename change, not a permanent dual
+  implementation.
+
+Other terms follow the ToR glossary.
+
+## 4. Baseline, target, and gap analysis
+
+The baseline is provisional. No repository file was read, so symbol paths,
+current call-site counts, and existing test names are unverified.
+
+| ID | Baseline (provisional) | Target | Gap and disposition | Verification |
+| --- | --- | --- | --- | --- |
+| TDD-GAP-01 | The package exports `OLD` at 0.8 | The release candidate exports `NEW` and not `OLD` | Rename the exported item. Disposition: proposed work | TDD-INV-01 |
+| TDD-GAP-02 | In-repository callers, tests, examples, and docs use `OLD` | All use `NEW` | Update callers with the definition in one change. Disposition: proposed work | TDD-INV-03 |
+| TDD-GAP-03 | `RFC-A` demands a callable alias | The demand is explicitly superseded | Disposition: blocked on upstream resolution (TOR-OPEN-001); the design does not add a wrapper | TDD-INV-02 |
+| TDD-GAP-04 | No changelog entry describes the break | A dated entry names `OLD`, `NEW`, and the carrying version | Disposition: proposed work | Release review |
+| TDD-GAP-05 | `CONSUMER` calls `OLD` | `CONSUMER` calls `NEW` against the new version | Disposition: dependency and outcome validation, not an implementation gap | TDD-LEMMA-01 |
+| TDD-GAP-06 | Whether `OLD` appears in persisted data, wire formats, or configuration keys is unknown | A recorded answer | Disposition: blocked on TOR-OPEN-003; a data obligation would be assessed separately | ToR TOR-OPEN-003 |
+
+TDD-GAP-03 is not deferred work and must not sit in a "remaining gaps" list as
+though a later milestone could pick it up. It is a rejected demand whose
+disposition is an upstream decision.
+
+## 5. Design summary and change set
+
+The change is one atomic rename:
+
+1. Rename the definition of `OLD` to `NEW`.
+2. Update every import, re-export, caller, test, example, and documentation
+   link in the repository in the same change.
+3. Add a changelog entry naming the break and the replacement.
+4. Notify `CONSUMER` before the release, and publish the version that carries
+   `NEW` only.
+
+The resulting plateau is a repository and a release candidate whose public
+surface has one name. Old and new interfaces do not coexist at any milestone
+boundary.
+
+No diagram is included. The change has no runtime topology, no state machine,
+and no interaction sequence; a diagram would restate the rename table. No
+external schema, interface definition, or configuration file is produced for
+the same reason. The only structured artefact is the short rename table and
+signature block in §6, both short enough to embed.
+
+## 6. Interfaces and contracts
+
+The identifier changes; the signature does not. If implementation discovers
+that the signature must also change, that is outside this design (TOR-OPEN-002)
+and requires escalation.
+
+| Current | Target | Kind | Signature change |
+| --- | --- | --- | --- |
+| `OLD` | `NEW` | Public source-API item | None |
+
+The package path and language are unverified. The shape below is illustrative
+and provisional:
+
+```text
+before:  <modifiers> <return type> OLD(<parameters>)
+after:   <modifiers> <return type> NEW(<parameters>)
+```
+
+No forwarding implementation, default-method bridge, or type synonym is added
+at either name. Only `NEW` exists.
+
+## 7. Compatibility assessment
+
+| Question | Answer |
+| --- | --- |
+| What surface is affected? | The public source API of a package published at 0.8. It is a pre-1.0 API. |
+| Is there a released 1.0-or-later contract? | None known; TOR-ASSUMPTION-001 is `[ASSUMED]` pending release-tag inspection. |
+| Who is the external consumer? | `CONSUMER`, the single named downstream project. |
+| Does the named consumer permit compatibility machinery? | No. The policy states that a named consumer does not create an exception for a pre-1.0 API. |
+| Is there an inherited compatibility demand? | Yes: `RFC-A` requires an alias. It is a conflict to resolve explicitly, not a waiver. |
+| Are persisted data or wire formats affected? | Unknown; TOR-OPEN-003. Assessed separately if present. |
+| Compatibility decision | `none`. |
+
+### 7.1 Alternatives considered
+
+| Option | Outcome |
+| --- | --- |
+| Add a callable alias for `OLD` | Rejected. It is source-API compatibility machinery for a pre-1.0 API, which the policy prohibits. It also creates a second name that would need its own future removal plan, a compatibility layer needed only to create a middle state. |
+| Keep a 0.8 line with `OLD` and a new line with `NEW` | Rejected. It is a dual implementation and compatibility theatre. The question "compatible with whom or what?" is answered only by an inherited RFC that the governing policy overrides. |
+| Defer the rename until after 1.0 | Out of scope. It does not resolve the RFC and leaves the naming defect in place; it would also create a 1.0 commitment to `OLD`. |
+| Atomic rename with coordinated migration | Selected. It is the only option that leaves one current name and no obsolete surface. |
+
+### 7.2 Migration, which is not compatibility
+
+The design keeps a deliberate migration path without keeping an old source
+interface:
+
+- the changelog names `OLD`, `NEW`, the version that carries the rename, and a
+  one-line replacement example;
+- `CONSUMER` receives direct notice before the release;
+- `CONSUMER` updates its call site and its dependency constraint;
+- previously published 0.8 artefacts remain available, so a consumer can pin
+  the prior version while it schedules its own update.
+
+Pinning an earlier published version is distribution history, not a
+compatibility layer. A consumer that stays on 0.8 does not receive later fixes;
+that is a decision for the consumer, not a reason to add a shim.
+
+A deprecation cycle is also excluded. A deprecation warning or annotation
+requires the old name to resolve, so it is the same prohibited machinery under a
+different label.
+
+## 8. Stakeholder concerns and views
+
+| Stakeholder | Concern | View | Why this form |
+| --- | --- | --- | --- |
+| `LIB` maintainer | No obsolete surface remains | Exported-name inventory before and after | The question is membership in a finite set; a table is auditable |
+| `CONSUMER` maintainer | Exactly what to change, and when | One-row migration table plus changelog entry | A single replacement needs no diagram or prose narrative |
+| Release authority | The break is deliberate and documented | Changelog entry and version choice | Publication records the decision where later readers look |
+
+No view requires a diagram. Diagram validation with nixie is therefore not part
+of this design; no Mermaid block exists to validate.
+
+## 9. Verification plan
+
+Each obligation names the property, method, artefact, discharge condition, and
+non-vacuity argument. Exact commands belong in the ExecPlan, which chooses them
+once the toolchain is confirmed.
+
+### TDD-INV-01 – released surface carries `NEW` only
+
+- **Property.** The exported-symbol inventory of the release candidate contains
+  `NEW` and zero entries for `OLD`.
+- **Linked requirement.** TOR-GOAL-001; TDD-REQ-01.
+- **Method.** Parameterized check over the public API listing, compared with the
+  0.8 baseline inventory.
+- **Artefact.** A listing produced by the package's API-inventory tool, named in
+  the ExecPlan once the toolchain is known (TDD-AXIOM-04).
+- **Discharge.** Zero `OLD` entries and exactly the expected `NEW` entry.
+- **Non-vacuity.** The same command run against the 0.8 baseline must list
+  `OLD`. A check that cannot find `OLD` before the change is inspecting the
+  wrong artefact.
+
+### TDD-INV-02 – no compatibility surface exists
+
+- **Property.** No alias, deprecated re-export, facade, wrapper, second
+  definition, or default-name binding exposes `OLD`.
+- **Linked requirement.** TOR-CONSTRAINT-001 and TOR-CONSTRAINT-002;
+  TDD-REQ-02.
+- **Method.** Word-boundary search over source, manifests, and generated
+  documentation, with an allowlist limited to the changelog and historical
+  records.
+- **Artefact.** The search command and allowlist, recorded in the ExecPlan.
+- **Discharge.** Zero matches outside the allowlist.
+- **Non-vacuity.** The baseline tree contains matches, so the search can fail.
+  A seeded mention of `OLD` outside the allowlist must be rejected for the
+  intended reason.
+
+### TDD-INV-03 – in-repository callers are current
+
+- **Property.** Every in-repository definition, import, re-export, caller, test,
+  example, and documentation link uses `NEW`.
+- **Linked requirement.** TOR-GOAL-002; TDD-REQ-01.
+- **Method.** Red-Green-Refactor on the smallest focused test that uses `NEW`;
+  the full gate sequence follows.
+- **Artefact.** The renamed focused test and the repository gate commands.
+- **Discharge.** The focused test fails before the implementation with a
+  missing-symbol diagnostic, passes after the minimal implementation, and the
+  gates pass after refactoring.
+- **Non-vacuity.** The red failure must be the missing symbol, not an unrelated
+  compile or fixture error. A test that passes before the rename tests nothing.
+
+### TDD-LEMMA-01 – the consumer migrates by substitution
+
+- **Property.** With `OLD` replaced by `NEW` in its call site and a dependency
+  on the release candidate, `CONSUMER` builds.
+- **Linked requirement.** TOR-GOAL-003; TOR-SUCCESS-003; TDD-REQ-03.
+- **Method.** A real build of `CONSUMER` against the release candidate, in the
+  consumer's own CI.
+- **Artefact.** The consumer's build result, cited by revision.
+- **Discharge.** A passing consumer build with no reference to `OLD`.
+- **Non-vacuity.** The build must exercise the renamed call path. A consumer
+  build that never calls `NEW` would not test the lemma. This evidence is
+  unavailable in the present task and is recorded as planned, not passed.
+- **Boundary.** The lemma holds only for the consumer's documented use of the
+  API. It does not establish that no other consumer exists.
+
+### Axioms
+
+| ID | Assumption | Source | Boundary that depends on it |
+| --- | --- | --- | --- |
+| TDD-AXIOM-01 | The affected surface has no released 1.0-or-later contract | Brief plus TOR-ASSUMPTION-001, `[ASSUMED]` | Compatibility classification |
+| TDD-AXIOM-02 | `CONSUMER` is the only downstream consumer | Brief plus TOR-ASSUMPTION-002, completeness `[ASSUMED]` | Consumer-migration lemma and release notice scope |
+| TDD-AXIOM-03 | `OLD` is absent from persisted data, wire formats, and configuration keys | TOR-ASSUMPTION-004, `[ASSUMED]` | Scope excludes data migration |
+| TDD-AXIOM-04 | The repository's toolchain provides an exported-name inventory or an equivalent listing | Unverified | TDD-INV-01 artefact selection |
+| TDD-AXIOM-05 | The `RFC-A` alias is callable rather than documentation-only | TOR-ASSUMPTION-003, `[ASSUMED]` | The prohibition's applicability |
+
+Axioms 01 to 03 and 05 are the ones that expire first. Re-check them at the
+release candidate; a release tag or a discovered consumer invalidates the
+respective conclusion.
+
+### Formal-verification decision
+
+No model checking or formal proof is warranted. The properties are membership
+in a finite exported-name inventory, absence in a bounded source tree, and a
+real consumer build. These are fully exercised by the checks above; a prover
+would add cost without covering the coordination risk that actually matters.
+The residual gap is real: the absence search cannot prove that an unknown
+downstream project does not use `OLD`. TDD-AXIOM-02 carries that assumption,
+and the changelog is the mitigation.
+
+### Suggested acceptance scenarios (proposed)
+
+Proposed path: `tests/features/rename.feature`, subject to the repository's
+actual layout, which is unverified. If the repository has no BDD runner, the
+focused test and inventory check in the ExecPlan exercise the same behaviour.
+
+```gherkin
+Feature: The renamed symbol is the only public name
+  Scenario: A caller uses the new name after the release
+    Given a release candidate built from the rename change
+    When the exported names are listed
+    Then NEW is present and OLD is absent
+
+  Scenario: An obsolete name is reintroduced
+    Given a change that adds an alias for OLD
+    When the absence check runs
+    Then the check fails because OLD is found outside the allowlist
+```
+
+## 10. Handoff and readiness
+
+| Item | Value |
+| --- | --- |
+| Readiness | Ready for an implementation plan |
+| Blocking condition | The executing ExecPlan must enter `BLOCKED` until TOR-OPEN-001 closes; this is a governance block, not a design unknown |
+| Compatibility decision for every milestone | `none` |
+| Requirements handed to the ExecPlan | TDD-REQ-01 atomic rename; TDD-REQ-02 no compatibility surface; TDD-REQ-03 release notice and consumer migration; TDD-REQ-04 record the conflict explicitly |
+| Obligations handed to the ExecPlan | TDD-INV-01, TDD-INV-02, TDD-INV-03, TDD-LEMMA-01 |
+| Axioms handed to the ExecPlan | TDD-AXIOM-01 to TDD-AXIOM-05 |
+| Unresolved decisions | TOR-OPEN-001 to TOR-OPEN-005, mapped to what they gate in the ToR |
+| Milestone identifiers | None invented here; the receiving plan supplies them |
+
+Trace example for the receiving plan:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-01 -> TDD-INV-01 -> <current rename milestone> -> exported-name inventory
+```
+
+An upstream item that changes requires impact analysis in both directions
+before the link is accepted. If implementation falsifies TDD-AXIOM-01, the
+compatibility assessment reopens. If it falsifies TDD-AXIOM-02, the release
+notice widens. Neither outcome authorizes an alias.
+
+## 11. Revision note
+
+- 2026-11-19: Initial draft. Records the compatibility prohibition, the RFC
+  conflict, the atomic rename, and the verification obligations. No approval or
+  implementation is claimed.

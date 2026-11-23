@@ -1,0 +1,109 @@
+# Reconciliation intake and disposition
+
+Status: working record, ready for review, not accepted.
+
+Audience: the design owner, the architecture decision owner, the executing
+plan's author, and the sponsor or product owner who can accept scope.
+
+Date: 2026-11-19.
+
+Companion records, all in this directory:
+
+- `02-gap-register-and-design-change.md`
+- `03-adr-candidate.md`
+- `04-execplan-deviation-record.md`
+- `05-handoff-and-open-questions.md`
+
+## Evidence limits
+
+This session had access only to the `terms-of-reference-doc`, `tech-design-doc`
+and `execplans` skill packages. It had no repository tree, no terms of
+reference, no technical design revision, no ADR set, no roadmap, and no
+executing ExecPlan. Every claim about those artefacts is therefore `[OPEN]`
+until a revision is supplied. This record does not invent their content,
+identifiers, owners, or approval dates.
+
+The two scenario inputs are the only evidence in hand. They are reports, not
+primary records. A discovery agent's recommendation and an implementation
+agent's observation both arrive as input. Neither approves itself, and neither
+completes a parent goal by being repeated.
+
+## Input register
+
+| ID    | Input                                             | Kind              | Evidence status | Approval evidence | Delivery state                  |
+| ----- | ------------------------------------------------- | ----------------- | --------------- | ----------------- | ------------------------------- |
+| IN-1  | Discovery agent recommends extra hardening        | Proposal          | `[KNOWN]` that the recommendation was made; its technical merit is `[OPEN]` | None supplied | Proposed only                   |
+| IN-2  | Implementation finds an approved architectural change absent from the design and ADRs | Decision plus observation | `[KNOWN]` that implementation reports it; the approval record is `[OPEN]` | Claimed, not supplied | Approved (claimed), implemented (observed), unrecorded in design and ADR, verification `[OPEN]`, release `[OPEN]` |
+
+The approval, evidence, and delivery columns are separate dimensions. IN-2 can
+be approved and implemented while remaining unrecorded, unverified, and
+unreleased. IN-1 can be technically sound while remaining unauthorized.
+
+## Intake catalogue
+
+| Artefact              | Present in this session | Informs                                |
+| --------------------- | ----------------------- | -------------------------------------- |
+| Terms of reference    | No                      | Scope, constraints, assumptions        |
+| Technical design      | No                      | Architecture, requirements, verification obligations |
+| ADRs                  | No                      | Durable decisions, supersession        |
+| Roadmap               | No                      | Sequencing and release gates           |
+| Executing ExecPlan    | No                      | Conformance basis, deviation record    |
+| Approval record for IN-2 | No                   | Whether IN-2 is a decision or an unapproved deviation |
+| Discovery report for IN-1 | No                   | The hardening proposal's claim and scope |
+
+Nothing here conflicts because nothing here is present. The absence is the
+finding. Downstream records cannot be reconciled against an unseen revision.
+
+## Disposition of IN-1, the hardening recommendation
+
+IN-1 is a reviewer suggestion. Per the architecture contract, it is input, not
+an approval and not a licence to widen scope. It is also solution-space
+material: a hardening mechanism belongs in the design or an ADR, not in the
+terms of reference as a new goal. Turning every audit suggestion into a
+strategic goal, or widening a release gate to accommodate it, requires
+authorization this session does not have.
+
+Disposition: recorded as `GAP-HARDEN-001`, status `proposed work, not
+authorized`. The available responses are:
+
+1. Accept it into the design as a new requirement or design element, with a
+   named approving authority and a recorded requirement or accepted-risk
+   statement.
+2. Reject or defer it, recording the residual risk and the owner who accepted
+   that risk.
+3. Fund bounded discovery to establish whether the proposed hardening addresses
+   a real trust-boundary weakness, without treating discovery as approval.
+
+It does not enter the terms of reference as a goal. If the recommendation
+reveals a genuine gap against an existing hard constraint or success criterion,
+the correct move is to record that gap and ask the constraint's owner, not to
+rewrite the goal to match the suggestion.
+
+## Disposition of IN-2, the approved architectural change
+
+IN-2 is different in kind. An approved architectural decision already exists in
+some record that is not the design or the ADR set. Propagation, not invention,
+is the action. Two branches must be distinguished before any prose is changed:
+
+1. If the approval record is produced, reconciled, and current, the design and
+   ADR are stale records of an accepted decision. The remedy is a design change
+   request, an ADR candidate, impact analysis in both directions, and an
+   ExecPlan revision. The ExecPlan remains `BLOCKED` until that accepted state
+   is propagated, not until the architecture is re-approved.
+2. If no approval record can be produced, IN-2 is an unapproved architectural
+   deviation. The ExecPlan records the proposed deviation, identifies affected
+   identifiers, enters `BLOCKED`, and awaits explicit acceptance. It does not
+   proceed on the implementation's say-so.
+
+This session cannot decide between those branches. The record therefore states
+both and marks the branch selection `[OPEN]`.
+
+## What this session did not do
+
+- It did not edit, or claim to have edited, the design, an ADR, the terms of
+  reference, the roadmap, or any ExecPlan.
+- It did not implement, accept, or reject the hardening recommendation.
+- It did not treat the implementation as authority for what the design should
+  have said.
+- It did not mark any plan `COMPLETE`, because an upstream change remains
+  unrecorded and unaccepted.

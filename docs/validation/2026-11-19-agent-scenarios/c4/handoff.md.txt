@@ -1,0 +1,68 @@
+# Execution handoff – rename an unreleased exported function
+
+## Receiving artefact
+
+- ExecPlan: `/tmp/val-c4/execplan-rename-unreleased-export.md`
+- Revision: dated draft, 2026-11-19.
+- Status: `DRAFT`. The plan is not approved and no implementation has begun.
+
+No Terms of Reference, technical design, ADR, roadmap, or prior ExecPlan was
+supplied or inspected. This is a mechanical rename that changes no problem
+intent and no architecture, so no upstream document is revised or invented. The
+absence is recorded in the plan's `Conformance basis`.
+
+## Release baseline recorded
+
+The baseline is the affected package's latest formal release tag, not the
+library's version 2 major number. The function was introduced after that tag
+and is absent at it, so it is an unreleased API change ahead of the latest
+formal release tag.
+
+The exact repository, package, tag, definition path, and symbol name were not
+supplied. `EP-M0` records them before any edit and confirms the symbol's absence
+at the tag with `git show <tag>:<path>`.
+
+## Compatibility assessment
+
+- Source-API compatibility required: no.
+- Compatibility alias, deprecated entrypoint, facade, or wrapper: none
+  proposed, deliberately.
+- Reason: the applicable ToR, tech-design, and ExecPlan rules prohibit
+  source-API compatibility machinery for unreleased API changes ahead of the
+  latest formal release tag. The released 1.0-or-later lineage does not extend
+  to a symbol that never shipped.
+- Released surface: unchanged. Any edit to a symbol present at the tag is
+  outside this plan.
+- Persisted or wire formats: no obligation identified; escalate if the
+  identifier is serialized.
+- External consumers: none expected; `EP-M0` must evidence this. A discovered
+  consumer invalidates the no-alias decision and blocks the plan.
+
+## Traced requirements
+
+- `REQ-RENAME-NAME` – all references and the definition use the new name.
+- `REQ-RENAME-NO-ALIAS` – the old name is absent from the exported surface.
+- `REQ-RENAME-RELEASED-SURFACE` – released exports are unchanged.
+- `REQ-RENAME-BEHAVIOUR` – signature and behaviour are unchanged.
+
+## Readiness
+
+- Approval: awaiting explicit user approval. Silence is not approval.
+- Target name: unresolved. The intended replacement identifier was not supplied;
+  the plan uses `<new_name>`. Implementation cannot begin without it.
+- Otherwise ready for implementation once `EP-M0` replaces the placeholders
+  with concrete repository paths, symbols, tag, and toolchain commands.
+- Classification: bounded discovery first (`EP-M0`), then ready for approval and
+  execution.
+
+## Checks deliberately left unrun
+
+- All repository gates (`format`, `lint`, `typecheck`, `test`, and any API
+  surface check) were left unrun. The plan is `DRAFT`, nothing was implemented,
+  and the target repository lay outside the permitted read set under the
+  isolation rule.
+- No release-tag verification, reference inventory, exported-surface diff, or
+  negative-control search was run, for the same reason. The plan specifies each
+  as required evidence.
+- No diagram validation was needed; the plan contains no diagrams.
+- No skill-manifest checks apply; no skill files were changed.

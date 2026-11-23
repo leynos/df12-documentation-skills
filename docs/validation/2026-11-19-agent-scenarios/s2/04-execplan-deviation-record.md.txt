@@ -1,0 +1,413 @@
+# Reconcile an approved architecture change and an unapproved hardening recommendation
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: BLOCKED
+
+Branch: `unknown (not supplied)`
+
+Roadmap item: `unknown (not supplied)`
+
+This record is the deviation entry for the executing plan. The plan itself was
+not available in this session, so this file supplies the sections that the
+executing plan must adopt. It does not replace that plan, and it does not
+resume it.
+
+## Purpose / big picture
+
+Implementation reports an architectural change that is claimed to be approved
+but is absent from the technical design and the ADRs. Separately, a discovery
+agent recommends additional hardening. Today a reader of the design cannot tell
+which statements the decision owner accepted, and an implementer cannot tell
+whether the hardening proposal is in scope.
+
+After this work, the design and the ADR set will state the approved
+architecture, the plan's conformance basis will name real identifiers and
+revisions, and the hardening proposal will have an explicit disposition. Until
+an approving authority acts, the observable state is: the plan is `BLOCKED`,
+the design is unchanged, no hardening code is written, and no completion is
+claimed.
+
+## Constraints
+
+- The design, ADRs, terms of reference, and roadmap are not edited from this
+  session's authority. Changes to them are proposals.
+- No compatibility shim, alias, facade, deprecated entrypoint, or dual
+  implementation is introduced for a private, test-only, pre-1.0, or
+  unreleased surface.
+- The hardening recommendation is not implemented, accepted, or folded into the
+  architectural change without a named approving authority.
+- Implementation does not establish intent. Code is baseline evidence, never a
+  substitute for an approved decision.
+- The plan does not leave `BLOCKED` until the deviation is explicitly accepted
+  and the upstream records are reconciled.
+- Historical completed plans are read as evidence and are not rewritten.
+
+## Tolerances (exception triggers)
+
+- Architecture: any change to a protected boundary, interface, or persisted
+  format not covered by the approval record stops the work and escalates.
+- Evidence: an approval record that cannot be produced, or that names a signer
+  without the relevant decision right, stops the work and escalates.
+- Scope: any attempt to include the hardening recommendation in the same
+  revision stops the work; the proposal must be decided on its own.
+- Links: if more than the identified set of requirement and verification links
+  prove stale, stop and re-scope the reconciliation before editing.
+- Ambiguity: if two readings of the approval record produce materially
+  different architectures, stop and present both to the decision owner.
+- Iterations: if the link audit still reports stale references after three
+  passes, stop and escalate.
+- Code, configuration, and documentation budgets: not applicable. This work is
+  documentary, and its ExecPlan file is excluded from size counts.
+
+## Risks
+
+- Risk: the approval record does not exist, and IN-2 is an unapproved
+  deviation.
+  Severity: high. Likelihood: medium. Mitigation: branch selection is an
+  explicit open question; the plan stays `BLOCKED` either way.
+- Risk: the design is updated from the implementation, laundering an
+  unapproved change into apparent intent.
+  Severity: high. Likelihood: medium. Mitigation: transcription requires the
+  approval record, not the code.
+- Risk: the hardening proposal is adopted by proximity to the approved change.
+  Severity: medium. Likelihood: medium. Mitigation: separate gaps, separate
+  decision records, no shared revision.
+- Risk: verification evidence from the pre-change architecture is inherited
+  unchanged.
+  Severity: high. Likelihood: high. Mitigation: reopen each affected
+  obligation explicitly and mark unrerun checks as unverified.
+- Risk: the approved change touches a released contract or persisted format
+  that was not examined.
+  Severity: high. Likelihood: unknown. Mitigation: compatibility
+  classification is a blocking field.
+
+## Progress
+
+- [x] (2026-11-19 00:00Z) Intake of both scenario inputs completed.
+- [x] (2026-11-19 00:00Z) Gap register and design change request drafted.
+- [x] (2026-11-19 00:00Z) ADR candidate drafted.
+- [x] (2026-11-19 00:00Z) Deviation recorded; plan status set to `BLOCKED`.
+- [ ] Approval provenance for IN-2 produced and checked.
+- [ ] Branch selected: accepted decision or unapproved deviation.
+- [ ] `EP-M1` Design revision records the accepted decision.
+- [ ] `EP-M2` ADR records the accepted decision.
+- [ ] `EP-M3` Links reconciled and plan allowed to leave `BLOCKED`.
+- [ ] Hardening recommendation dispositioned by its owner.
+
+## Surprises & discoveries
+
+- Observation: an architectural change is reported as approved while neither
+  authoritative record carries it.
+  Evidence: the scenario input, as reported by implementation; the design and
+  ADR revisions were not available to inspect.
+  Impact: the design is not a trustworthy conformance basis until reconciled.
+- Observation: a second, unapproved change request arrived in the same
+  discovery window.
+  Evidence: the discovery agent report.
+  Impact: the two must be separated, or scope authority becomes untraceable.
+
+## Decision log
+
+- D1. Decision: record the architectural change as a proposed deviation and
+  set the plan to `BLOCKED`.
+  Rationale: the approval record is not in hand. The strongest alternative –
+  updating the design from the implementation – would convert an unverified
+  report into apparent intent.
+  Date/Author: 2026-11-19, reconciliation author.
+
+- D2. Decision: keep the hardening recommendation out of the architectural
+  change's revision and out of the terms of reference as a new goal.
+  Rationale: it has no approving authority and is solution-space material.
+  The strongest alternative – accept it because it is likely beneficial – still
+  requires a decision right this session does not have.
+  Date/Author: 2026-11-19, reconciliation author.
+
+- D3. Decision: prescribe no compatibility layer pending surface
+  classification.
+  Rationale: private, test-only, pre-1.0, and unreleased surfaces prohibit such
+  machinery; a released 1.0+ surface requires a named consumer and commitment.
+  Date/Author: 2026-11-19, reconciliation author.
+
+- D4. Decision: do not mark the plan `COMPLETE`.
+  Rationale: an upstream architectural change remains unrecorded and
+  unaccepted, and the reconciliation rule forbids completion in that state.
+  Date/Author: 2026-11-19, reconciliation author.
+
+## Outcomes & retrospective
+
+Not yet achieved. The plan is `BLOCKED`. The design and ADR set remain
+unchanged, the hardening proposal remains unauthorized, and no verification
+obligation has been re-discharged. The lesson recorded is that an approval
+claim arriving through an implementation report is not self-evidencing; the
+approval record must be produced before the design is edited.
+
+Completion requires the reconciliation steps below, not merely a passing test
+run or a merged change.
+
+## Context and orientation
+
+The affected artefacts are the terms of reference, the technical design, the
+ADR set, the roadmap, and the executing ExecPlan. Their repository-relative
+paths and revisions were not available in this session. The inspecting base
+revision is therefore unpinned, and every claim in this record is scoped to
+that limitation.
+
+The two inputs are recorded in `01-intake-and-disposition.md`. The gaps are in
+`02-gap-register-and-design-change.md`. The ADR candidate is in
+`03-adr-candidate.md`. Open questions and the handoff are in
+`05-handoff-and-open-questions.md`.
+
+No repository tooling or gate command is known here. The receiving plan must
+supply the exact format, lint, typecheck, and test commands, preferably through
+its Makefile targets, and must run them sequentially.
+
+## Conformance basis
+
+| Artefact             | Revision             | Acceptance state | Notes                       |
+| -------------------- | -------------------- | ---------------- | --------------------------- |
+| Terms of reference   | `UNAVAILABLE`        | `[OPEN]`         | Impact not yet assessed     |
+| Technical design     | `UNAVAILABLE`        | `[OPEN]`         | Stale relative to IN-2      |
+| ADRs                 | `UNAVAILABLE`        | `[OPEN]`         | Candidate raised            |
+| Roadmap              | `UNAVAILABLE`        | `[OPEN]`         | Sequencing impact unknown   |
+| Executing ExecPlan   | `UNAVAILABLE`        | `BLOCKED`        | This record supplements it  |
+| Approval record      | `UNAVAILABLE`        | Claimed          | Blocking input              |
+| Installed `execplans` skill | Inspected 2026-11-19, `SKILL.md` and `references/execplan-template.md` | N/A | Installed version used |
+
+Identifiers are `UNASSIGNED` rather than invented:
+
+```plaintext
+[TOR item] -> [TDD requirement] -> [TDD component] -> EP-M1..EP-M3 -> [evidence]
+```
+
+The affected requirement and design-element identifiers must be filled from the
+authoritative design revision. A link means the items relate; it does not mean
+the obligation is discharged.
+
+## Verification plan
+
+### Abstract model
+
+The reconciliation is a documentary state machine over four states: reported,
+recorded, accepted, verified. Each affected upstream item starts at `reported`
+and reaches `accepted` only through the decision owner. Implementation and
+approval are separate axes; an item can be implemented and recorded yet remain
+unaccepted.
+
+### Invariants and lemmas
+
+- `INV-LINKS`: every statement the approved change invalidates is either
+  updated or explicitly marked unaffected in the design revision.
+- `INV-AUTHORITY`: no record attributes acceptance to an actor or date absent
+  from the approval record.
+- `INV-EVIDENCE`: every affected verification obligation is re-discharged or
+  recorded as unverified with the gap and owner named.
+- `L-COMPLETE`: `INCOMPLETE` cannot be reached while any affected item remains
+  at `reported` or `recorded`. This follows from `INV-LINKS` and
+  `INV-AUTHORITY` applied to the completion gate.
+
+The system-level invariants introduced by the architectural change itself are
+`[OPEN]`: they cannot be stated without the approved decision's text. That
+absence is a blocking gap, not an omitted section.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-APPROVAL`: the approval record, once produced, is authentic and was
+  granted within the signer's authority. Boundary: the decision owner; this
+  plan verifies transcription, not authenticity.
+- `AXIOM-REVISION`: the revisions supplied to the reconciler are those in
+  force. Boundary: the repository's revision identifiers; verify hashes or
+  commit IDs before use.
+- `AXIOM-DESIGN`: the design revision was internally consistent before the
+  change. Boundary: the design owner; this plan does not re-audit unrelated
+  sections.
+
+### Methods per obligation
+
+- Obligation: `INV-LINKS` over the affected statement set.
+  Method: trace audit by targeted search, plus reviewer diff.
+  Rationale: the statement set is finite and documentary; exhaustive search is
+  practical and proportionate.
+  Domain: every design and ADR file in the supplied revision.
+  Artefact: link table in the design change request.
+  Evidence: before the edit, each targeted search returns the stale statement
+  and the audit lists it; after the edit, the audit returns no stale statement
+  and the table records each disposition.
+  Non-vacuity: the before-audit must return at least one real stale statement.
+  A negative control seeds one additional stale reference and confirms the
+  audit reports it.
+
+- Obligation: `INV-AUTHORITY` over every acceptance claim.
+  Method: documentary cross-check against the approval record.
+  Rationale: approval is a decision fact, not a runtime property.
+  Domain: every status, date, and owner field changed by the reconciliation.
+  Artefact: the ADR candidate's evidence list.
+  Evidence: a field with no matching record fails the check; every field
+  matches exactly one record on success.
+  Non-vacuity: include an intentionally unsupported owner field in the
+  check set and confirm it is rejected.
+
+- Obligation: `INV-EVIDENCE` over the affected obligation inventory.
+  Method: obligation-by-obligation diff, with each item marked
+  re-discharged, deferred with acceptance, or unverified.
+  Rationale: the change invalidates evidence scope, and only a per-obligation
+  review can show which evidence survives.
+  Domain: every verification obligation linked to the changed requirements.
+  Artefact: an updated obligation table in the design revision.
+  Evidence: no obligation retains a passing result from a pre-change revision
+  without an explicit re-run or an explicit invalidation note.
+  Non-vacuity: at least one obligation must be genuinely invalidated; an
+  inventory where everything survives unchanged is treated as a failed audit.
+
+### Formal verification decision
+
+No model checking or formal proof is proposed for the reconciliation itself.
+The obligations are finite documentary properties, and the methods above
+discharge them. The architectural change may require its own formal or
+property-based obligations once its text is known; that decision belongs to the
+revisited design and must not be assumed here.
+
+### Suggested BDD features
+
+No BDD feature is proposed. This work changes documents and decision records,
+not observable system behaviour. The executing plan's existing behavioural
+scenarios remain the acceptance surface for the code, and this record does not
+reinterpret them.
+
+## Plan of work
+
+### `EP-M1` Design revision records the accepted decision
+
+Produce the approval record and check it. Transcribe the decision into the
+design with its provenance, then update the affected requirement, gap, and
+verification links. Acceptance evidence: the design revision contains the
+decision, its owner, its date, and no stale statement from the pre-change
+architecture. This milestone cannot start while the approval record is
+missing.
+
+### `EP-M2` ADR records the accepted decision
+
+Record the candidate ADR, or update the ADR it supersedes, with the same
+provenance and the consequences identified in `03-adr-candidate.md`. Acceptance
+evidence: the ADR is accepted by its owner and links to the design revision.
+
+### `EP-M3` Links reconciled and plan allowed to leave `BLOCKED`
+
+Re-run the link audit, confirm `INV-LINKS`, `INV-AUTHORITY`, and
+`INV-EVIDENCE`, and update the plan's conformance basis with real identifiers.
+Acceptance evidence: the audit returns no stale statement, every acceptance
+field is supported, and the plan status changes only after explicit acceptance.
+Completion is permitted only after these steps.
+
+## Milestones and plateaus
+
+- Identifier and outcome: `EP-M1`, design and links coherent.
+  Requirements and gaps: `GAP-ARCH-001`.
+  Acceptance evidence: the design revision and the reconciled link table.
+  Conformance check:
+  - Affected requirements satisfied or explicitly deferred.
+  - Design still follows the accepted decision.
+  - Upstream assumptions rechecked against the terms of reference.
+  - No unapproved public interface or dependency change.
+  - No unapproved trust-boundary or persisted-format change.
+  - Trace links current.
+  Recovery: revert the design revision if acceptance is withdrawn.
+  Remaining gaps: `EP-M2` and `EP-M3`.
+  Compatibility decision: `[OPEN]` pending surface classification.
+
+- Identifier and outcome: `EP-M2`, ADR accepted.
+  Requirements and gaps: `GAP-ARCH-001`.
+  Acceptance evidence: the accepted ADR and its supersession link.
+  Conformance check: as `EP-M1`, applied to the ADR set.
+  Recovery: mark the candidate withdrawn; restore the prior ADR text.
+  Remaining gaps: `EP-M3`, and `GAP-HARDEN-001` remains separate.
+  Compatibility decision: `[OPEN]`; the ADR must record the classification.
+
+- Identifier and outcome: `EP-M3`, reconciliation closed.
+  Requirements and gaps: `GAP-ARCH-001` discharged; `GAP-HARDEN-001` only if
+  its owner has acted.
+  Acceptance evidence: a clean link audit, a supported acceptance field set,
+  and an updated conformance basis.
+  Conformance check: as `EP-M1`, across all affected artefacts.
+  Recovery: return to `BLOCKED` if the audit finds an unrecorded item.
+  Remaining gaps: the hardening disposition, unless separately accepted.
+  Compatibility decision: `[OPEN]` until classified.
+
+No milestone introduces compatibility machinery. Each plateau is a coherent
+documentary state, not a parallel old and new architecture.
+
+## Concrete steps
+
+The receiving plan must substitute real repository paths and gate commands.
+Illustrative shape only:
+
+```plaintext
+Working directory: <repository root>
+Red (audit): rg -n '<stale statement>' docs/ -> reports the stale references
+Green (audit): rg -n '<stale statement>' docs/ -> no matches
+Link check: <repository link or trace check> -> no broken trace links
+Gates: make check-fmt; make lint; make typecheck; make test
+```
+
+Run the gates sequentially and capture output to a log under `/tmp`, with
+`pipefail` enabled. None of these commands is known to apply to this
+repository; they must be replaced before execution.
+
+## Validation and acceptance
+
+Acceptance is documentary and observable:
+
+- The design revision states the approved decision with an owner, a date, and a
+  source.
+- The ADR set records the decision or marks it superseded.
+- The link audit reports no stale statement and no unsupported acceptance
+  field.
+- Every affected verification obligation is re-discharged, deferred with
+  acceptance, or marked unverified with a named gap.
+- The hardening proposal has an explicit disposition, separate from the
+  architectural change.
+- The plan leaves `BLOCKED` only after explicit acceptance, and reaches
+  `COMPLETE` only after the upstream records are reconciled.
+
+Quality criteria:
+
+- Tests: the repository's full gate sequence passes for the documentary change.
+- Verification: `INV-LINKS`, `INV-AUTHORITY`, and `INV-EVIDENCE` are
+  discharged; system-level obligations are `[OPEN]` until stated.
+- Lint and typecheck: pass, with no waiver.
+- Security: the hardening proposal remains unapproved and unimplemented.
+- Performance: not applicable.
+
+## Idempotence and recovery
+
+The audits are read-only and can be re-run safely. Design and ADR edits are
+reversible through revision control; each milestone records a safe revert.
+No step is destructive, and no temporary fault used as a negative control is
+left in place.
+
+## Artefacts and notes
+
+- `01-intake-and-disposition.md`: input register and dispositions.
+- `02-gap-register-and-design-change.md`: gaps, change request, compatibility
+  classification, verification reopening.
+- `03-adr-candidate.md`: candidate ADR and required evidence.
+- `05-handoff-and-open-questions.md`: blocking questions and owners.
+
+No transcript is claimed. No check was executed in this session.
+
+## Interfaces and dependencies
+
+No code interface, library, or dependency is introduced or changed. The
+documentary interfaces are the design revision, the ADR set, the roadmap, and
+the ExecPlan's conformance basis. The decision owner is a dependency for
+`EP-M1`; the ADR owner is a dependency for `EP-M2`. Neither dependency is
+unblocked.
+
+## Revision note
+
+- 2026-11-19: initial record. The plan is `BLOCKED` pending approval
+  provenance. No design, ADR, or code change is included. Remaining work is
+  `EP-M1` to `EP-M3` after acceptance.

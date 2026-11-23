@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/df12/record-v2.schema.json",
+  "title": "Record format version 2",
+  "description": "Target storage representation. A record without schema_version is a version 1 record and is decoded by the version 1 decoder; it is not valid against this schema. Field names in payload are application-defined.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "created_at", "payload"],
+  "properties": {
+    "schema_version": {
+      "const": 2,
+      "description": "Format discriminator. Its absence means a version 1 record; any other value is an unsupported version, never a version 1 fallback."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Record identity. Preserved from version 1."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 date-time in UTC. Derived from the version 1 integer timestamp."
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true,
+      "description": "Optional. Version 1 carried at most one tag string; the decoder wraps it in a list."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Application data, preserved from the version 1 body with the same JSON value."
+    }
+  }
+}

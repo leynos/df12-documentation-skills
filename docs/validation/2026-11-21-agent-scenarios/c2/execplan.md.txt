@@ -1,0 +1,719 @@
+# Reshape the test-only helper and migrate its test callers
+
+This ExecPlan (execution plan) is a living document. The sections
+`Constraints`, `Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`,
+`Decision log`, `Outcomes & retrospective`, `Conformance basis`, and
+`Verification plan` must be kept up to date as work proceeds.
+
+Status: DRAFT (reconnaissance, outline agreement, and explicit approval
+outstanding; `TOR-CONFLICT-001` is recorded for resolution at approval).
+
+Branch: unassigned. The target repository was not inspected and the input
+names no branch.
+
+Roadmap item: none supplied.
+
+## Purpose / big picture
+
+The repository exposes a helper solely to its tests. After this change, the
+helper has the narrowest surface its test callers can use, every test caller
+uses that surface, and the old general-purpose exposure is gone. A maintainer
+can observe success by running the repository's test suite and by searching
+for the old helper surface: the tests pass and the search finds nothing. The
+diff contains no alias, deprecated entrypoint, facade, adapter, dual
+implementation, or temporary wrapper.
+
+The compatibility shim suggested in the prompt is deliberately not built.
+A shim would preserve the obsolete test-only interface, which the installed
+contracts prohibit. If the requester makes the shim mandatory, this plan
+enters `BLOCKED` until the demand is withdrawn or the surface is reclassified
+with evidence.
+
+Terms used here:
+
+- **Helper** – the repository function, type, or module-level item whose only
+  consumer is the repository's own test suite.
+- **Test caller** – any test, doctest, example, benchmark, fixture, or build
+  script reference to the helper.
+- **Test-only API** – an interface or support surface whose sole purpose is
+  to serve tests.
+- **Compatibility shim** – an alias, deprecated entrypoint, facade, adapter,
+  dual implementation, or wrapper that keeps an obsolete source interface
+  usable.
+- **Coherent plateau** – a repository state that is correct and internally
+  consistent, not one that keeps old and new interfaces alive together.
+
+Illustrative shape only; the symbols are not repository facts:
+
+```plaintext
+Before: tests -> old exposed helper
+After:  tests -> reshaped helper
+Never:  tests -> old alias -> reshaped helper
+```
+
+The helper's observable behaviour and the tests' assertions are preserved.
+Deliberately changed: the helper's location, visibility, or signature, and
+the test call sites. No error or diagnostic change is expected; if the
+reshape would change one, that is a behavioural change requiring separate
+acceptance.
+
+## Constraints
+
+- The helper definition and every affected caller change in one coherent
+  commit. No partial migration is committed, and no intermediate state is
+  required to build or test.
+- No source-API compatibility machinery for this test-only surface. This
+  prohibits aliases, deprecated entrypoints, facades, adapters, dual
+  implementations, feature flags selecting old and new paths, and temporary
+  wrappers.
+- No production or public API change. If reconnaissance finds a production
+  caller or a genuine external consumer, stop and reassess; the surface is
+  no longer test-only.
+- Test intent is preserved. Call sites may be rewritten. Assertions are not
+  deleted, weakened, or marked expected-failure without a recorded
+  disposition and, for behavioural changes, explicit acceptance.
+- The helper's behaviour does not change unless separately requested and
+  accepted.
+- No new dependency, generated code, or unrelated cleanup.
+- Repository guidance, including `AGENTS.md` and its gate targets, governs
+  once inspected. Until then, no command is asserted as the repository's
+  gate.
+- Paths and modules that must not be modified: unknown until `EP-M0`. The
+  default is that only the helper's definition and its test callers change.
+- Historical documents, completed ExecPlans, and changelog history remain
+  untouched.
+- Implementation begins only after the user explicitly approves this plan,
+  unless existing standing instructions already authorize execution. This
+  draft does not authorize any repository change.
+
+If satisfying the objective requires violating a constraint, do not proceed.
+Record the conflict in `Decision log` and escalate.
+
+## Tolerances (exception triggers)
+
+No repository survey was possible for this draft, so these are provisional
+ceilings derived from the stated scope, not evidence-based estimates. `EP-M0`
+must confirm or lower them before implementation is approved; any increase
+requires explicit approval. No comparable historical ExecPlans were
+available, and no budget history exists. This ExecPlan file is excluded from
+every count, including when it is added or updated. Generated files are
+excluded only if `EP-M0` names them explicitly.
+
+The ceilings assume one helper definition, up to four test files, and at
+most one documentation file; the code ceiling assumes a small mechanical
+migration; the configuration ceiling assumes that no manifest changes. These
+assumptions are unverified. Each limit measures net lines – additions minus
+deletions – not churn.
+
+- Files: if implementation changes more than 6 non-ExecPlan files, stop and
+  escalate.
+- Code: if changes exceed 200 net lines of production source, tests, or
+  executable build logic, stop and escalate.
+- Configuration: if changes exceed 0 net lines of declarative settings,
+  manifests, lockfiles, deployment descriptors, or CI configuration, stop and
+  escalate.
+- Documentation: if changes exceed 40 net lines of prose, guides, or
+  reference material excluding ExecPlan files, stop and escalate.
+- Interface: if a change beyond the helper's test-facing surface is needed,
+  stop and escalate.
+- Dependencies: if any dependency is needed, stop and escalate.
+- Architecture: if a new production module boundary, layering change, trust
+  boundary, or persisted format is needed, stop and escalate.
+- Iterations: if a focused test still fails after 3 attempts, stop and
+  escalate with the failure log.
+- Time: if a milestone takes more than 2 hours, stop and escalate.
+- Ambiguity: if multiple valid interpretations materially affect the
+  outcome, stop and present the options with trade-offs.
+
+Counting method: `git diff --numstat` against the recorded base revision,
+with changed hunks assigned to one category by purpose. Code embedded in a
+workflow or configuration file counts as code. Enforce each category
+independently; spare capacity in one category does not offset another.
+
+## Risks
+
+- Risk: the brief's "solely to its tests" is wrong and a production or
+  external consumer exists.
+  Severity: high. Likelihood: medium. Mitigation: `EP-M0` inventories every
+  reference class before any edit; a non-test caller sets the plan to
+  `BLOCKED`.
+- Risk: a hidden caller in a doctest, example, benchmark, fixture, or build
+  script is missed.
+  Severity: medium. Likelihood: high. Mitigation: search every tracked file
+  and classify each reference; compile and run the affected harnesses.
+- Risk: the helper is exported by a released package and has genuine external
+  consumers.
+  Severity: medium. Likelihood: low, given the brief. Mitigation: inspect
+  release lineage at `EP-M0`; if the surface is not test-only, reassess
+  separately. A released test-only surface remains excluded from source
+  compatibility.
+- Risk: tests are rewritten to pass rather than migrated, losing coverage.
+  Severity: high. Likelihood: medium. Mitigation: per-test review table,
+  assertion diff review, focused suites, and a mutation negative control.
+- Risk: the repository's gates are unavailable or already failing.
+  Severity: medium. Likelihood: medium. Mitigation: record the baseline before
+  editing, keep gate logs, and distinguish pre-existing failures from
+  regressions.
+- Risk: scope creeps into general cleanup of the helper's module.
+  Severity: medium. Likelihood: medium. Mitigation: the tolerances and the
+  one-helper scope; unrelated improvements become separate proposals.
+
+## Progress
+
+- [x] (2026-11-21 08:17Z) Intake, terms of reference, design outline, design
+  draft, and this draft plan completed. No repository inspection was
+  permitted.
+- [x] (2026-11-21 08:17Z) Compatibility conflict `TOR-CONFLICT-001` recorded;
+  the suggested shim is declined.
+- [ ] Requester answers `TOR-OPEN-001` (meaning of 'reshape').
+- [ ] Design outline agreed and design accepted.
+- [ ] `EP-M0` reconnaissance and premise verification.
+- [ ] Tolerances confirmed or lowered against the `EP-M0` inventory.
+- [ ] Plan explicitly approved by the decision authority.
+- [ ] `EP-M1` atomic reshape and caller migration.
+- [ ] `EP-M2` verification, gates, and closure.
+- [ ] Upstream artefacts reconciled; plan marked `COMPLETE`.
+
+## Surprises & discoveries
+
+- Observation: the prompt's suggested compatibility shim is prohibited by
+  all three installed skill contracts, not merely discouraged.
+  Evidence: the quotations in `terms-of-reference.md` §7.1 and
+  `tech-design.md` §3.4. Impact: recorded as `TOR-CONFLICT-001`; the plan
+  prescribes the atomic caller migration instead.
+- Observation: a 'stable repository' is not a compatibility category.
+  Evidence: the policy classifies the surface and release lineage, not
+  repository age or gate health. Impact: the test-only exclusion controls; no
+  shim is justified by stability.
+- Observation: the scenario supplies no repository path, symbol, language,
+  gate command, or release tag.
+  Evidence: the scenario text; the authoring isolation rules. Impact: `EP-M0`
+  exists and no command or signature is invented here.
+
+## Decision log
+
+- D1. Decision: decline the suggested compatibility shim.
+  Rationale: the helper is a test-only API, for which source-API
+  compatibility machinery is absolutely prohibited. The shim would preserve
+  an obsolete interface, add a second path, and cannot answer "compatible
+  with whom or what?" The strongest rejected alternative – keeping the old
+  tests verbatim through an alias – fails that question and creates permanent
+  maintenance surface. Date/Author: 2026-11-21, authoring agent. The decision
+  authority must confirm it at plan approval; if the shim is mandatory, the
+  plan is `BLOCKED`.
+- D2. Decision: reshape the helper and migrate every caller atomically.
+  Rationale: a coherent plateau requires one interface and all its users.
+  Rejected alternative: two milestones with a temporary compatibility path,
+  which would violate D1 and the plateau rule.
+- D3. Decision: preserve test intent, not test text.
+  Rationale: assertions and covered behaviour are the tests' value; call-site
+  spelling is incidental. Rejected alternative: verbatim tests through a
+  shim.
+- D4. Decision: defer the choice among visibility narrowing, relocation to
+  test support, and a deliberate test-support export to `EP-M0`.
+  Rationale: the language and harness are unknown; choosing now would invent
+  a contract. Rejected alternative: prescribe a language-specific mechanism
+  without evidence.
+- D5. Decision: treat the tolerances as provisional ceilings.
+  Rationale: no repository survey was possible, so evidence-based budgets
+  would be fabricated. Rejected alternative: omit tolerances or invent a
+  survey.
+- D6. Decision: leave this plan in `DRAFT`; perform no implementation.
+  Rationale: the approval gate is unmet, the premise is unverified, and
+  `TOR-OPEN-001` to `TOR-OPEN-005` remain open.
+- D7. Decision: no model checking or formal proof.
+  Rationale: the change introduces no algorithmic, concurrency, protocol, or
+  arithmetic invariant. Compile-time visibility plus the test suite are
+  proportionate. A prover would not establish interface absence; the
+  inventory and search do.
+- D8. Decision: adapt Red-Green-Refactor to a structural change.
+  Rationale: the reshape adds no behaviour, so no failing behavioural
+  assertion specifies it. The red stage is the first migrated caller failing
+  to resolve the target surface – a compile-time or visibility failure for
+  the intended reason. A compile-fail check is the substitute; the preserved
+  assertions remain the green evidence. Rejected alternative: delete or
+  weaken a passing test to manufacture a red stage.
+
+## Outcomes & retrospective
+
+Not applicable at draft. Update at each milestone and at completion.
+
+At completion, compare the result with the purpose: the tests pass through the
+reshaped helper, the old surface is absent, and no compatibility symbol
+exists. Reconcile implementation discoveries with the conformance basis. If
+`EP-M0` falsifies `TOR-ASSUMPTION-001`, update the terms of reference and the
+design before continuing and set this plan to `BLOCKED` until the deviation is
+accepted. Do not mark the plan `COMPLETE` while a deviation or upstream change
+is unrecorded or unaccepted.
+
+## Context and orientation
+
+Known facts:
+
+- One helper is exposed solely to the repository's tests.
+- The repository is described as stable; no gate output was supplied.
+- The requested operation is a reshape of that helper.
+- The prompt suggests a compatibility shim for the old tests; that proposal is
+  declined under `TOR-CONFLICT-001`.
+
+Unknown facts, to be supplied by `EP-M0`:
+
+- the helper's exact symbol, definition site, owning module, and signature;
+- every caller, with path, test class, and assertion;
+- the language, toolchain version, test framework, and harness layout;
+- the repository's documented gate commands and their baseline state;
+- the base revision; the package's release lineage; and any generated or
+  vendored paths that the search must treat separately;
+- the decision authority and the confirmed meaning of 'reshape'.
+
+No symbol, path, or command is asserted before that reconnaissance. This
+plan is not approvable for implementation while this section is incomplete.
+The reconnaissance is read-only and does not authorize implementation.
+
+Budget-setting survey: no repository survey was possible; no comparable
+historical ExecPlans were available. The provisional tolerances in this plan
+are therefore ceilings derived from the stated one-helper scope, and `EP-M0`
+must replace them with evidence-based values or confirm them.
+
+## Conformance basis
+
+| Artefact | Path | Revision and state | Inspected |
+| --- | --- | --- | --- |
+| Scenario statement | Supplied in session | Dated 2026-11-21; quoted in the ToR | Yes |
+| Terms of reference | `/tmp/val2-c2/terms-of-reference.md` | Draft v0.1, 2026-11-21, SHA-256 `bd54871da8fe8260f474cd1e1cbcdd18824d5beb72c15608672055ef72943408`; not accepted | Yes |
+| Design outline | `/tmp/val2-c2/tech-design-outline.md` | Proposed, 2026-11-21, SHA-256 `09d045e520bebed6e41cccde62366263679aff11466731708c232abf638c543f`; not agreed | Yes |
+| Technical design | `/tmp/val2-c2/tech-design.md` | Draft 0.1, 2026-11-21, SHA-256 `fd96ba9df7307ec87d061a1aad45510736cb37fdc5b5c079cad10bc947eb3fce`; not accepted | Yes |
+| ExecPlans skill | `/home/leynos/.claude/skills/execplans/SKILL.md` | Installed copy, inspected 2026-11-21; no revision metadata present | Yes |
+| Target repository | Not supplied | Unknown; not inspected | No |
+
+Derived requirements:
+
+- `REQ-atomic-reshape`: reshape the helper and migrate every caller in one
+  coherent change. Traces: `TOR-GOAL-001` -> `TDD-REQ-001` to `TDD-REQ-003`
+  -> `EP-M1`.
+- `REQ-caller-completeness`: no old-surface reference survives and every
+  baseline caller reaches the target. Traces: `TOR-GOAL-002` ->
+  `TDD-REQ-002`, `TDD-REQ-006` -> `EP-M1`, `EP-M2`.
+- `REQ-test-intent`: every migrated test keeps its asserted behaviour.
+  Traces: `TOR-CONSTRAINT-003` -> `TDD-REQ-004` -> `EP-M1`, `EP-M2`.
+- `REQ-no-shim`: no compatibility machinery is introduced. Traces:
+  `TOR-NONGOAL-001`, `TOR-CONSTRAINT-001`, `TOR-CONFLICT-001` ->
+  `TDD-REQ-003` -> `EP-M1`, `EP-M2`.
+- `REQ-premise`: the helper is test-only. Traces: `TOR-ASSUMPTION-001` ->
+  `GAP-001`, `GAP-005` -> `EP-M0`.
+
+Observed gaps: `GAP-001` (caller inventory), `GAP-002` (target mechanism),
+`GAP-003` ('reshape' meaning), `GAP-004` (release lineage and gates), and
+`GAP-005` (premise may be falsified). `EP-M0` owns all five.
+
+Illustrative trace chain; the final evidence identifiers do not exist yet and
+must be filled from observed results:
+
+```plaintext
+TOR-GOAL-001 -> TDD-REQ-001 -> EP-M1 -> <target test>: passes and calls the reshaped helper
+TOR-NONGOAL-001 -> TDD-REQ-003 -> EP-M2 -> <alias-seed negative control>: rejected
+```
+
+On a traced change, identify upstream and downstream impacts before accepting
+it, then update every affected link.
+
+## Verification plan
+
+### Abstract model
+
+A reference is a use of the helper through the old surface or the target
+surface in a tracked file. Each reference has one state: definition, test
+caller, production caller, or documentation reference. The transition
+migrates every test caller and removes the old surface in one change. The
+precondition is that every reference is a test caller; it is assumed by the
+brief and must be established by `EP-M0`. A production, external, or
+unclassifiable reference violates the precondition and stops the work.
+
+### Invariants and lemmas
+
+- `INV-001` – After the change, no tracked, non-historical file refers to the
+  old helper surface. Links: `REQ-caller-completeness`.
+- `INV-002` – Every baseline test caller exists in the target and reaches the
+  reshaped helper. Links: `REQ-caller-completeness`, `REQ-test-intent`.
+- `INV-003` – The change introduces no alias, deprecated entrypoint, facade,
+  adapter, dual implementation, or temporary wrapper. Links:
+  `REQ-no-shim`.
+- `INV-004` – Every migrated test preserves its asserted behaviour. Links:
+  `REQ-test-intent`.
+- `L-001` – If `INV-001` to `INV-004` hold and the gates pass, the change is
+  atomic and no compatibility obligation applies. Links: `REQ-atomic-reshape`,
+  `REQ-no-shim`.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-001` – The selected language mechanism restricts access as its
+  documentation states. Source: language documentation, to be cited at
+  `EP-M0`. Boundary: the helper's exposure.
+- `AXIOM-002` – The repository test runner executes the migrated tests and
+  reports them individually. Source: repository test configuration, to be
+  inspected at `EP-M0`. Boundary: acceptance evidence.
+- `AXIOM-003` – The repository's documented gates are the acceptance
+  authority. Source: repository guidance, to be read at `EP-M0`. Boundary:
+  `TOR-SUCCESS-002`.
+
+The premise that the helper is test-only is not an axiom. It is
+`TOR-ASSUMPTION-001` with an evidence obligation in `EP-M0`.
+
+### Methods per obligation
+
+- Obligation: `INV-001`, no old-surface reference remains.
+  Method: repository-wide symbol search over tracked files plus diff review.
+  Rationale: a search directly observes the claim and is cheap; the diff
+  review catches renames that evade a literal search.
+  Domain: every tracked, non-generated, non-historical file.
+  Artefact: search transcript and target-symbol list in `Artefacts and notes`.
+  Evidence: pre-change search finds at least one reference (proving the search
+  can match); post-change search finds none outside historical records. The
+  red stage begins with a migrated caller that cannot resolve the target
+  symbol.
+  Non-vacuity: seed an alias for the old name in a scratch, uncommitted edit
+  and confirm the search reports it; revert the edit and confirm the search
+  is clean.
+- Obligation: `INV-002`, caller completeness.
+  Method: baseline-to-target reconciliation plus compile and focused tests.
+  Rationale: the inventory is finite and enumerable once known; compilation
+  catches unresolved calls.
+  Domain: every caller class recorded at `EP-M0`.
+  Artefact: per-test review table.
+  Evidence: every baseline caller has a target counterpart; the focused suite
+  passes; the red stage fails for the intended missing-symbol reason.
+  Non-vacuity: omit one caller migration in a scratch edit and confirm the
+  build or search fails; revert the edit.
+- Obligation: `INV-003`, no compatibility machinery.
+  Method: diff review plus targeted search for shim forms.
+  Rationale: no search can enumerate every shim shape, so human review of the
+  complete diff is primary and the search is a backstop.
+  Domain: the whole diff, including test-support modules.
+  Artefact: diff and search output.
+  Evidence: no added alias, deprecation marker, forwarding facade, adapter,
+  or dual path.
+  Non-vacuity: introduce one alias in a scratch edit and confirm both review
+  and search reject it; revert the edit.
+- Obligation: `INV-004`, asserted behaviour preserved.
+  Method: per-test assertion diff review plus focused suites.
+  Rationale: the risk is silent weakening, which a green suite cannot detect.
+  Domain: every modified test.
+  Artefact: per-test review table with "assertion change: none" or the
+  accepted change and its authorization.
+  Evidence: no assertion deleted or loosened without recorded acceptance;
+  focused tests pass.
+  Non-vacuity: mutate one expected value in a scratch edit and confirm the
+  test fails; revert the edit.
+- Obligation: `L-001`, atomicity removes the compatibility need.
+  Method: argument from `INV-001` to `INV-004` plus the complete caller
+  inventory.
+  Rationale: once no caller remains for the old surface, there is no consumer
+  for a compatibility layer.
+  Artefact: this plan and the review table.
+  Evidence: all four invariants discharged in one coherent commit.
+  Non-vacuity: the witness is the complete inventory, which contains at least
+  one caller before the change; an empty inventory would falsify the premise
+  and stop the work.
+
+### Formal verification decision
+
+No model checking or formal proof is needed. The change introduces no
+algorithmic invariant, protocol, concurrency property, state machine, or
+arithmetic bound. Compile-time visibility and the test suite are the
+proportionate checks. A stronger method would not establish interface
+absence; the inventory, search, and diff review address that claim directly.
+The residual gap is a caller outside the inspected tracked files; `EP-M0`
+bounds it, and any later discovery reopens the classification.
+
+### Suggested BDD features
+
+The repository's BDD runner is unknown. These scenarios are proposed, not an
+authorization to add a framework. Proposed path:
+`<target repository>/features/test_only_helper_reshape.feature`, to be
+confirmed at `EP-M0`. If no runner exists, the focused tests and the review
+table exercise them.
+
+```gherkin
+Feature: Test-only helper reshape
+  Scenario: Tests use only the reshaped helper
+    Given the helper is exposed only to the repository's tests
+    When the helper and every test caller change together
+    Then the repository test suite passes
+    And no reference to the old helper surface remains
+    And no compatibility alias exists
+
+  Scenario: A non-test caller is discovered
+    Given reconnaissance finds a production or external caller
+    When the caller inventory is reviewed
+    Then implementation stops
+    And the compatibility classification is reassessed
+```
+
+## Plan of work
+
+The work proceeds in three milestones. `EP-M0` is read-only discovery.
+`EP-M1` is the single atomic implementation. `EP-M2` verifies, gates, and
+closes. No milestone may begin before the previous milestone's acceptance is
+recorded.
+
+### `EP-M0` reconnaissance and premise verification
+
+Read the repository guidance, then inventory every reference to the helper.
+Classify each as definition, test caller, production caller, or documentation
+reference. Record the language, toolchain, test framework, harness layout,
+gate commands, base revision, release lineage, and any generated or vendored
+paths. Confirm the requester's meaning of 'reshape' and the decision
+authority. Replace the provisional tolerances with evidence-based values or
+confirm them. Complete `Context and orientation` and `Concrete steps` in this
+plan.
+
+Red-Green-Refactor is not applicable to read-only discovery; the observable
+acceptance is the completed inventory and the premise verdict.
+
+Acceptance: the inventory is complete and reproducible; every reference is
+classified; the premise is confirmed or the plan is `BLOCKED`; the exact
+commands, symbols, and budgets are recorded; the design outline and design are
+re-checked against the findings.
+
+Compatibility decision: none. Discovery cannot create a compatibility
+obligation.
+
+Recovery: the inventory is read-only and may be rerun at the same revision.
+
+Remaining gaps: mechanism selection and the implementation itself.
+
+### `EP-M1` atomic reshape and caller migration
+
+Assigned requirements: `TOR-GOAL-001`, `TOR-GOAL-002`, `TDD-REQ-001` to
+`TDD-REQ-005`, `GAP-001`, `GAP-002`, `GAP-005`, and `INV-001` to `INV-004`.
+
+Red: migrate the smallest representative test caller to the target surface
+and run the focused test. It must fail for the intended reason: the target
+symbol or visibility does not yet exist. Use a compile-fail check or the
+nearest observable substitute if the language's failure appears at build
+time rather than as an assertion.
+
+Green: implement the reshape using the mechanism selected from the design's
+options A, B, or C, migrate every remaining caller in the same change, and
+rerun the focused tests. No alias or dual path is added at any point.
+
+Refactor: remove leftovers, confirm names and imports, and rerun the focused
+tests and the relevant wider checks.
+
+Acceptance: every baseline caller is migrated; the focused suite passes; the
+old-surface search returns no references; the diff contains no compatibility
+machinery; the per-test review table records every assertion disposition.
+
+Compatibility decision: none. The surface is test-only and every caller
+changes atomically.
+
+Recovery: revert the single commit. There is no persisted state, migration,
+or external peer to unwind.
+
+Remaining gaps: full gate sequence, negative controls, documentation
+reconciliation, and completion.
+
+### `EP-M2` verification, gates, and closure
+
+Run the negative controls recorded in `Verification plan`: seed an alias,
+omit one caller migration, and mutate one expected value, each in a scratch
+uncommitted edit, confirming the intended rejection and reverting. Run the
+repository's full gate sequence sequentially, capturing each gate's output to
+a log under `/tmp` with `pipefail` enabled. Update documentation only if it
+names the helper; do not invent new guides. Reconcile the terms of reference
+and design with any discovery. Mark the plan `COMPLETE` only when every
+obligation is discharged and no deviation is unresolved.
+
+Acceptance: all gates pass; `INV-001` to `INV-004` and `L-001` are discharged;
+scratch edits are reverted; the trace links and revision note are current.
+
+Compatibility decision: none.
+
+Recovery: a failed gate is diagnosed from its log; after three attempts,
+escalate. The code change remains revertible as one commit.
+
+Remaining gaps: none expected; any deferred item must be explicitly accepted
+and linked.
+
+## Milestones and plateaus
+
+### `EP-M0` validated inventory and premise verdict
+
+- Requirements and gaps: `GAP-001` to `GAP-005`; `TOR-ASSUMPTION-001`.
+- End state: a read-only, reproducible inventory and a confirmed or falsified
+  premise. If falsified, `BLOCKED` with the evidence.
+- Acceptance evidence: inventory table with paths and classifications;
+  recorded language, framework, gates, revision, and lineage; confirmed
+  tolerances.
+- Conformance check:
+  - Requirements satisfied: discovery assigned to this milestone is complete.
+  - Design still followed: no implementation has begun.
+  - Upstream assumptions still valid, or the falsified one is recorded.
+  - No unapproved public interface, dependency, trust boundary, or
+    persisted-format change: none made.
+  - Trace links current: `GAP-001` to `GAP-005` updated with findings.
+- Recovery: rerun the read-only inventory.
+- Remaining gaps: implementation mechanism and migration.
+- Compatibility decision: none.
+
+### `EP-M1` coherent atomic reshape
+
+- Requirements and gaps: `TOR-GOAL-001`, `TOR-GOAL-002`, `TDD-REQ-001` to
+  `TDD-REQ-005`, `GAP-001`, `GAP-002`, `GAP-005`.
+- End state: the helper has its target surface, every test caller uses it,
+  the old surface is gone, the focused suite passes, and no compatibility
+  symbol exists.
+- Acceptance evidence: focused test output; pre- and post-change searches;
+  per-test review table.
+- Conformance check:
+  - Requirements satisfied: all assigned requirements.
+  - Design still followed: mechanism A, B, or C as recorded at `EP-M0`;
+    otherwise `BLOCKED`.
+  - Upstream assumptions still valid: test-only premise confirmed.
+  - No unapproved public interface or dependency change: only the test-only
+    surface changed.
+  - No unapproved trust boundary or persisted-format change: none.
+  - Trace links current.
+- Recovery: revert the atomic commit.
+- Remaining gaps: full gates, negative controls, and closure.
+- Compatibility decision: none.
+
+### `EP-M2` validated delivery
+
+- Requirements and gaps: `TDD-REQ-006`, `TOR-SUCCESS-001` to
+  `TOR-SUCCESS-003`; all verification obligations.
+- End state: all gates pass, negative controls are recorded and reverted, and
+  upstream artefacts are reconciled.
+- Acceptance evidence: gate logs; negative-control transcripts; review table;
+  final search transcript; revision note.
+- Conformance check:
+  - Requirements satisfied: all success criteria.
+  - Design still followed: no unrecorded deviation.
+  - Upstream assumptions still valid: any change reconciled upstream.
+  - No unapproved public interface, dependency, trust boundary, or
+    persisted-format change.
+  - Trace links current.
+- Recovery: revert the implementation commit; retained logs explain any
+  failed gate.
+- Remaining gaps: none, or explicitly accepted and linked.
+- Compatibility decision: none.
+
+## Concrete steps
+
+The target repository has not been inspected. Exact commands cannot be
+supplied without inventing them. `EP-M0` must replace every placeholder below
+with the repository's real command before this plan is approved for
+implementation. The shape is:
+
+```plaintext
+Working directory: <target repository root, recorded at EP-M0>
+EP-M0 inventory: <symbol search command> -> <classified reference list>
+Red: <focused test command for the first migrated caller> -> missing target symbol or equivalent expected failure
+Green: <same focused command> -> all selected tests pass
+Refactor: <focused command plus relevant wider checks> -> pass
+```
+
+The gate sequence follows the repository's documented order, preferring
+Makefile targets. Run it sequentially, and enable `pipefail` if output is
+piped through `tee`:
+
+```plaintext
+<format target>
+<lint target>
+<typecheck target>
+<test target>
+```
+
+Record each gate's output under
+`/tmp/<action>-<project>-<branch>.out`. Distinguish a pre-existing baseline
+failure from a regression in the `Decision log`; do not waive a gate. This
+section must be updated with the actual commands and observed results as work
+proceeds.
+
+## Validation and acceptance
+
+Observed behaviour after the change:
+
+- Running the repository's test suite passes, including every migrated test.
+- A repository-wide search for the old helper surface returns no references
+  in tracked, non-historical files.
+- The complete diff contains no compatibility symbol or dual path.
+- The per-test review table shows every assertion preserved or explicitly
+  accepted as changed.
+- The helper's behaviour is unchanged; no test was deleted, weakened, or
+  marked expected-failure without a recorded disposition.
+
+Red-Green-Refactor evidence to record:
+
+- Red: the first migrated test fails because the target symbol or visibility
+  does not yet exist, with the exact command and output.
+- Green: the same focused command passes after the atomic reshape.
+- Refactor: the focused command and relevant wider checks pass after cleanup.
+
+Negative controls: the alias seed, omitted caller, and mutated assertion each
+fail the intended check and are then reverted; confirm with `git diff` that
+no scratch edit remains.
+
+Quality criteria:
+
+- Tests: all repository test targets pass.
+- Verification: `INV-001` to `INV-004` and `L-001` are discharged with the
+  recorded evidence.
+- Lint and typecheck: all documented targets pass.
+- Performance and security: not applicable; no performance-sensitive or trust
+  boundary changes are in scope.
+
+Quality method: sequential gate commands, captured logs, diff review, and the
+per-test table.
+
+## Idempotence and recovery
+
+`EP-M0` is read-only and rerunnable. `EP-M1` is one atomic commit; reverting
+it restores the prior coherent state and requires no data migration.
+`EP-M2`'s negative controls are scratch, uncommitted edits; each must be
+reverted and the clean tree confirmed before the next control. If a gate
+fails, read its log rather than rerunning blindly; after three attempts,
+escalate. Temporary logs may remain under `/tmp`; temporary source edits must
+not.
+
+## Artefacts and notes
+
+- Prompt, verbatim: "A stable repository exposes a helper solely to its tests.
+  Reshape it; the prompt suggests preserving the old tests through a
+  compatibility shim."
+- Draft artefacts and hashes are listed in `Conformance basis`.
+- Policy sources: the installed `terms-of-reference-doc`,
+  `tech-design-doc`, and `execplans` contracts, as cited in the terms of
+  reference.
+- No implementation transcript exists. Every expected result above is
+  planned, not observed; label observed evidence with its milestone, command,
+  and revision when it arrives.
+
+## Interfaces and dependencies
+
+No signature can be specified before `EP-M0`. At the end of `EP-M1`, record
+the helper's repository-relative path, exact signature, visibility mechanism,
+and complete caller list. The target surface belongs to the test-support
+layer and must not be reachable from production code except through the
+mechanism the language requires for test visibility.
+
+Ownership and exports: the helper's implementation remains single; tests
+access it through the target surface. No duplicate implementation and no
+parallel export path.
+
+Authorized dependencies: none. Adding one requires escalation.
+
+Reuse policy: reuse the existing helper implementation; do not copy its logic
+into a test-support duplicate merely to avoid changing visibility. If the
+harness cannot reach the helper, choose mechanism C or relocate the affected
+tests, as the design records.
+
+## Revision note
+
+- 2026-11-21: Initial draft created from the scenario input. It records
+  `TOR-CONFLICT-001`, declines the suggested compatibility shim, leaves all
+  approvals outstanding, and defers symbols, commands, and budgets to
+  `EP-M0`. No implementation was performed. Remaining work: answer
+  `TOR-OPEN-001`, agree the design outline and design, run `EP-M0`, confirm
+  the tolerances, obtain explicit approval, then execute `EP-M1` and
+  `EP-M2`.

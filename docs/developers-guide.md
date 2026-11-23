@@ -109,6 +109,144 @@ dependency of any skill.
 
 ______________________________________________________________________
 
+## Skill reference contract
+
+The terms-of-reference and technical-design skills hand their downstream
+contract through named reference files.
+`tests/test_skill_reference_contract.py` enforces three things about them.
+
+- Every contract reference — `architecture-contract.md` and
+  `field-evidence.md` for `tech-design-doc`, `problem-contract.md` for
+  `terms-of-reference-doc` — ships in its skill's `references/` directory, and
+  some Markdown file in that skill other than the reference itself names it. A
+  reference that is deleted, renamed, or reachable only from itself would
+  otherwise remove the guidance from an installing agent without any gate
+  noticing.
+- Each rule the contract rests on is still stated, in the section that governs
+  it, by the document that owns it. That covers the reading order; the four
+  independent source-API compatibility prohibitions under their governing
+  `MUST NOT` sentences, with released contracts, persisted data, and wire
+  formats assessed separately; compact contract records, concern-driven views,
+  principle discovery, and component reuse; baseline, target, and gap records
+  with their valid dispositions; dependency records, stale-blocker
+  reconciliation, and evidence expiry at rebases and upstream change;
+  verification planned jointly and non-vacuously against a corresponding model;
+  approval, evidence, and delivery kept distinct; stable identifiers,
+  measurable success criteria, stakeholder decision rights, and the
+  implementation states; the `BLOCKED`/`COMPLETE` reconciliation that logs a
+  deviation and waits for explicit acceptance; and the traceable handoff,
+  including readiness by scope and the ExecPlan approval gate. Each rule names
+  the heading it belongs under, and the wording must appear in that heading's
+  region, which for a level-two heading includes its subsections. Wording moved
+  under another heading, reproduced in a fenced block or a blockquote, or
+  introduced as something the document "no longer" requires is a mention rather
+  than a statement, and does not satisfy the check.
+- No sentence in those documents permits the compatibility machinery the
+  prohibitions deny. The check rejects permissive wording such as "may
+  prescribe … compatibility", "should impose … compatibility", "can retain …
+  compatibility wrappers", or "might add … compatibility shims", so a later
+  edit cannot reopen a prohibited category without deleting the prohibition
+  itself. The permission words are `may`, `can`, `should` and `might`, together
+  with `is`/`are permitted` and `is`/`are allowed`, each with or without `to`;
+  `can` counts only when it governs a grant verb, so a capability such as "a
+  maintainer can read the call site" is not a permission. The scan is
+  sentence-scoped, so distance from the verb cannot hide a permission, and a
+  negated modality such as "should not prescribe … compatibility" is not
+  treated as one. A coordinated verb phrase stays in the same clause, so "may
+  retain the old name, or add compatibility shims" is reported, while a new
+  subject or copula starts an independent clause, so "may resolve the conflict,
+  and is the alias owner" is not. A sentence that justifies compatibility for a
+  released external contract with an explicit commitment and a deployed
+  consumer is guidance rather than a permission, so it is not reported; a
+  prohibited surface is reported even when the same sentence mentions a
+  release. The scan is the validator's `compatibility_problems`, which
+  `tests/test_skill_reference_contract.py` loads rather than reimplements.
+
+The packaging and rule checks read the shipped Markdown, so they fail when a
+reference disappears or a rule is deleted or inverted; the test module proves
+that sensitivity against temporary fixtures, including one generated case per
+retained rule, fixtures that move a rule into another section or quote it, and
+a fixture that injects a permissive sentence into each prohibition section.
+Hypothesis properties then exercise both phrase checks over generated input.
+For the permissive-claim scanner, every permissive verb paired with a
+compatibility term is reported however far apart they sit, a negated or
+prohibition-only sentence is not, and a generated version number does not end
+the match window. For the released-permission check, a generated version number
+inside the statement does not end it, and a generated partial acceptance clears
+only the deviation its clause names while the other stays pending. A generated
+sequence of acceptance forms — named, unrelated, anaphoric, hedged, and
+placeholder — must clear exactly the deviations it names and no others. The
+checks assert wording, not semantics: no behavioural claim is guarded. Whether
+a concern warrants a view, whether evidence is adequate, whether a target is
+honest, and whether a handoff is proportionate are judgement calls covered only
+by the fresh-agent scenarios in
+[`architecture-contract-validation.md`](architecture-contract-validation.md).
+Their artefacts are published under `docs/validation/` for the 19 November and
+21 November campaigns, so a reader can inspect what the reviewer judged, but
+rerunning a scenario still needs an agent: the verdicts are manual evidence,
+not CI results. `scripts/check_workflow_boundary.py` decides one boundary
+mechanically from those artefacts, and
+`tests/test_workflow_boundary_contract.py` drives it through its command line:
+a record with a pending deviation must not claim `COMPLETE` or `ACTIVE` until a
+later Decision log entry accepts that deviation, a `BLOCKED` record must still
+log a pending deviation as a concrete entry rather than a placeholder template,
+and a handoff must state its approval state, readiness, stable identifiers, and
+a feedback route that is not declared absent. It also runs two phrase checks
+over the same output: a record for a private, test-only, pre-1.0, or unreleased
+surface may not permit compatibility machinery, and the C5 records must keep
+their affirmative statement that a layer or migration is admissible, so a
+negated form such as "no layer or migration is admissible" does not satisfy the
+check. The affirmative form must keep the term and its predicate in one
+unnegated clause, and a full stop inside a version number, as in "released 2.1
+APIs", does not end that clause. An acceptance in the Decision log clears only
+the deviations named in the clause that carries the acceptance, so "approve D2;
+retain D1 for separate review" leaves D1 pending. The script reads the
+governing sentences from the shipped skills and reports one that is missing, so
+a rule cannot be deleted from a skill while the check keeps passing.
+
+The checker is invoked as
+`python scripts/check_workflow_boundary.py <check> RECORD...`, for example
+`python scripts/check_workflow_boundary.py status c3/execplan.md.txt`.
+`<check>` is `status`, `handoff`, `prohibitions`, or `permission`, and each
+takes one or more `RECORD` paths. `--skills-root` selects the directory holding
+the shipped skills, defaults to `skills/` beside the script, and must precede
+the subcommand because it is an option of the top-level parser. `status` reads
+each plan or revision record's `Status` line and Decision log; `handoff` reads
+its handoff section; `prohibitions` reads the proposed records for permissive
+compatibility sentences; `permission` reads the released-contract records for
+the affirmative admissibility statement. Every check reads the supplied
+`RECORD` files and the skills directory selected by `--skills-root`. Every
+diagnostic is printed as `path: message`, except the permission check's
+missing-statement diagnostic, which names no path because it reports on the
+record set rather than on one file. The exit status is 1 when any diagnostic is
+printed, including one about a missing skill rule, and 0 otherwise. These
+checks decide the recorded output, not whether an agent obeys the skill: the
+phrase checks find a permissive sentence, not a plan that implements
+compatibility without saying so.
+
+The guards cover the two `SKILL.md` files, the two contract references, and the
+non-goal guidance this branch changed: the elicitation protocol's "Goals and
+non-goals" section and the `SKILL.md` "Anti-patterns to avoid" entry each have
+a retained-rule entry, so deleting or inverting the wording against inventing
+non-goals fails the checks. Three further reference documents carry operative
+guidance that no phrase guard covers:
+`tech-design-doc/references/document-anatomy.md`, `editing-checklist.md`, and
+`research-protocol.md`. They are unchanged by this branch, and guarding their
+wording is separate work. `field-evidence.md` is covered for packaging only,
+because it records rationale rather than obligations.
+
+The [users' guide](users-guide.md) describes how to use the skills and carries
+no normative statements, so it is deliberately outside the retained-rule
+guards. The [v0.2.0 migration guide](v0-2-0-migration-guide.md) does restate
+the compatibility prohibition, and a retained-rule entry now asserts that
+sentence under its governing section; its examples, checklist, and common-error
+fixes remain descriptive. A later change that adds normative guidance to either
+document should add a retained-rule entry.
+
+These are the areas that remain unguarded.
+
+______________________________________________________________________
+
 ## Markdown linting
 
 The repository uses `markdownlint-cli2`, configured by

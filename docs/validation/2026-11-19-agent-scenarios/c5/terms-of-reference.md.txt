@@ -1,0 +1,204 @@
+# Version 2.1 function change – terms of reference
+
+Status: Draft v0.1 (evidence incomplete; open questions recorded).
+
+Audience: Maintainers of the affected package, the release authority, and the
+owner of the external consumer named in the compatibility commitment. This
+document settles the problem space; it does not choose an implementation.
+
+Companion documents: `tech-design.md` and `execplan.md` in this directory. Both
+are drafts derived from this draft. The installed `tech-design-doc`, `execplans`
+and `terms-of-reference-doc` skills were inspected on 2026-11-19.
+
+Date and version: 2026-11-19, v0.1.
+
+Authority and evidence basis: The only supplied source is the scenario brief,
+quoted in full as: "Change a function shipped in version 2.1 with an explicit
+compatibility commitment and a deployed external consumer. The current branch is
+ahead of the tag." No repository, function identifier, commitment text,
+consumer identity, or release history was supplied. Evidence labels therefore
+carry the weight that the sources cannot.
+
+## 1. Background and motivation
+
+[KNOWN] A function shipped in version 2.1. Version 2.1 is a formal release.
+The project made an explicit compatibility commitment for that function. At
+least one external consumer has deployed code that calls it. The current branch
+contains commits that are ahead of the release tag.
+
+The change is wanted now: [OPEN] the brief does not state the defect, feature,
+or operational driver. A weak or unstated motivation is information; it is not
+a licence to assume one.
+
+The timing question matters because the function is already in the hands of a
+deployed external consumer. The project cannot treat the work as an internal
+refactor.
+
+## 2. Domain
+
+The work sits in API evolution for a released library surface. Established
+conventions in that field are semantic versioning, deprecation windows, source
+compatibility, and coordinated migration of known consumers. The relevant prior
+art is the project's own 2.1 release and its published compatibility commitment;
+both must be read before design, and neither was supplied.
+
+Terms used in this document:
+
+- **Released contract.** The observable source and behavioural interface that
+  version 2.1 published.
+- **Compatibility commitment.** The project's explicit promise about that
+  contract. Its exact terms are [OPEN].
+- **Deployed external consumer.** Code outside the repository that already runs
+  against the 2.1 contract in a live environment, not merely in a test.
+- **Source compatibility.** Existing consumer source compiles and links against a
+  newer release without edits.
+- **Behavioural compatibility.** Existing consumer calls observe the documented
+  result, error, and side-effect contract.
+- **Release lineage.** The formal release tag from which a surface derives, as
+  distinct from the position of the working branch.
+
+## 3. Market context
+
+This is not a market-facing product decision. The alternatives to the change are
+the relevant comparison set: leave the function unchanged and carry the cost
+that motivated the request; evolve the surface compatibly; or break the surface
+and migrate the consumer. The current default, doing nothing, fails when the
+unstated driver is material. The brief does not quantify that cost, so the
+choice remains a design question rather than a proven market gap.
+
+## 4. Users and stakeholders
+
+| Actor | Context | Material concern | Decision right |
+| --- | --- | --- | --- |
+| External consumer owner | Runs deployed code against 2.1 | Their build and runtime behaviour must not break inside the committed window | Must supply consumer version, usage, and migration evidence; cannot approve the project's release |
+| Maintainer | Owns the affected package | Delivers the change without an unplanned outage or a permanent second interface | Implements; escalates commitment conflicts |
+| Release authority | Approves releases and deprecations | Whether the change ships as a minor, a major, or a deprecation | Approves the release classification |
+| Consumer operator | Operates the deployed system | Continuity through any migration | None over the library; can veto deployment timing |
+
+Non-users: callers outside the scope of the compatibility commitment. The brief
+does not define that boundary [OPEN].
+
+## 5. Job to be done
+
+When a maintainer must change a function that a deployed external consumer
+already uses, they want to deliver the change without breaking that consumer's
+committed behaviour, so they can improve the product without forcing an
+unplanned consumer outage or carrying a permanent compatibility burden.
+
+## 6. Scope
+
+### 6.1 Goals
+
+- `TOR-GOAL-001` Deliver the requested change to the function.
+- `TOR-GOAL-002` Honour the explicit compatibility commitment for the released
+  2.1 contract, within its stated terms.
+- `TOR-GOAL-003` Leave the external consumer either running unchanged or on a
+  completed, evidenced migration path.
+
+### 6.2 Non-goals
+
+- `TOR-NONGOAL-001` Permanent duplication of the old and new interfaces. A
+  compatibility path exists only for the committed window and has a removal
+  point.
+- `TOR-NONGOAL-002` Changes to unrelated functions or unrelated API surfaces.
+- `TOR-NONGOAL-003` A promise longer or broader than the existing commitment.
+  This work does not extend the commitment by implication.
+- `TOR-NONGOAL-004` Redesigning the consumer. Its owner migrates it; this
+  project supplies the supported path and evidence.
+
+## 7. Success criteria
+
+- `TOR-SUCCESS-001` The deployed external consumer compiles and observes its
+  committed behaviour against the supported release. Evidence: the consumer's
+  own build and test result, plus consumer-owner confirmation. Baseline and
+  target versions are [OPEN].
+- `TOR-SUCCESS-002` The new behaviour is available and exercised by its intended
+  callers, with its result distinguishable from the old behaviour.
+- `TOR-SUCCESS-003` If a baseline path is retained under a deliberate
+  migration, it is removed at the approved point with migration evidence, or
+  the commitment is explicitly renewed by its authority. Under additive
+  evolution, no retained path is created and the 2.1 contract remains supported
+  for the committed window. Neither removal nor renewal may happen silently.
+- `TOR-SUCCESS-004` No consumer-visible regression appears in the 2.1 baseline
+  behaviour other than a documented, committed, and dated deprecation.
+
+No quantitative measure is supplied; thresholds remain [OPEN]. A merged change
+is not evidence of consumer deployment or outcome.
+
+## 8. Constraints and assumptions
+
+### 8.1 Hard constraints
+
+- `TOR-CONSTRAINT-001` The function is a released, externally consumed surface.
+  The explicit compatibility commitment binds this work. The commitment's
+  source and terms must be located and quoted before an approach is chosen.
+  [KNOWN that it exists; OPEN on its content.]
+- `TOR-CONSTRAINT-002` A real deployed external consumer exists. Its deployed
+  state must be preserved or deliberately migrated; it must not be assumed away.
+  [KNOWN existence; OPEN identity and version.]
+- `TOR-CONSTRAINT-003` The working branch being ahead of the release tag does
+  not make the published 2.1 contract unreleased. The design must classify the
+  release lineage of the function, not the position of the branch.
+- `TOR-CONSTRAINT-004` Any compatibility path must name the consumer, the
+  deployed state, and the commitment it serves. A layer that cannot answer
+  "compatible with whom or what?" is out of scope.
+
+### 8.2 Assumptions
+
+- `TOR-ASSUMPTION-001` The commitment is still in force. Failure consequence: if
+  it has expired, the migration approach and urgency change; the design must
+  re-decide rather than inherit the assumption. Verification route: read the
+  commitment. Expiry trigger: any release or policy change.
+- `TOR-ASSUMPTION-002` The external consumer can be identified and coordinated
+  with. Failure consequence: a breaking migration cannot be scheduled; a
+  compatible path or a longer window is required.
+- `TOR-ASSUMPTION-003` Version 2.1 is the applicable formal release tag for the
+  surface. Failure consequence: if the function derives from another package's
+  tag, the lineage and obligation must be re-read. In a multi-package
+  repository, use the affected package's tag.
+
+### 8.3 Dependencies
+
+- `TOR-DEP-001` Consumer-owner cooperation for deployment, version disclosure,
+  and migration evidence. Blocks migration acceptance. Unblock condition: the
+  consumer owner names the deployed version and a testable upgrade path.
+- `TOR-DEP-002` Release-authority decision on minor versus major and on the
+  deprecation window. Blocks release classification, not initial design.
+  Unblock condition: an approved release class and removal date.
+
+## 9. Open questions
+
+| ID | Question | Gates | Resolution criteria | Owner |
+| --- | --- | --- | --- | --- |
+| `TOR-OPEN-001` | Which function, in which package and path? | Baseline, all design | Exact symbol and 2.1 tag recorded | Maintainer |
+| `TOR-OPEN-002` | What does the compatibility commitment say, and where is it recorded? | Approach selection | Quoted text and source revision | Release authority |
+| `TOR-OPEN-003` | Who is the deployed consumer, at what version, using which call sites? | Migration and acceptance | Named consumer, version, usage inventory | Consumer owner |
+| `TOR-OPEN-004` | Is the requested change source-breaking, behaviour-breaking, or additive? | Approach selection | A concrete before/after call-site comparison | Maintainer |
+| `TOR-OPEN-005` | Does the function write persisted data or a wire format? | Data-migration design | Format inventory and deployed records | Maintainer |
+| `TOR-OPEN-006` | What release class and window did the authority approve? | Removal milestone | Approved class and removal date | Release authority |
+
+## 10. Handoff
+
+This draft is ready for bounded design with the open items above. It is not
+ready for implementation, and it does not approve one. The ToR owns why, for
+whom, scope, and constraints. The technical design owns the approach, the
+classification, and the verification obligations. The ExecPlan owns execution
+tolerances and acceptance evidence, and it proceeds only after explicit
+approval.
+
+No downstream milestone identifiers, owner commitments, or evidence are
+invented here. The design must return to this document if evidence falsifies an
+assumption.
+
+## Appendix – references
+
+- Scenario brief (supplied 2026-11-19), quoted in the front matter.
+- The installed `terms-of-reference-doc` skill and its `problem-contract.md`
+  reference, inspected 2026-11-19.
+- No repository documents, release records, or consumer artefacts were
+  available within the authoring scope; their absence is recorded, not filled.
+
+## Appendix – glossary pointer
+
+The normative glossary for this work is §2 until a project `context.md` exists.
+Terms introduced here should be promoted to that document if one is created.

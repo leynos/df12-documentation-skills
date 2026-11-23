@@ -1,0 +1,790 @@
+# Supervisor cancellation must terminate its workers
+
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & discoveries`, `Decision log`,
+`Outcomes & retrospective`, `Conformance basis`, and `Verification plan` must
+be kept up to date as work proceeds.
+
+Status: BLOCKED (proposed deviation D1 awaits explicit acceptance; this draft
+has not passed the approval gate)
+
+Branch: none created; this plan is an untracked artefact under
+`/tmp/val2-e1`, and implementation needs a new branch after approval
+
+Roadmap item: none identified; no roadmap path was supplied or inspectable
+under the authoring isolation rules
+
+## Purpose / big picture
+
+An operator runs a supervisor: a process that starts, monitors, and stops
+worker processes for one supervised unit of work. A worker is a process that
+the supervisor starts to perform that work. Cancellation is the documented
+operation by which the operator asks a running supervisor to stop. The terms of
+reference (ToR) and the architecture decision record (ADR) promise that
+cancelling a supervisor stops its workers.
+
+The supplied integration probe contradicts that promise. The operator cancelled
+the supervisor, the supervisor exited, and workers remained alive. A reader
+should treat the supervisor's exit code as irrelevant here: the disputed claim
+is about the liveness of the worker processes themselves.
+
+After the change, repeating the same cancellation and observing the worker
+processes, not only the supervisor, shows that every supervisor-started worker
+has terminated within the agreed deadline. Workers continue to run while the
+supervisor runs, and cancellation keeps its documented observable contract. No
+behaviour beyond the accepted disposition of decision D1 is intended to change.
+
+The outstanding decision is whether the probe exposes a defect within the
+existing architecture or falsifies the design and ADR mechanism. Until that
+decision is accepted, this plan cannot be approved for implementation.
+
+## Constraints
+
+- Implementation starts only after decision D1 is explicitly accepted and this
+  plan is explicitly approved. No standing instruction authorizes earlier
+  execution, and silence is not approval.
+- The ToR promise remains authoritative until its owner amends it. Do not
+  weaken the promise, its tests, or its documentation to match the observed
+  behaviour.
+- Do not edit the ToR, ADR, or technical design from the authoring task. An
+  accepted resolution is required first, and its revision and acceptance
+  evidence must then be recorded.
+- Keep the worker set definition open until the owner answers
+  `TOR-OPEN-SCOPE-03`. Do not silently limit the fix to direct children if the
+  promise covers descendants.
+- Do not invent the cancellation command, signal, grace period, deadline,
+  platform matrix, process identity mechanism, or decision owner. Each remains
+  an open item until supplied.
+- Preserve workers that were not cancelled. A fix that kills workers
+  unconditionally violates the promise's useful behaviour.
+- If an interface must change, update every affected caller in the same
+  milestone. Do not add aliases, facades, deprecated entrypoints, wrappers, or
+  other compatibility machinery: no released contract or external consumer has
+  been identified, so there is nothing to be compatible with.
+- The implementation must not add a dependency without explicit authorization.
+- This authoring task must not modify the repository or run its gates. The
+  artefacts are untracked files under `/tmp/val2-e1`.
+
+## Tolerances (exception triggers)
+
+These thresholds define the boundary of autonomous action. They are not
+quality criteria. ExecPlan files, including this one, are excluded from every
+size count.
+
+The values are provisional. The authoring isolation rules prevented surveying
+the supervisor codebase, its tests, its configuration, its documentation, or
+comparable historical ExecPlans, so no evidence-based budget survey exists.
+Re-baseline every value after approved reconnaissance, record the survey in
+`Context and orientation`, and obtain approval for the revised values before
+implementation begins.
+
+- Files: if implementation changes more than 6 non-ExecPlan files, stop and
+  escalate.
+- Code: if changes exceed 250 net lines of production source and tests, stop
+  and escalate. Count additions minus deletions.
+- Configuration: if changes exceed 20 net lines, stop and escalate.
+- Documentation: if changes exceed 120 net lines excluding ExecPlan files, stop
+  and escalate.
+- Interface: if a cancellation or worker-management interface changes beyond
+  the contract accepted with D1, stop and escalate.
+- Dependencies: if any new dependency is needed, stop and escalate.
+- Architecture: if the worker-lifetime mechanism changes without an accepted
+  D1 option, stop and escalate.
+- Iterations: if the focused test still fails after 3 fix attempts, stop and
+  escalate.
+- Time: if any milestone takes longer than 4 hours, stop and escalate.
+- Ambiguity: if multiple valid interpretations exist and the choice materially
+  affects the outcome, stop and present the options with trade-offs.
+
+Count with the receiving repository's base revision recorded during `EP-M0`:
+
+```plaintext
+git diff --numstat <BASE_REV> -- . ':(exclude)<EXECPLAN_PATH>'
+```
+
+Replace the placeholders before use. Enforce each category independently;
+spare capacity in one category must not offset another. Generated files and
+lockfile churn require an explicit exclusion decision, not an assumption.
+
+## Risks
+
+- Risk: the probe did not use the documented cancellation operation, so it does
+  not exercise the promise.
+  Severity: high. Likelihood: medium.
+  Mitigation: confirm the probe's preconditions from its transcript and
+  reproduce it under `EP-M0` before treating the promise as falsified.
+- Risk: workers detach or are reparented when the supervisor exits, so an
+  implicit parent-child lifetime assumption fails.
+  Severity: high. Likelihood: high.
+  Mitigation: establish the actual process parentage, group membership, and
+  signal handling in `EP-M0`; choose a mechanism that covers the defined worker
+  set.
+- Risk: a test passes because the worker already exited for an unrelated
+  reason, not because cancellation worked.
+  Severity: high. Likelihood: medium.
+  Mitigation: assert the worker's identity is alive immediately before
+  cancellation, and match process start time or cgroup membership rather than
+  PID alone.
+- Risk: timing assumptions make the test flaky.
+  Severity: medium. Likelihood: high.
+  Mitigation: poll until deadline D with bounded intervals, record the observed
+  shutdown latency, and avoid unbounded sleeps.
+- Risk: terminating a process group kills unrelated processes.
+  Severity: high. Likelihood: low to medium, depending on mechanism.
+  Mitigation: test preservation of a non-worker process and prefer an explicit
+  worker set where group membership is not guaranteed.
+- Risk: the repository is not the one implied by these records, so paths,
+  symbols, and gates differ.
+  Severity: medium. Likelihood: medium.
+  Mitigation: resolve the receiving repository and its gate sequence in
+  `EP-M0`; do not implement against placeholder names.
+- Risk: an accepted fix misses a worker-spawn path.
+  Severity: medium. Likelihood: medium.
+  Mitigation: enumerate spawn paths, add one coverage test per path, and keep a
+  mutation that bypasses the mechanism as a negative control.
+- Risk: a scope change is smuggled in as a design detail.
+  Severity: high. Likelihood: low.
+  Mitigation: D1 requires explicit acceptance and an upstream revision for any
+  change to the promise itself.
+
+## Progress
+
+- [x] (2026-11-21 08:12Z) Read the supplied scenario and the permitted skill
+  guidance.
+- [x] (2026-11-21 08:12Z) Recorded the promise, the probe evidence, and the
+  evidence limits in `01-terms-of-reference-feedback.md`.
+- [x] (2026-11-21 08:12Z) Recorded the design and ADR impact, gap, and
+  candidate responses in `02-technical-design-and-adr-impact.md`.
+- [x] (2026-11-21 08:12Z) Drafted this ExecPlan and set the status to
+  `BLOCKED`.
+- [ ] Decision D1 accepted by the ToR and ADR decision authority, whose identity
+  is unknown.
+- [ ] Plan approved by the user. This is a separate gate from D1.
+- [ ] `EP-M0` reproduce the probe and establish the cause; no production fix.
+- [ ] `EP-M1` red integration test for worker termination fails on the baseline
+  for the intended reason.
+- [ ] `EP-M2` accepted design response implemented; focused test passes.
+- [ ] `EP-M3` breadth verification, upstream reconciliation, and gates pass.
+- [ ] Repository gates run for the implemented change (not run in this
+  authoring task: no tracked changes and no identified receiving repository).
+- [ ] Resolve the open questions in `01-terms-of-reference-feedback.md` or
+  record them as accepted, bounded residual gaps.
+
+## Surprises & discoveries
+
+- Observation: the observed implementation contradicts the upstream promise.
+  Evidence: the supplied scenario states that workers remained alive after the
+  supervisor exited. Impact: this plan is blocked on D1 rather than proceeding
+  to a fix.
+- Observation: the probe's command, revision, platform, and transcript were not
+  supplied. Evidence: the input contains only the result. Impact: the
+  falsification is bounded to the exercised path until reproduction and
+  precondition confirmation occur in `EP-M0`.
+- Observation: the ToR and ADR revisions, identifiers, and approval records were
+  unavailable under the authoring isolation rules. Evidence: only named skill
+  directories were readable, and no repository document was opened. Impact:
+  provisional identifiers and unresolved conformance links must be reconciled
+  before approval.
+- Observation: the supervisor's successful exit does not establish worker
+  termination. Evidence: the probe reports survivors after exit. Impact:
+  acceptance tests must observe worker process liveness directly.
+
+## Decision log
+
+- D1. Decision: do not implement yet. Record a proposed deviation from the
+  promised behaviour and set this plan to `BLOCKED` until it is explicitly
+  accepted.
+  Rationale: `EVID-PROBE-001` contradicts `PROV-TOR-SUCCESS-001` and
+  `PROV-ADR-001`. Three materially different resolutions exist, and choosing
+  one without authority would silently change either the implementation or the
+  promise. The execplans skill requires a proposed deviation in `Decision log`
+  and explicit acceptance before continuing when an approved design cannot or
+  should not be followed.
+  Affected identifiers: `PROV-TOR-SUCCESS-001`, `PROV-ADR-001`,
+  `PROV-TDD-REQ-001`, `PROV-TDD-COMP-001`, `GAP-WORKER-REAP-001`, `EP-M1`,
+  `EP-M2`, and `EP-M3`.
+  Options: (1) defect fix within the existing architecture, if `EP-M0` shows
+  that the documented mechanism exists but is incomplete or unimplemented; no
+  upstream change is needed. (2) Accepted design and ADR change, if the
+  mechanism cannot deliver the promise; the ADR and design must then name the
+  mechanism, scope, platforms, and verification. (3) Accepted change to the
+  promise itself; the ToR and ADR must both be revised, and the change must be
+  explicit rather than inferred from observed behaviour.
+  Trade-offs: option 1 is smallest and preserves intent, but may be impossible.
+  Option 2 changes a durable decision and adds platform-specific work and
+  tests. Option 3 is semantically cheapest but abandons the operator's stated
+  expectation and requires the highest authority.
+  Required upstream changes: option 1 none beyond recording the defect; option
+  2 an ADR amendment or supersession plus a design update; option 3 a ToR
+  revision plus an ADR revision.
+  Approving authority: unknown and must be named. The input does not identify
+  an owner, and this plan does not invent one.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+  Status: awaiting explicit acceptance. No work proceeds until it is recorded.
+- D2. Decision: classify the probe as observed evidence with a bounded scope,
+  not as a requirement and not as proof of cause.
+  Rationale: a single probe can falsify a universal promise for the path it
+  exercises, but it cannot establish why the workers survived. The cause must
+  be demonstrated in `EP-M0`.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+- D3. Decision: do not inspect the repository or run its gates during
+  authoring; leave repository paths, symbols, revisions, and commands
+  unspecified.
+  Rationale: the task's isolation rules permitted only the named skill
+  directories. Inventing repository facts would violate the evidence rules and
+  make the plan unsafe to execute.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+- D4. Decision: use real-process integration tests and scripted interleavings;
+  do not plan a formal proof.
+  Rationale: the disputed property concerns operating-system process liveness
+  across an external boundary. A prover would need a model of the platform, and
+  the model, not the implementation, would be verified. Integration tests with
+  observable process identity give proportionate evidence. A state-machine
+  model checker may be used for cancellation interleavings if the receiving
+  repository already supports one.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+- D5. Decision: keep plan approval separate from D1 acceptance.
+  Rationale: accepting the deviation settles intent and architecture;
+  approving the plan authorizes execution, tolerances, and evidence targets.
+  Neither implies the other.
+  Date/Author: 2026-11-21 08:12Z, authoring agent.
+
+## Outcomes & retrospective
+
+No implementation outcome exists yet. The intended outcome is that a cancelled
+supervisor leaves no live worker from its defined worker set, observed through
+real process liveness rather than an exit code.
+
+What this draft achieved: the promise and the probe are recorded with their
+evidence status and limits; the gap and candidate design responses are
+documented; a traceable, blocked execution contract exists; and the decisions
+that require human authority are explicit.
+
+What remains: the cause of the survivors, the ToR disposition, the ADR and
+design resolution, plan approval, implementation, verification, and gate
+results.
+
+Lesson so far: a supervisor exiting successfully is not evidence that its
+workers stopped. Lifecycle promises need acceptance tests that observe the
+processes named in the promise.
+
+## Context and orientation
+
+No repository was inspected. The owning modules, entrypoints, helper
+functions, callers, tests, configuration, and revision are therefore unknown.
+Names in this plan are placeholders and must not be used as code identifiers.
+
+Terms are defined in `01-terms-of-reference-feedback.md`, which is authoritative
+for the project vocabulary. In brief: a supervisor starts and manages workers;
+a worker is a process started by the supervisor; cancellation is the documented
+operation that asks the supervisor to stop; a surviving worker is alive after
+its supervisor exits.
+
+When repository access is granted, inspect and record at least:
+
+- the supervisor's start and cancellation lifecycle, including its signal
+  handlers and exit ordering;
+- every worker-spawn path and every caller of the spawn interface;
+- process group, session, and parentage setup for workers, including any
+  detaching behaviour;
+- the shutdown wait, grace period, and forced-termination discipline;
+- existing cancellation and lifecycle tests, fixtures, and their known gaps;
+- the ToR, ADR, and technical-design text behind the promise, with exact
+  revisions;
+- supported operating systems, container runtimes, and service managers;
+- the repository's gate commands and the installed test frameworks.
+
+Distinguish tools installed on the host from tooling the repository configures.
+Do not infer the latter from the former.
+
+Budget-setting survey: none possible. No code, comments, documentation, or
+historical ExecPlan was readable under the isolation rules. No comparable
+budget history exists to cite. Consequently the values in `Tolerances` are
+provisional and must be replaced after the reconnaissance above.
+
+## Conformance basis
+
+Upstream artefacts exist per the supplied scenario, but were not available for
+inspection. Record actual paths, revisions, and acceptance evidence when they
+are supplied.
+
+- ToR: path and revision unavailable; promise `PROV-TOR-SUCCESS-001`
+  (provisional local handle).
+- ADR: identifier, path, and revision unavailable; decision `PROV-ADR-001`
+  (provisional local handle).
+- Technical design: not supplied or inspected; requirement
+  `PROV-TDD-REQ-001`, component `PROV-TDD-COMP-001`, and gap
+  `GAP-WORKER-REAP-001` are provisional.
+- Governing standards: none identified.
+- ExecPlan: this file, draft revision 2026-11-21.
+- Missing inputs: raw probe transcript, cancellation definition, deadline,
+  worker-set scope, platform scope, ToR and ADR revisions, decision authority,
+  receiving repository, and gate commands.
+
+Provisional trace chain:
+
+```plaintext
+PROV-TOR-SUCCESS-001 -> PROV-ADR-001 -> PROV-TDD-REQ-001
+  -> PROV-TDD-COMP-001 -> GAP-WORKER-REAP-001 -> EP-M1
+  -> planned cancellation integration test
+```
+
+`EP-M2` implements the accepted D1 response. `EP-M3` reconciles the upstream
+revisions and the trace links. A trace link records a relationship; it is not
+evidence that an obligation is discharged. Replace every provisional handle
+with the established upstream identifier during reconciliation.
+
+## Verification plan
+
+### Abstract model
+
+The model is intentionally small. It captures the promise's observable claim
+without prescribing a mechanism.
+
+```plaintext
+W        = the set of worker processes started by one supervisor and within
+           the agreed scope
+D        = the agreed shutdown deadline (definition open; see
+           TOR-OPEN-DEADLINE-02)
+alive(p) = process p exists and matches the recorded process identity
+
+Running(W) --cancellation--> Cancelling(W) --supervisor exits-->
+SupervisorExited
+
+Required: for every p in W, not alive(p) at SupervisorExited + D.
+Preserved: with no cancellation request, each p remains alive.
+```
+
+Preconditions: the operator used the documented cancellation operation; each
+`p` was started by the supervisor through a covered path; D is agreed; the
+liveness observer is independent of the supervisor's exit status.
+
+Malformed inputs and violated preconditions: a different cancellation
+operation is outside the promise and the observation must say so rather than
+claim a pass or a failure. A worker not started by the supervisor is excluded
+from `W` and recorded. An undefined D makes the property untestable, so the
+missing deadline gates acceptance rather than being invented.
+
+### Invariants and lemmas
+
+- `INV-WORKER-TERMINATION`: For every `p` in `W`, after cancellation completes
+  and the supervisor has exited, `p` is not alive at `SupervisorExited + D`.
+  Linked to `PROV-TDD-REQ-001`.
+- `INV-PRESERVATION`: With no cancellation request and no independent worker
+  failure, every `p` in `W` remains alive while the supervisor runs. This
+  prevents a fix from passing the termination test by killing workers
+  unconditionally.
+- `INV-NO-ORPHAN-RACE`: Cancellation concurrent with worker start, worker exit,
+  or repeated cancellation leaves no survivor and does not hang.
+- `INV-IDEMPOTENT-CANCEL`: A second cancellation request neither fails
+  spuriously nor prevents the first from completing; the post-condition still
+  holds.
+- `L-PROBE-CORRESPONDENCE`: Reproducing the supplied probe on the recorded
+  baseline revision produces the survivor observation for the intended reason,
+  so the red evidence is not vacuous.
+- `L-REGISTRY-COVERAGE`: Every supervisor-owned worker-spawn path adds its
+  worker to the set protected by the accepted mechanism. If this lemma fails,
+  `INV-WORKER-TERMINATION` cannot be claimed for the full worker set.
+- `L-LIVENESS-IDENTITY`: The liveness observer distinguishes the fixture worker
+  from an unrelated process that reuses its PID.
+
+### Axioms (trusted, not verified here)
+
+- `AXIOM-OS-PARENT-EXIT`: An operating system does not terminate a parent's
+  children merely because the parent exits. Children survive and are reparented
+  unless an explicit mechanism enforces termination. Source: platform process
+  semantics; on Linux, the `prctl(2)` parent-death-signal documentation
+  describes the relevant mechanism. The platform set is open.
+- `AXIOM-LIVENESS-OBSERVATION`: The chosen liveness check reports process
+  existence reliably for the duration of a test when process identity is
+  matched, not merely the PID.
+- `AXIOM-REAL-PROCESS-TEST`: The integration fixture executes real supervisor
+  and worker processes, not a mock that asserts the disputed guarantee.
+
+### Methods per obligation
+
+- Obligation: `INV-WORKER-TERMINATION`.
+  Method: parameterized integration test over worker counts, including one and
+  more than one worker, and over the worker-set cases accepted in D1.
+  Rationale: process death is an operating-system observation; only a
+  real-process test exercises it.
+  Domain: the documented cancellation operation; workers started through each
+  covered spawn path; descendants only if the scope decision includes them.
+  Artefact: a focused integration test, exact path to be recorded before
+  approval.
+  Evidence: red on the baseline revision with the survivor's identity; green
+  after the accepted fix; the worker is absent at `SupervisorExited + D`.
+  Non-vacuity: the test asserts the worker identity is alive immediately before
+  cancellation, and a seeded fault that skips the termination step or the wait
+  must fail for the intended reason.
+- Obligation: `INV-PRESERVATION`.
+  Method: parameterized test observing worker liveness before cancellation.
+  Rationale: a test that never sees a live worker, or a fix that kills workers
+  at startup, would otherwise pass vacuously.
+  Domain: one worker and multiple workers, sampled at intervals while the
+  supervisor runs.
+  Artefact: the same integration suite.
+  Evidence: workers alive before cancellation on both baseline and fixed
+  revisions.
+  Non-vacuity: the liveness observer must report `alive` for the fixture's
+  recorded identity; a mutation that terminates workers at spawn must fail.
+- Obligation: `INV-NO-ORPHAN-RACE` and `INV-IDEMPOTENT-CANCEL`.
+  Method: scripted interleavings, with barriers or synchronisation hooks; use a
+  state-machine model check only if the receiving repository already supports
+  one.
+  Rationale: the properties are temporal, and a single sequential test does not
+  cover them.
+  Domain: cancel before start completes; cancel during worker exit; worker
+  ignores the graceful signal; double cancellation; worker exits before the
+  signal arrives.
+  Artefact: deterministic interleaving tests, exact path to be recorded.
+  Evidence: no survivor, no hang, and a completed shutdown for every scripted
+  interleaving.
+  Non-vacuity: each scripted case must reach its intended state, demonstrated
+  by an assertion or trace; a case whose barrier never fires is a failure, not
+  a pass.
+- Obligation: `L-PROBE-CORRESPONDENCE`.
+  Method: reproduction of the supplied probe under the recorded revision.
+  Rationale: the red test must fail for the reason the input reports, not for
+  an unrelated environmental cause.
+  Domain: the probe's documented command, platform, cancellation path, and
+  worker count.
+  Artefact: a transcript appended to `Artefacts and notes`, with a scratch
+  reproduction script if needed; the script is discarded or promoted
+  deliberately.
+  Evidence: the observed survivor identity and the supervisor exit status.
+  Non-vacuity: the worker must be observed alive before cancellation; a probe
+  that cancels nothing is rejected.
+- Obligation: `L-REGISTRY-COVERAGE`.
+  Method: static inspection of every spawn path plus one integration case per
+  path.
+  Rationale: a termination mechanism covers only the processes it knows about.
+  Domain: every caller of the worker-spawn interface.
+  Artefact: coverage tests and an inspection note naming each path and caller.
+  Evidence: each spawn path produces a worker that is terminated by
+  cancellation.
+  Non-vacuity: a mutation that starts a worker through a bypass path must fail
+  coverage detection.
+
+### Formal verification decision
+
+No formal proof or model check is planned at the design level. The central
+claim is about real process liveness across an operating-system boundary.
+Verifying a model would demonstrate properties of the model, not of the
+platform's process semantics. Real-process integration tests with an
+independent liveness observer provide proportionate rigour, and a state-machine
+model check is reserved for cancellation interleavings if the receiving
+repository already has the tooling. Residual gaps: unexercised platforms,
+container runtimes, and service managers must be named rather than claimed.
+This decision is recorded in D4.
+
+### Suggested BDD features
+
+This feature is proposed, not adopted. No BDD runner was identified, and adding
+one requires separate authorization. If the receiving repository has no runner,
+encode the scenarios in its existing integration tests and link them to
+`EP-M1`.
+
+```gherkin
+Feature: Supervisor cancellation terminates its workers
+  Scenario: Cancelling a running supervisor stops every worker
+    Given a supervisor that has started 2 workers
+    And both worker processes are alive
+    When the operator cancels the supervisor through the documented operation
+    Then the supervisor exits
+    And no worker process started by the supervisor is alive after the
+        shutdown deadline
+
+  Scenario: Workers are preserved when cancellation is not requested
+    Given a supervisor that has started 2 workers
+    When the supervisor continues running
+    Then both worker processes remain alive
+```
+
+Proposed path: `tests/features/supervisor_cancellation.feature` (unverified).
+
+## Plan of work
+
+No edit is authorized by this draft. The sequence below is described so that
+the decision owner can see what acceptance would authorize.
+
+### `EP-M0` reproduce and characterise (bounded discovery)
+
+Assigned gap: `GAP-WORKER-REAP-001`. This milestone resolves uncertainty; it
+does not fix anything.
+
+Obtain and record the ToR and ADR revisions, the probe transcript and revision,
+the documented cancellation operation, the deadline D, the worker-set scope,
+the platform scope, the receiving repository, and the decision authority.
+Reproduce the probe on the recorded baseline with real processes. Capture the
+surviving worker identities, parentage, process group or session, signal
+handling, and the supervisor's exit ordering. Enumerate every worker-spawn path
+and the current lifetime mechanism. Test the candidate explanations in the
+design impact record rather than assuming one.
+
+Go/no-go: if the probe does not reproduce under the documented cancellation
+operation, stop. Do not claim falsification beyond the probe's actual scope,
+and re-scope the work with the owner.
+
+Acceptance: an `EP-M0` transcript in `Artefacts and notes`, an updated cause
+statement, an assessment of each D1 option, and updated `Surprises &
+discoveries` and `Decision log`. A scratch probe script is additive, removable,
+and must be labelled as a prototype.
+
+### `EP-M1` red integration test
+
+Assigned requirement: `PROV-TDD-REQ-001`.
+
+Add the smallest real-process test that expresses `INV-WORKER-TERMINATION` for
+one worker. Run it on the baseline revision before any production change. It
+must fail because the worker is still alive after the supervisor exits, naming
+the surviving worker identity. Assert the worker is alive immediately before
+cancellation. If the framework supports strict expected-failure markers, use
+one only until the red failure is observed, then remove it at green; do not
+leave it in the delivered change.
+
+Acceptance: `EVID-RED-001` with the command, exit status, and observed survivor.
+
+### `EP-M2` implement the accepted D1 response
+
+If D1 selects option 1, make the minimal correction within the existing
+architecture and cover every spawn path. If D1 selects option 2, update the ADR
+and technical design with the accepted resolution before changing code, then
+update this plan's `Conformance basis`. If D1 selects option 3, revise the ToR
+and ADR first; the implementation then follows the revised promise and this
+plan's acceptance target changes explicitly.
+
+Ensure the supervisor's exit ordering cannot leave survivors, handle error paths
+and repeated cancellation, and preserve workers when no cancellation occurs.
+Update every affected caller in the same change. Do not add compatibility
+machinery.
+
+Acceptance: the focused test passes; refactoring keeps it passing; the
+preservation test passes. No other milestone begins before this one validates.
+
+### `EP-M3` breadth, reconciliation, and delivery closure
+
+Expand verification to multiple workers, every spawn path, the accepted
+interleavings, and the accepted platform scope. Record residual gaps for
+platforms or descendant cases that remain out of scope. Reconcile the ToR
+revision, ADR decision, technical-design links, and this plan's trace links with
+the accepted resolution. Update live documentation, and roadmap material if the
+receiving repository has it. Run the receiving repository's gates sequentially,
+capture each to a log under `/tmp`, and record any host-specific baseline
+failure separately from a regression. Mark the work complete only when every
+upstream change is recorded and accepted.
+
+## Milestones and plateaus
+
+### `EP-M0` characterisation plateau
+
+- Outcome: a reproducible statement of the mismatch and its cause, with no
+  production change.
+- Requirements and gaps: advances `GAP-WORKER-REAP-001`; discharges no
+  behaviour.
+- Acceptance evidence: `EVID-PROBE-001` transcript, process observations, and a
+  cause statement.
+- Conformance check:
+  - the probe is reproduced under the documented operation, or the work stops;
+  - no production interface or dependency changed;
+  - upstream assumptions are recorded with their evidence limits;
+  - trace links remain provisional and are flagged as such.
+- Recovery: discard the scratch script and revert nothing else; the repository
+  is unchanged.
+- Remaining gaps: the disposition decision, the fix, and verification.
+- Compatibility decision: none.
+
+### `EP-M1` red-test plateau
+
+- Outcome: a failing real-process test that specifies the promised behaviour.
+- Requirements and gaps: specifies `PROV-TDD-REQ-001`; advances
+  `GAP-WORKER-REAP-001`.
+- Acceptance evidence: `EVID-RED-001` fails for the intended reason.
+- Conformance check:
+  - the test uses the real supervisor and worker processes;
+  - the worker is observed alive before cancellation;
+  - no production behaviour changed;
+  - the test path and command are recorded.
+- Recovery: revert the test commit; no production state changed.
+- Remaining gaps: implementation, broader cases, and reconciliation.
+- Compatibility decision: none; the test surface is test-only and creates no
+  source-API obligation.
+
+### `EP-M2` implementation plateau
+
+- Outcome: the accepted D1 response is implemented and the focused termination
+  and preservation tests pass.
+- Requirements and gaps: discharges `PROV-TDD-REQ-001` for the covered worker
+  set; closes `GAP-WORKER-REAP-001` within the accepted scope.
+- Acceptance evidence: `EVID-GREEN-001`, plus the preservation result.
+- Conformance check:
+  - requirements satisfied within the accepted scope;
+  - the design and ADR match the accepted response;
+  - `AXIOM-OS-PARENT-EXIT` still describes the relied-upon boundary;
+  - no unapproved public interface or dependency change;
+  - no unapproved persisted-format or trust-boundary change;
+  - trace links current.
+- Recovery: revert the implementation commit and leave `EP-M1` in place as the
+  specification.
+- Remaining gaps: breadth, interleavings, platform coverage, and upstream
+  reconciliation.
+- Compatibility decision: none identified; if a released contract or external
+  consumer is discovered, record it and re-plan.
+
+### `EP-M3` delivery plateau
+
+- Outcome: verified behaviour within the accepted scope and reconciled upstream
+  artefacts.
+- Requirements and gaps: all assigned obligations discharged or explicitly
+  recorded as residual gaps.
+- Acceptance evidence: gate logs, verification results, and the reconciled
+  revisions.
+- Conformance check:
+  - every obligation is discharged or has an accepted residual gap;
+  - all upstream links and revisions are current;
+  - no unrecorded deviation remains.
+- Recovery: safe revert of the delivery commit; no partial migration is known.
+- Remaining gaps: only accepted, recorded ones.
+- Compatibility decision: none, or the named commitment discovered during
+  reconnaissance.
+
+## Concrete steps
+
+The authoring isolation rules prevented identifying the receiving repository,
+its test runner, and its gate sequence. The placeholders below must be replaced
+before approval. A plan with unresolved placeholders is not self-contained and
+must not be approved.
+
+```plaintext
+Working directory: <receiving repository root, recorded in EP-M0>
+Precondition: D1 accepted and this plan explicitly approved.
+
+EP-M0 reproduce:
+  <documented cancellation command from the ToR or design>
+  <worker liveness check, for example: kill -0 <pid> or test -d /proc/<pid>>
+Expected: the recorded baseline revision and the survivor's identity are
+appended to Artefacts and notes.
+
+Red: <focused integration test command> -> failure naming the surviving worker
+Green: <same command> -> pass, zero survivors at SupervisorExited + D
+Refactor: <focused command> -> pass
+
+Gates, run sequentially from the repository root, capturing each to
+/tmp/<action>-<project>-<branch>.out with pipefail enabled:
+  <format check command>
+  <lint command>
+  <typecheck command>
+  <test command>
+Expected: each gate passes, or a host-specific baseline failure is recorded
+separately from the change's results.
+```
+
+If the receiving repository is the df12 documentation repository, its
+documented sequence is `make check-fmt`, `make lint`, `make typecheck`, and
+`make test`, run sequentially. That applicability is unverified here: a
+supervisor implementation may live elsewhere, and its own gate sequence governs.
+
+## Validation and acceptance
+
+Acceptance is behavioural, not structural. Starting the supervisor with one or
+more real workers, cancelling it through the documented operation, and
+observing the worker processes must show that no supervisor-started worker is
+alive at `SupervisorExited + D`. The test must fail before the change for the
+intended reason and pass after it.
+
+For code changes, record the Red-Green-Refactor evidence:
+
+- Red command and expected failure, including the survivor identity and any
+  strict expected-failure marker used to prove the intended reason.
+- Green command and expected pass after the minimal implementation.
+- Refactor command sequence and expected pass after cleanup.
+
+For verification obligations, record the command and the initial failure or
+counterexample. After implementation, record the passing result, the exercised
+cases, the axioms relied upon, and any obligation that remains undischarged.
+
+Quality criteria (what "done" means):
+
+- Tests: the focused termination test, the preservation test, and the accepted
+  interleavings pass; the wider suite passes.
+- Verification: the `INV-*` and `L-*` obligations are discharged by the methods
+  above, or residual gaps are explicitly recorded.
+- Lint and typecheck: the receiving repository's commands pass.
+- Performance: shutdown completes within D, once D is defined.
+- Security: termination does not signal unrelated processes, demonstrated by
+  the preservation test.
+
+Quality method: the verified commands and gate logs recorded in
+`Artefacts and notes`. No result is claimed in this draft.
+
+## Idempotence and recovery
+
+`EP-M0` and the tests are re-runnable. Tests create real processes, so each test
+must use a unique fixture tag and a cleanup fixture that terminates any survivor
+it started, even when the assertion fails. A red test deliberately leaves a
+surviving worker at the moment of failure; cleanup must still run, and the
+cleanup itself must be observed to avoid leaking processes between runs.
+
+The implementation change is a normal commit that can be reverted. No deployed
+state, persisted format, or migration is known; if reconnaissance finds one,
+add the migration and rollback plan before implementation. Do not leave orphan
+processes, scratch scripts, or seeded faults after verification.
+
+## Artefacts and notes
+
+The supplied scenario, quoted verbatim as input rather than as a measured
+transcript:
+
+```plaintext
+"A ToR and ADR promise that cancelling a supervisor stops its workers. An
+integration probe shows workers remain alive after the supervisor exits."
+```
+
+Evidence register:
+
+- `EVID-PROBE-001`: reported observation from the supplied input. No command,
+  transcript, revision, or environment was supplied. Scope is limited to the
+  exercised path.
+- `EVID-RED-001`: planned, not obtained. It must be a real-process test failure
+  naming the surviving worker.
+- `EVID-GREEN-001`: planned, not obtained. It must show zero survivors at
+  `SupervisorExited + D` and preservation when cancellation is not requested.
+- `EVID-GATE-*`: planned, not obtained. Gate logs belong under `/tmp`, with
+  paths recorded here.
+
+No passing result is fabricated. An unexecuted check is recorded as planned,
+and an unavailable check is recorded as unverified.
+
+## Interfaces and dependencies
+
+No repository interface can be named without inspection. Do not implement
+against placeholder names.
+
+Design-level obligations for the accepted response:
+
+- A worker-set or lifetime boundary that covers every supervisor-owned spawn
+  path.
+- A cancellation sequence that prevents supervisor exit from leaving survivors,
+  with graceful and forced termination semantics recorded.
+- An observable process identity for tests, independent of the supervisor's
+  exit status.
+- Preservation of workers when no cancellation occurs.
+
+Ownership: the supervisor lifecycle component owns the worker set and the
+shutdown discipline. The exact component and path must be recorded in `EP-M0`.
+Callers must use one spawn path; a parallel implementation or a bypass spawn
+path violates `L-REGISTRY-COVERAGE`.
+
+Dependencies: none authorized. Any new dependency, platform feature, or
+privileged configuration requires explicit approval.
+
+Compatibility: none identified. No released contract or external consumer was
+named. If one is discovered, record it and re-plan rather than adding a shim.
+
+## Revision note
+
+- 2026-11-21: Initial draft created in response to `EVID-PROBE-001`. The status
+  is `BLOCKED` pending explicit acceptance of D1, and the plan has not passed
+  the approval gate. Remaining work cannot start until the upstream revisions,
+  the probe transcript, and the decision authority are supplied. No repository
+  change was made and no gate was run.

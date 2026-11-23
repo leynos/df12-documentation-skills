@@ -1,0 +1,90 @@
+# Change to a released 2.1 function – intake and elicitation note
+
+Status: working note (phases 0–1 of the terms-of-reference workflow), not an
+approved artefact.
+
+Date: 2026-11-21.
+
+Audience: maintainers and the release authority of the package that ships the
+function, plus the author of the technical design.
+
+## Input
+
+> Change a function shipped in version 2.1 with an explicit compatibility
+> commitment and a deployed external consumer. The current branch is ahead of
+> the tag.
+
+## What was inspected
+
+The installed `terms-of-reference-doc`, `tech-design-doc`, and `execplans`
+skills and their references were inspected on 2026-11-21. The invoking
+session's isolation rule prohibits reading the target repository's `README`,
+`docs/` directory, release tags, ADRs, roadmaps, and ExecPlans. The prior-art
+catalogue is therefore empty by constraint, not because prior art is absent.
+Facts that the supplied statement does not establish are marked `[OPEN]`; none
+is invented.
+
+## Evidence inventory
+
+| ID     | Claim                                                  | Status           | Source and scope                                                                                                                                        |
+| ------ | ------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| EV-001 | The function was shipped in version 2.1.                | `[KNOWN]`        | Supplied statement. Establishes release history as stated; the exact tag and commit are not supplied.                                                   |
+| EV-002 | An explicit compatibility commitment applies.          | `[KNOWN]`        | Supplied statement. The commitment's text, scope, duration, notice period, and permitted change classes are `[OPEN]`.                                   |
+| EV-003 | An external consumer is deployed.                      | `[KNOWN]`        | Supplied statement. The consumer's identity, deployed version, deployment date, and usage profile are `[OPEN]`.                                          |
+| EV-004 | The current branch is ahead of the tag.                | `[KNOWN]`        | Supplied statement. Which tag, how far ahead, and which unreleased changes exist are `[OPEN]`.                                                           |
+| EV-005 | The intended change to the function.                   | `[OPEN]`         | The statement names a change but does not state its content, new contract, signature, or motivation.                                                     |
+| EV-006 | The function's identity and context.                   | `[OPEN]`         | Name, module, language, package, and whether the declaration is a library public API or an application-internal public symbol are not supplied.          |
+
+The statement establishes the situation but not the change. The compatibility
+classification in the technical design does not depend on the change content.
+The implementation plan does.
+
+## Provisional sketch
+
+The sketch follows the surviving terms-of-reference sections, tailored to the
+scope of a single-function change. Sections that would merely restate the
+package's existing terms of reference are omitted rather than filled with
+generalities.
+
+| Section                  | Content                                                                                                                                                          | Tag                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Background and motivation | Why the function must change now.                                                                                                                                | `[OPEN]`                                                          |
+| Users and stakeholders    | A deployed external consumer exists; maintainers and a release authority are implied by the release and commitment.                                               | `[KNOWN]` consumer existence; `[ASSUMED]` maintainer and release roles; `[OPEN]` identities and decision rights |
+| Job to be done            | When a consumer has deployed against 2.1, maintainers want to change the function without breaking deployed users, so they can evolve the package without forcing a lockstep upgrade. | `[ASSUMED]`                                                       |
+| Scope                     | The released function, its observable contract, its callers, and its deprecation or migration path.                                                              | `[KNOWN]` function; `[OPEN]` adjacent surfaces                    |
+| Goals                     | Deliver the change while every committed 2.1 guarantee remains true; provide a migration path.                                                                   | `[ASSUMED]`                                                       |
+| Non-goals                 | Redesigning unrelated APIs; a package-wide compatibility layer; choosing the implementation mechanism.                                                            | `[ASSUMED]`                                                       |
+| Success criteria          | Contract-equivalence evidence for the old entry point; consumer acceptance for the migration path.                                                               | `[ASSUMED]`; targets `[OPEN]`                                     |
+| Constraints               | The compatibility commitment and the deployed consumer.                                                                                                          | `[KNOWN]` existence                                               |
+| Assumptions               | The consumer relies on documented behaviour; the commitment permits eventual removal at a major release.                                                          | `[ASSUMED]`                                                       |
+| Open questions            | See the constraint record.                                                                                                                                       | `[OPEN]`                                                          |
+
+## Gating questions
+
+The elicitation protocol asks one question per turn, in dependency order. The
+first question is:
+
+> TOR-OPEN-001: What is the intended change to the function – its new or
+> changed contract relative to version 2.1?
+
+The second is:
+
+> TOR-OPEN-002: What is the exact text of the compatibility commitment, and
+> which change classes, versions, notice periods, and removal conditions does
+> it cover?
+
+This authoring run has no interactive user to answer them. The elicitation
+therefore exits with the questions recorded, as the protocol permits, rather
+than manufacturing answers. The remaining questions, their gating effects, and
+their resolution criteria are in the constraint record.
+
+## Planned artefacts
+
+1. A terms-of-reference constraint revision recording the commitment and the
+   deployed consumer as hard constraints, with stakeholders and open questions.
+2. A technical design that classifies the surface, chooses the compatibility or
+   migration approach, and states the design-level verification obligations.
+3. A draft ExecPlan for the implementation, held at `DRAFT` under the skill's
+   approval gate.
+
+No implementation is authorised by any of these documents.

@@ -1,0 +1,297 @@
+# Chunk-size coverage and capture-only benchmark scope – design update
+
+Status: Draft v0.1 (bounded verification design; not accepted).
+
+Audience: The design owner, the implementer of the evidence correction, and the
+reviewer who will accept or reject the performance claim.
+
+Companion documents: The receiving execution plan at
+`./execplan-chunk-and-benchmark-evidence.md`. No Terms of Reference, prior
+design revision, architecture decision record (ADR), roadmap, or ExecPlan was
+available in the authoring sandbox, and none was inspected. That absence is an
+input gap, not evidence that those artefacts do not exist.
+
+Date and version: 2026-11-21, v0.1.
+
+Authority and evidence basis: The supplied scenario brief of 2026-11-21 is the
+only project-specific source. It is authoritative for what the sponsor reports
+and asks to be examined. It does not independently establish the reported
+observations, approve a performance claim, or identify a decision owner. The
+governing design rules come from the `tech-design-doc` skill revision in
+`skills/tech-design-doc/` and its `architecture-contract.md` and
+`field-evidence.md` references, inspected on 2026-11-21. The execution rules
+come from the installed `execplans` skill and its template, inspected on the
+same date.
+
+## 1. Problem and scope
+
+Two evidence defects put a design claim at risk:
+
+- `OBS-001`: Increasing the chunk size causes a test that is meant to exercise
+  multiple chunks to execute only one iteration. The test still passes.
+- `OBS-002`: The benchmark measures the echo path, while the design claims a
+  capture-only gain.
+
+The response is not merely to restore the old chunk size, weaken the test, or
+restate the claim to match the measurement. It is to make each claim's
+verification exercise the behaviour that the claim names. A revert may later be
+justified by evidence, but it is not a substitute for the missing verification.
+
+In scope:
+
+- the coverage contract for the multi-chunk test at the configured chunk size;
+- the measurement contract for the capture-only performance claim;
+- the evidence states, gaps, and handoff required to correct both.
+
+Out of scope:
+
+- a functional diagnosis of the chunked reader or its echo mode;
+- a change to the default chunk size, the echo behaviour, or any production
+  interface;
+- a new benchmark framework or dependency;
+- any reduction of a success threshold, change of a control, or substitution
+  of a cheaper metric;
+- acceptance of either claim. This document proposes verification; it does not
+  discharge it.
+
+This is a design artefact, not a Terms of Reference. The input concerns
+solution-space evidence for an existing design. Applicable problem-space intent
+is unavailable, and inventing users, goals, or market claims to supply it would
+violate the upstream contract.
+
+## 2. Terms
+
+- **Chunk size (`C`)**: the maximum number of bytes the reader requests in one
+  iteration.
+- **Iteration**: one pass of the read-and-process loop over one chunk.
+- **Multi-chunk test**: a test whose fixture (`F`) spans at least two chunks at
+  the configured chunk size, so the modelled iteration count is at least two.
+- **Echo path (`P_echo`)**: the execution path that writes captured bytes to a
+  presentation or output sink in addition to any capture destination.
+- **Echo write**: a presentation write of captured bytes, performed by the echo
+  path.
+- **Capture-only path (`P_capture`)**: the execution path that consumes and
+  captures input without the echo write.
+- **Vacuous verification**: a passing check whose preconditions are not
+  satisfied by the exercised case, so the check cannot detect the defect it
+  claims to cover.
+- **Negative control**: a deliberately invalid case or mutation that a valid
+  check must reject for the intended reason.
+
+The brief does not define "echo" or "capture-only". These are working
+definitions; `Q4` in section 10 confirms them against the benchmark harness
+before `VO-002` is applied. If the project uses different meanings, this
+section is updated first.
+
+## 3. Evidence status
+
+| ID | Statement | Source | Status | Established scope |
+| --- | --- | --- | --- | --- |
+| `OBS-001` | A larger chunk size makes the multi-chunk test execute one iteration, and the test still passes. | Scenario brief. | `[KNOWN]` as a report. | The report only. The observation was not independently reproduced here. |
+| `OBS-002` | The benchmark measures echo while the design claims a capture-only gain. | Scenario brief. | `[KNOWN]` as a report. | The report only. The benchmark was not inspected or rerun here. |
+| `CLM-001` | The multi-chunk test demonstrates multi-chunk behaviour at the configured chunk size. | Implied by the test's stated purpose; not an approved claim in the brief. | `[OPEN]`, unsupported. | None. The test currently exercises one iteration. |
+| `CLM-002` | The implementation produces a capture-only performance gain. | Design claim reported in the brief. | `[OPEN]`, unsupported. | None. The measured path is echo. |
+| `PARAM-001` | The approved chunk size, fixture size, benchmark harness, workload, environment, baseline, and acceptance threshold. | No source supplied. | `[OPEN]`. | Unknown. |
+
+The reported passes remain valid for the narrower properties they actually
+exercise: the single-chunk path passes, and the echo-path measurement is a
+measurement of the echo path. Neither pass discharges an obligation about the
+multi-chunk path or the capture-only path.
+
+## 4. Gap register
+
+| ID | Upstream need | Baseline evidence | Target state | Disposition | Unblock condition |
+| --- | --- | --- | --- | --- | --- |
+| `GAP-001` | A test that demonstrates multi-chunk behaviour at the configured chunk size. | `OBS-001`: the test passes with one iteration. | The test observes at least two iterations at `C`, covers a boundary-spanning sentinel, and fails if coverage collapses to one iteration. | Proposed verification work assigned to `EP-M1`. No production change is assumed. | `VO-001` is discharged with recorded red, green, and negative-control evidence. |
+| `GAP-002` | Evidence for the claim that the gain is capture-only. | `OBS-002`: the benchmark measures echo. | A capture-only run, separately labelled from an echo control, with the full measurement record. | Proposed verification work assigned to `EP-M2`. The claim remains unsupported. | `VO-002` is discharged, and the owner restates the claim at its measured scope or withdraws it. |
+
+`GAP-001` is a verification-coverage gap, not proof of a functional defect.
+`GAP-002` is a measurement-scope gap, not proof that no gain exists. Either gap
+may expose a real defect once the correct check runs; neither does so yet.
+
+## 5. Requirements and design response
+
+`REQ-001` – A test that claims multi-chunk coverage must observe the multi-chunk
+execution at the configured chunk size. It must assert or otherwise witness an
+iteration count of at least two, and it must exercise a value that crosses a
+chunk boundary. A larger chunk size must not silently reduce the test to a
+single-chunk case.
+
+`REQ-002` – A performance claim must name its measured execution path and
+retain the workload, control, environment, measurement protocol, uncertainty,
+baseline, and acceptance threshold. A gain on the echo path does not support a
+capture-only claim.
+
+`REQ-003` – A later result may not lower the threshold, change the control, or
+substitute a cheaper metric. If the claim cannot be supported at the agreed
+scope, mark it unsupported and return the decision to its owner.
+
+## 6. Verification obligations
+
+### `VO-001` – Multi-chunk coverage at the configured chunk size
+
+- Property: For the configured chunk size `C` and fixture `F`, the reader
+  executes at least two iterations, and a sentinel whose bytes cross the `C`
+  boundary is reproduced exactly. In the abstract model,
+  `iterations(F, C) >= 2` and `output = expected(F)`. The test records
+  `|F| > C` as an explicit precondition, so a short-read artefact alone cannot
+  supply the second iteration.
+- Linked requirement: `REQ-001`. Affected components: the reader test harness
+  and the multi-chunk test.
+- Method: a parameterized test over a small set of chunk sizes and fixtures,
+  with a test-only iteration counter and a whole-buffer reference oracle. The
+  counter is test-only and must not create a source-API compatibility
+  obligation.
+- Artefact: the existing multi-chunk test, located in `EP-M0`, plus a test-only
+  counter. The exact path and test name are recorded after reconnaissance.
+- Discharge condition: the red run fails on the iteration assertion with
+  `iterations = 1` at the approved `C`; the green run passes with
+  `iterations >= 2`; the boundary sentinel matches the independent oracle; the
+  negative control collapses coverage to one iteration and is rejected for that
+  reason.
+- Non-vacuity: exhibit a witness with `|F| > C` that reaches the second
+  iteration; exercise `C` values on both sides of the fixture boundary; run the
+  negative control with `C >= |F|` and observe the iteration assertion fail. An
+  empty loop, a fixture that fits in one chunk, an expected-failure marker in
+  the final state, or a filtered case is not evidence.
+- Bounds and residual uncertainty: the check covers selected fixtures and
+  chunk sizes, not every admissible `C` or short-read pattern. If the harness
+  supports a generated property over `C`, that extends the domain; otherwise
+  record the residual gap. The production default `C` must be exercised.
+
+### `VO-002` – Capture-only measurement for the performance claim
+
+- Property: The benchmark result offered for `CLM-002` is produced by the
+  capture-only path, and the echo path is a separately labelled control. A
+  measured statistic `T(P)` is evidence for a claim about `P` only.
+- Linked requirement: `REQ-002`. Affected components: the benchmark harness and
+  the design's performance claim record.
+- Method: two labelled benchmark runs, capture-only and echo control, with the
+  same workload, input, environment, and protocol; path verification that the
+  capture-only run performs no echo write; repeated measurements with reported
+  dispersion; and a pre-registered acceptance threshold. Path verification runs
+  separately from the timed measurement, or uses instrumentation disabled
+  during timing, so it does not perturb the result.
+- Measurement record: workload, control, environment, selected path, protocol,
+  uncertainty, baseline, threshold, and owner. Section 7 holds the current
+  record; every unknown remains `[OPEN]` until supplied.
+- Discharge condition: the harness demonstrates that the capture-only run
+  executes `P_capture` and the echo run executes `P_echo`; the capture-only
+  result meets the pre-registered threshold with uncertainty reported; the
+  claim is restated with the measured path, workload, and environment. If the
+  result does not meet the threshold, the owner withdraws or revises the claim;
+  nobody rescues it with a threshold change.
+- Non-vacuity: assert that the capture-only run transfers a non-zero number of
+  bytes and performs zero echo writes; assert that the echo control performs
+  echo writes. Include a negative control or representative mutation in the
+  capture path that changes the measured result for the intended reason. A
+  benchmark that skips the path, measures zero bytes, or differs only in
+  unrelated startup work is rejected.
+- Bounds and residual uncertainty: the result is environment- and
+  workload-specific. A throughput difference does not establish a causal
+  mechanism unless that mechanism is separately instrumented. The claim states
+  both limits.
+
+### `VO-003` – Evidence freshness
+
+- Property: Any change to `C`, `F`, the benchmark path selector, the benchmark
+  harness, the performance-relevant implementation, or the upstream design
+  revision reopens `VO-001` and `VO-002` until they are re-run.
+- Linked requirement: `REQ-003`.
+- Method: a recorded trigger list, checked at each milestone and before the
+  claim is accepted.
+- Discharge condition: the triggers are recorded here and in the ExecPlan, and
+  each change is followed by a re-run or an explicit unverified state.
+- Non-vacuity: a deliberately changed chunk size in a test parameter must
+  reopen the iteration-count obligation; a changed benchmark path label must
+  reopen the performance claim.
+
+## 7. Performance claim record
+
+| Field | Value | Status |
+| --- | --- | --- |
+| Claim | A capture-only performance gain. | Reported claim, unsupported. |
+| Measured path in current evidence | Echo path. | `[KNOWN]` from `OBS-002`. |
+| Required selected path | Capture-only, with echo as a separate control. | Proposed. |
+| Workload (input size, source, content) | Not supplied. | `[OPEN]`. |
+| Control | Echo path. | Proposed; not yet measured. |
+| Environment (hardware, operating system, runtime) | Not supplied. | `[OPEN]`. |
+| Measurement protocol (warm-up, repeats, statistic) | Not supplied. | `[OPEN]`. |
+| Uncertainty (dispersion, interval) | Not reported. | `[OPEN]`. |
+| Baseline revision | Not supplied. | `[OPEN]`. |
+| Acceptance threshold | Not supplied; must be agreed before results. | `[OPEN]`. |
+| Decision owner | Not identified. | `[OPEN]`. |
+| Evidence state | Unverified for capture-only. | `[OPEN]`. |
+
+The table retains the fields the architecture contract requires. The design may
+report the echo measurement at its actual scope, but it must not present that
+measurement as the capture-only gain.
+
+## 8. Decisions
+
+`D1` – Do not accept the passing multi-chunk test as evidence for `CLM-001`.
+The test executes one iteration, so it exercises the single-chunk path. Accept
+the pass only for that narrower path. Rationale: a passing check demonstrates
+only the property and scope it actually exercises.
+
+`D2` – Do not accept the echo benchmark as evidence for `CLM-002`. Rationale:
+a throughput gain on one execution path is not evidence for a claim about a
+different path, nor for an unmeasured causal mechanism.
+
+`D3` – Preserve the agreed threshold, control, and workload. Do not lower a
+target or substitute a cheaper metric after seeing results. If the claim fails,
+return the decision to its owner.
+
+`D4` – Reopen both obligations after any change listed in `VO-003`.
+
+`D5` – The functional implementation is unproven, not broken. These
+observations establish evidence gaps, not functional defects, unless the
+required verification finds one.
+
+## 9. State, handoff, and readiness
+
+- Design state: draft v0.1, not accepted. The section outline and the proposed
+  claim revision await agreement.
+- Claim state: `CLM-001` and `CLM-002` are unsupported. The proposed revision
+  for `CLM-002` is "gain unproven pending a capture-only measurement".
+- Implementation state: unchanged in this authoring task. No production code,
+  test, or benchmark was run.
+- Verification state: `VO-001`, `VO-002`, and `VO-003` are planned. No
+  obligation is discharged. The reported pass is recorded at its actual scope.
+- Handoff: the ExecPlan at
+  `./execplan-chunk-and-benchmark-evidence.md` receives `REQ-001` to `REQ-003`,
+  `GAP-001` and `GAP-002`, and `VO-001` to `VO-003`. It remains blocked pending
+  approval and acceptance of the claim revision.
+- Readiness: ready for bounded implementation and verification planning; not
+  ready for a claim that the gain is capture-only, and not ready for design
+  acceptance.
+
+## 10. Open questions
+
+| ID | Question | Gates | Resolution criteria |
+| --- | --- | --- | --- |
+| `Q1` | What are the approved chunk size `C` and fixture `F`? | `VO-001`. | The configuration is named in the design and used by the test. |
+| `Q2` | Does the test framework support a test-only iteration counter and a strict expected-failure wrapper for the negative control? | `VO-001` method. | A local check demonstrates both mechanisms, or the plan records an equivalent witness. |
+| `Q3` | Which real boundary must the sentinel cross: CRLF, a multi-byte delimiter, or a record separator? | `VO-001` witness. | The sentinel is derived from a boundary the production reader actually encounters. |
+| `Q4` | Which existing benchmark harness and path selector govern the echo and capture-only runs, and do they match the working definitions in section 2? | `VO-002`. | The harness, selector, exact commands, and meanings are recorded. |
+| `Q5` | What are the workload, environment, baseline, acceptance threshold, and decision owner for `CLM-002`? | `CLM-002` acceptance. | Each field in section 7 is filled and agreed before results are examined. |
+| `Q6` | Who may accept the revised claim and approve the ExecPlan? | Design readiness. | A named decision authority records acceptance or rejection. |
+
+Resolution paths: `Q1` to `Q4` close through targeted reconnaissance in
+`EP-M0`. `Q5` and `Q6` close through an explicit decision by the owning
+authority. No owner or threshold is invented here.
+
+## 11. References
+
+- Scenario brief supplied to the authoring agent, 2026-11-21.
+- Installed `tech-design-doc` skill, `SKILL.md`:
+  `<repository>/skills/tech-design-doc/SKILL.md`, inspected 2026-11-21.
+- `skills/tech-design-doc/references/architecture-contract.md`, inspected
+  2026-11-21.
+- `skills/tech-design-doc/references/field-evidence.md`, inspected 2026-11-21.
+  It is a rationale ledger whose observations were checked on 2026-09-26. Its
+  linked cases were not independently inspected for this task.
+- Installed `execplans` skill, `SKILL.md` and
+  `references/execplan-template.md`, inspected 2026-11-21.
+- No external web source was consulted. No diagram was produced, so no Mermaid
+  validation was required.
