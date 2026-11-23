@@ -112,8 +112,8 @@ Check these locations and read what is present:
   updating rather than creating).
 - `docs/context.md` (ubiquitous language; defines terms the user
   already considers settled).
-- `docs/adrs/` or `docs/decisions/` (architectural decisions reveal
-  constraints and prior reasoning).
+- `docs/adrs/`, `docs/decisions/`, or a legacy `docs/adr/` (architectural
+  decisions reveal constraints and prior reasoning). Read every one that exists.
 - `docs/design.md`, `docs/architecture.md`, or any tech design
   documents.
 - `docs/roadmap.md`.
