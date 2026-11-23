@@ -235,12 +235,13 @@ guidance that no phrase guard covers:
 wording is separate work. `field-evidence.md` is covered for packaging only,
 because it records rationale rather than obligations.
 
-The [users' guide](users-guide.md) and the
-[v0.2.0 migration guide](v0-2-0-migration-guide.md) describe how to use the
-skills rather than restating their obligations, so they are deliberately
-outside the retained-rule guards; the repository's Markdown gates are their
-only check. A future change that turns either into normative guidance should
-add a retained-rule entry instead of relying on that scope decision.
+The [users' guide](users-guide.md) describes how to use the skills and carries
+no normative statements, so it is deliberately outside the retained-rule
+guards. The [v0.2.0 migration guide](v0-2-0-migration-guide.md) does restate
+the compatibility prohibition, and a retained-rule entry now asserts that
+sentence under its governing section; its examples, checklist, and common-error
+fixes remain descriptive. A later change that adds normative guidance to either
+document should add a retained-rule entry.
 
 These are the areas that remain unguarded.
 

@@ -118,12 +118,12 @@ do not rewrite requirements to legitimise a generated artefact or current code.
 
 ## Common errors and fixes
 
-- **Error:** `Designs MUST NOT prescribe source-API compatibility machinery
-  for:`
+- **Error:** a design prescribes source-API compatibility machinery for a
+  private, test-only, pre-1.0, or unreleased API.
   - **Fix:** Remove the shim, alias, facade, wrapper, or compatibility
     entrypoint, and update the affected callers in the same change.
-- **Error:** `Terms of reference MUST NOT impose source-API compatibility
-  machinery on:`
+- **Error:** terms of reference impose source-API compatibility machinery on a
+  prohibited surface.
   - **Fix:** State the required outcome instead of a compatibility mechanism,
     and let the design record the compatibility assessment.
 - **Error:** an approved design, a merged pull request, or a passing test is

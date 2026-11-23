@@ -40,6 +40,7 @@ check here says only that the recorded output satisfies the stated boundary.
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -93,7 +94,8 @@ def _load_validator() -> ModuleType:
     return module
 
 
-COMPATIBILITY_PROBLEMS = _load_validator().compatibility_problems
+VALIDATOR_MODULE = _load_validator()
+COMPATIBILITY_PROBLEMS = VALIDATOR_MODULE.compatibility_problems
 
 
 def _diagnostics(result: subprocess.CompletedProcess[str]) -> str:
@@ -172,7 +174,9 @@ def test_both_published_c3_handoffs_state_their_boundaries() -> None:
     other = _run("handoff", second)
 
     assert accepted.returncode == 0, _diagnostics(accepted)
+    assert accepted.stdout == "", _diagnostics(accepted)
     assert other.returncode == 0, _diagnostics(other)
+    assert other.stdout == "", _diagnostics(other)
 
 
 _STATUSES = ("DRAFT", "ACTIVE", "BLOCKED", "COMPLETE", "PENDING")
@@ -864,14 +868,104 @@ def test_a_generated_decision_log_clears_only_the_named_deviations(
             pending.discard(target)
         elif form == "anaphoric" and len(pending) == 1:
             pending.clear()
-    with tempfile.TemporaryDirectory() as directory:
-        record = _fixture(
-            Path(directory),
-            f"Status: ACTIVE\n\n## Decision log\n\n{entries}",
+
+    def resolver(index: int, identifier: int) -> str:
+        """Return a later entry that accepts one deviation by identifier."""
+        return (
+            f"\n- D{index}. Decision: accept D{identifier} as the approved "
+            "resolution.\n"
+            "  Rationale: the remaining proposal was approved.\n"
+            "  Date/Author: 2026-11-22, policy owner.\n"
         )
 
-        result = _run("status", record)
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        results = {}
+        for name, suffix in (
+            ("plain", ""),
+            ("resolve-1", resolver(20, 1)),
+            ("resolve-2", resolver(21, 2)),
+        ):
+            record = root / f"{name}.md"
+            record.write_text(
+                f"Status: COMPLETE\n\n## Decision log\n\n{entries}{suffix}",
+                encoding="utf-8",
+            )
+            results[name] = _run("status", record)
 
-    message = "ACTIVE with an unaccepted deviation"
-    assert (message in result.stdout) == bool(pending), _diagnostics(result)
-    assert result.returncode == (1 if pending else 0), _diagnostics(result)
+    assert results["plain"].returncode == (0 if not pending else 1), _diagnostics(
+        results["plain"]
+    )
+    assert results["resolve-1"].returncode == (0 if pending <= {1} else 1), (
+        _diagnostics(results["resolve-1"])
+    )
+    assert results["resolve-2"].returncode == (0 if pending <= {2} else 1), (
+        _diagnostics(results["resolve-2"])
+    )
+
+
+def test_a_hedged_acceptance_leaves_the_deviation_pending(tmp_path: Path) -> None:
+    """A future-tense acceptance records no acceptance."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: D1 will be accepted.\n"
+        "  Rationale: the owner has not ruled yet.\n"
+        "  Date/Author: 2026-11-20, authoring agent.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 1, _diagnostics(result)
+    assert "COMPLETE with an unaccepted deviation" in result.stdout, _diagnostics(
+        result
+    )
+
+
+def test_an_unrelated_acceptance_leaves_the_deviation_pending(
+    tmp_path: Path,
+) -> None:
+    """An acceptance of an unrelated proposal clears nothing."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: accept the unrelated proposal.\n"
+        "  Rationale: the owner approved something else.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 1, _diagnostics(result)
+    assert "COMPLETE with an unaccepted deviation" in result.stdout, _diagnostics(
+        result
+    )
+
+
+@pytest.mark.parametrize(
+    ("relative", "fragment", "description"), VALIDATOR_MODULE._RULES
+)
+def test_each_governing_rule_is_individually_detectable(
+    tmp_path: Path,
+    relative: Path,
+    fragment: str,
+    description: str,
+) -> None:
+    """Removing one governing sentence from a skill reports exactly that rule."""
+    skills_root = tmp_path / "skills"
+    for skill in ("tech-design-doc", "terms-of-reference-doc"):
+        shutil.copytree(SKILLS / skill, skills_root / skill)
+    path = skills_root / relative
+    text = " ".join(path.read_text(encoding="utf-8").split())
+    assert fragment in text
+    path.write_text(text.replace(fragment, "", 1), encoding="utf-8")
+
+    problems = VALIDATOR_MODULE.skill_rule_problems(skills_root)
+
+    assert problems == [f"{path}: no longer states that {description}"]

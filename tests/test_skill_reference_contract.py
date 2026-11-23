@@ -377,6 +377,18 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         ),
     ),
     _RetainedRule(
+        rule="migration guide restates the compatibility prohibition",
+        document=Path("docs/v0-2-0-migration-guide.md"),
+        section="3. Classify the API surface before proposing compatibility work",
+        text=(
+            "Designs and terms of reference MUST NOT prescribe or impose "
+            "source-API compatibility machinery for private APIs (including "
+            "application-internal public surfaces), test-only APIs, pre-1.0 "
+            "APIs, or unreleased API changes ahead of the latest formal "
+            "release tag."
+        ),
+    ),
+    _RetainedRule(
         rule="terms reference prohibition governs its list",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
         section=_TERMS_COMPATIBILITY_SECTION,
@@ -922,6 +934,22 @@ def test_an_inverted_rule_is_reported(tmp_path: Path) -> None:
     missing = _missing_rules(tmp_path)
 
     assert missing == ["design compatibility prohibition summary"]
+
+
+def test_an_inverted_migration_guide_rule_is_reported(tmp_path: Path) -> None:
+    """Inverting the migration guide's prohibition is reported."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("migration guide restates the compatibility prohibition")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8").replace(
+        "MUST NOT prescribe or impose source-API compatibility machinery",
+        "MAY prescribe or impose source-API compatibility machinery",
+    )
+    document.write_text(text, encoding="utf-8")
+
+    missing = _missing_rules(tmp_path)
+
+    assert missing == [target.rule]
 
 
 def test_an_inverted_elicitation_non_goal_rule_is_reported(tmp_path: Path) -> None:
