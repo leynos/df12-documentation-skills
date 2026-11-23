@@ -173,9 +173,11 @@ compatibility term is reported however far apart they sit, a negated or
 prohibition-only sentence is not, and a generated version number does not end
 the match window. For the released-permission check, a generated version number
 inside the statement does not end it, and a generated partial acceptance clears
-only the deviation its clause names while the other stays pending. The checks
-assert wording, not semantics: no behavioural claim is guarded. Whether a
-concern warrants a view, whether evidence is adequate, whether a target is
+only the deviation its clause names while the other stays pending. A generated
+sequence of acceptance forms — named, unrelated, anaphoric, hedged, and
+placeholder — must clear exactly the deviations it names and no others. The
+checks assert wording, not semantics: no behavioural claim is guarded. Whether
+a concern warrants a view, whether evidence is adequate, whether a target is
 honest, and whether a handoff is proportionate are judgement calls covered only
 by the fresh-agent scenarios in
 [`architecture-contract-validation.md`](architecture-contract-validation.md).
@@ -200,7 +202,20 @@ APIs", does not end that clause. An acceptance in the Decision log clears only
 the deviations named in the clause that carries the acceptance, so "approve D2;
 retain D1 for separate review" leaves D1 pending. The script reads the
 governing sentences from the shipped skills and reports one that is missing, so
-a rule cannot be deleted from a skill while the check keeps passing. These
+a rule cannot be deleted from a skill while the check keeps passing.
+
+The checker is invoked as
+`python scripts/check_workflow_boundary.py <check> RECORD...`, where `<check>`
+is `status`, `handoff`, `prohibitions`, or `permission`. `--skills-root`
+selects the directory holding the shipped skills and defaults to `skills/`
+beside the script. `status` reads each plan or revision record's `Status` line
+and Decision log; `handoff` reads its handoff section; `prohibitions` reads the
+proposed records for permissive compatibility sentences; `permission` reads the
+released-contract records for the affirmative admissibility statement. Every
+diagnostic is printed as `path: message`, except the permission check's
+missing-statement diagnostic, which names no path because it reports on the
+record set rather than on one file. The exit status is 1 when any diagnostic is
+printed, including one about a missing skill rule, and 0 otherwise. These
 checks decide the recorded output, not whether an agent obeys the skill: the
 phrase checks find a permissive sentence, not a plan that implements
 compatibility without saying so.

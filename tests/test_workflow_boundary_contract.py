@@ -699,24 +699,111 @@ def test_a_generated_version_number_stays_inside_the_permission(
 def test_a_generated_partial_acceptance_leaves_the_other_deviation_pending(
     first: int, second: int
 ) -> None:
-    """Only the deviation named in the acceptance clause is cleared."""
+    """The named deviation clears while the retained one stays pending."""
     assume(first != second)
+    entries = (
+        f"- D{first}. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        f"- D{second}. Decision: replace the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        f"- D10. Decision: approve D{second}; retain D{first} for separate review.\n"
+        "  Rationale: only one proposal was approved.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n"
+    )
+    later = (
+        f"\n- D11. Decision: accept D{first} as the approved resolution.\n"
+        "  Rationale: the remaining proposal was approved.\n"
+        "  Date/Author: 2026-11-21, policy owner.\n"
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        partial = root / "partial.md"
+        partial.write_text(
+            f"Status: ACTIVE\n\n## Decision log\n\n{entries}", encoding="utf-8"
+        )
+        complete = root / "complete.md"
+        complete.write_text(
+            f"Status: COMPLETE\n\n## Decision log\n\n{entries}{later}",
+            encoding="utf-8",
+        )
+
+        partial_result = _run("status", partial)
+        complete_result = _run("status", complete)
+
+    assert partial_result.returncode == 1, _diagnostics(partial_result)
+    assert "ACTIVE with an unaccepted deviation" in partial_result.stdout, _diagnostics(
+        partial_result
+    )
+    assert complete_result.returncode == 0, _diagnostics(complete_result)
+
+
+_ACCEPTANCE_FORMS = ("named", "unrelated", "anaphoric", "hedged", "placeholder")
+
+
+def _acceptance_entry(index: int, form: str, target: int) -> str:
+    """Return one Decision log entry of the requested acceptance form."""
+    if form == "named":
+        decision = f"Decision: accept D{target} as the approved resolution."
+        rationale = "  Rationale: the owner approved it.\n"
+    elif form == "unrelated":
+        decision = "Decision: accept the unrelated proposal."
+        rationale = "  Rationale: the owner approved it.\n"
+    elif form == "anaphoric":
+        decision = "Decision: accept the deviation."
+        rationale = "  Rationale: the owner approved it.\n"
+    elif form == "hedged":
+        decision = f"Decision: D{target} will be accepted."
+        rationale = "  Rationale: the owner has not ruled yet.\n"
+    else:
+        decision = "Decision: record the outcome."
+        rationale = (
+            "  ```plaintext\n"
+            "  - D-<next free>. Decision: <what was decided>.\n"
+            "    Status: proposal pending acceptance.\n"
+            "  ```\n"
+        )
+    return (
+        f"- D{index}. {decision}\n"
+        f"{rationale}  Date/Author: 2026-11-21, policy owner.\n\n"
+    )
+
+
+@given(
+    actions=st.lists(
+        st.tuples(
+            st.sampled_from(_ACCEPTANCE_FORMS),
+            st.integers(min_value=1, max_value=2),
+        ),
+        min_size=1,
+        max_size=3,
+    )
+)
+@settings(max_examples=50, deadline=None)
+def test_a_generated_decision_log_clears_only_the_named_deviations(
+    actions: list[tuple[str, int]],
+) -> None:
+    """Generated acceptance forms clear exactly the deviations they name."""
+    pending = {1, 2}
+    entries = (
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: replace the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+    )
+    for index, (form, target) in enumerate(actions, start=3):
+        entries += _acceptance_entry(index, form, target)
+        if form == "named":
+            pending.discard(target)
+        elif form == "anaphoric" and len(pending) == 1:
+            pending.clear()
     with tempfile.TemporaryDirectory() as directory:
         record = _fixture(
             Path(directory),
-            "Status: ACTIVE\n"
-            "\n## Decision log\n\n"
-            f"- D{first}. Decision: rename the module. "
-            "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
-            f"- D{second}. Decision: replace the module. "
-            "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
-            f"- D10. Decision: approve D{first}; retain D{second} for "
-            "separate review.\n"
-            "  Rationale: only one proposal was approved.\n"
-            "  Date/Author: 2026-11-20, policy owner.\n",
+            f"Status: ACTIVE\n\n## Decision log\n\n{entries}",
         )
 
         result = _run("status", record)
 
-    assert result.returncode == 1, _diagnostics(result)
-    assert "ACTIVE with an unaccepted deviation" in result.stdout, _diagnostics(result)
+    message = "ACTIVE with an unaccepted deviation"
+    assert (message in result.stdout) == bool(pending), _diagnostics(result)
+    assert result.returncode == (1 if pending else 0), _diagnostics(result)
