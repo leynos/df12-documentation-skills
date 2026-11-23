@@ -216,6 +216,14 @@ _DECISION_LOGS: dict[str, str] = {
         "  Rationale: the policy owner approved only the second proposal.\n"
         "  Date/Author: 2026-11-20, policy owner.\n"
     ),
+    "clause-scoped-anaphor": (
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: accept the deviation; approve D99.\n"
+        "  Rationale: the deviation was approved and another proposal named.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n"
+    ),
     "unrelated-anaphor": (
         "\n## Decision log\n\n"
         "- D1. Decision: rename the module. "
@@ -266,6 +274,28 @@ def test_every_status_is_decided_against_every_decision_log(
 
     assert result.returncode == (1 if expected else 0), _diagnostics(result)
     assert _messages(result) == expected, _diagnostics(result)
+
+
+def test_an_indented_placeholder_is_not_a_pending_deviation(
+    tmp_path: Path,
+) -> None:
+    """A fenced template indented under its entry records no deviation."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: record the outcome.\n"
+        "  ```plaintext\n"
+        "  - D-<next free>. Decision: <what was decided>.\n"
+        "    Status: proposal pending acceptance.\n"
+        "  ```\n"
+        "  Date/Author: 2026-11-21, policy owner.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 0, _diagnostics(result)
+    assert result.stdout == "", _diagnostics(result)
 
 
 def test_an_unnamed_acceptance_clears_the_only_pending_deviation(

@@ -54,7 +54,7 @@ _UNACCEPTED_DEVIATION = re.compile(
     r"|not approved",
     re.IGNORECASE,
 )
-_FENCE = re.compile(r"^```.*?^```", re.MULTILINE | re.DOTALL)
+_FENCE = re.compile(r"^[ \t]*```.*?^[ \t]*```", re.MULTILINE | re.DOTALL)
 _DECISION_STATEMENT = re.compile(r"Decision:\s*(?!<)[^<\n]{20,}", re.IGNORECASE)
 _ENTRY_START = re.compile(r"^\s*(?:[-*]\s*)?\**D(?P<id>\d+)\**\.", re.MULTILINE)
 _DECISION_CLAUSE = re.compile(
@@ -296,8 +296,9 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
     Naming a deviation in another clause, such as "approve D2; retain D1 for
     separate review", records a different decision and leaves that deviation
     pending. The anaphoric form, "accept the deviation", clears the sole pending
-    deviation only when the clause names no identifier at all, so an acceptance
-    of some other proposal cannot clear it.
+    deviation only from a clause that names no identifier, so an acceptance of
+    some other proposal in the same clause cannot clear it, while an identifier
+    in a different clause does not disable it.
     """
     clause = _DECISION_CLAUSE.search(entry)
     if clause is None:
@@ -305,16 +306,15 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
     statement = _normalise(clause.group("clause"))
     accepted: list[str] = []
     anaphor = False
-    named_any = False
     for acceptance in _ACCEPTANCE_CLAUSE_SPLIT.split(statement):
         if (
             _ACCEPTANCE_CUE.search(acceptance) is None
             or _ACCEPTANCE_HEDGE.search(acceptance) is not None
         ):
             continue
-        anaphor = anaphor or _DEVIATION_ANAPHOR.search(acceptance) is not None
         named = set(_DEVIATION_REFERENCE.findall(acceptance))
-        named_any = named_any or bool(named)
+        if not named and _DEVIATION_ANAPHOR.search(acceptance) is not None:
+            anaphor = True
         accepted.extend(
             identifier
             for identifier in pending
@@ -322,9 +322,7 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
         )
     if accepted:
         return accepted
-    if named_any or not anaphor:
-        return []
-    return list(pending) if len(pending) == 1 else []
+    return list(pending) if anaphor and len(pending) == 1 else []
 
 
 def _records_unaccepted_deviation(region: str) -> bool:
