@@ -112,7 +112,7 @@ Check these locations and read what is present:
   updating rather than creating).
 - `docs/context.md` (ubiquitous language; defines terms the user
   already considers settled).
-- `docs/adr/` or `docs/decisions/` (architectural decisions reveal
+- `docs/adrs/` or `docs/decisions/` (architectural decisions reveal
   constraints and prior reasoning).
 - `docs/design.md`, `docs/architecture.md`, or any tech design
   documents.
