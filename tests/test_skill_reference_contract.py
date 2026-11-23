@@ -354,6 +354,29 @@ _RETAINED_RULES: tuple[_RetainedRule, ...] = (
         ),
     ),
     _RetainedRule(
+        rule="terms elicitation keeps non-goals honest",
+        document=Path(
+            "skills/terms-of-reference-doc/references/elicitation-protocol.md"
+        ),
+        section="Goals and non-goals",
+        text=(
+            "A goals list of fifteen items with a non-goals list of two is a "
+            "smell, but the count is not the test. Ask the user to cut goals or "
+            "to name exclusions a reasonable reader would assume are in scope; "
+            "never invent non-goals to make the lists comparable."
+        ),
+    ),
+    _RetainedRule(
+        rule="terms scope anti-pattern refuses invented non-goals",
+        document=Path("skills/terms-of-reference-doc/SKILL.md"),
+        section="Anti-patterns to avoid",
+        text=(
+            "The scope is undefended. Challenge the missing boundary. Add only "
+            "plausible exclusions or reduce scope; never invent non-goals to "
+            "meet a numerical quota."
+        ),
+    ),
+    _RetainedRule(
         rule="terms reference prohibition governs its list",
         document=Path("skills/terms-of-reference-doc/references/problem-contract.md"),
         section=_TERMS_COMPATIBILITY_SECTION,
@@ -899,6 +922,38 @@ def test_an_inverted_rule_is_reported(tmp_path: Path) -> None:
     missing = _missing_rules(tmp_path)
 
     assert missing == ["design compatibility prohibition summary"]
+
+
+def test_an_inverted_elicitation_non_goal_rule_is_reported(tmp_path: Path) -> None:
+    """Inverting the non-goal guidance is reported rather than accepted."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("terms elicitation keeps non-goals honest")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8").replace(
+        "never invent non-goals to make the lists comparable",
+        "invent non-goals to make the lists comparable",
+    )
+    document.write_text(text, encoding="utf-8")
+
+    missing = _missing_rules(tmp_path)
+
+    assert missing == [target.rule]
+
+
+def test_an_inverted_scope_anti_pattern_is_reported(tmp_path: Path) -> None:
+    """Inverting the anti-pattern's quota rule is reported."""
+    _materialise_rule_documents(tmp_path)
+    target = _rule("terms scope anti-pattern refuses invented non-goals")
+    document = tmp_path / target.document
+    text = document.read_text(encoding="utf-8").replace(
+        "never invent non-goals to meet a numerical quota",
+        "invent non-goals to meet a numerical quota",
+    )
+    document.write_text(text, encoding="utf-8")
+
+    missing = _missing_rules(tmp_path)
+
+    assert missing == [target.rule]
 
 
 def test_an_inverted_design_reference_prohibition_is_reported(tmp_path: Path) -> None:

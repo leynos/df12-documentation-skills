@@ -152,6 +152,10 @@ def test_the_published_plan_blocks_on_its_recorded_deviation(
 def test_the_published_revision_record_blocks_on_its_deviation() -> None:
     """The second C3 record is blocked for the reason its Decision log states."""
     record = _published("c3-29cd658", "execplan-record.md.txt")
+    text = record.read_text(encoding="utf-8")
+
+    assert "Status: BLOCKED" in text
+    assert "proposal pending acceptance" in text
 
     result = _run("status", record)
 

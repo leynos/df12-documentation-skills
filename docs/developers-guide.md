@@ -224,18 +224,25 @@ checks decide the recorded output, not whether an agent obeys the skill: the
 phrase checks find a permissive sentence, not a plan that implements
 compatibility without saying so.
 
-The guards cover the two `SKILL.md` files and the two contract references. Four
-further reference documents carry operative guidance that no phrase guard
-covers: `tech-design-doc/references/document-anatomy.md`,
-`editing-checklist.md`, and `research-protocol.md`, and
-`terms-of-reference-doc/references/elicitation-protocol.md`. One rule in this
-branch's change set does touch the last of these: its non-goal guidance no
-longer prescribes a list-length target, because that contradicted the
-`SKILL.md` rule against inventing non-goals to meet a numerical quota. The
-other three are unchanged by this branch, and guarding the wording of any of
-the four is separate work. `field-evidence.md` is covered for packaging only,
-because it records rationale rather than obligations. These are the areas that
-remain unguarded.
+The guards cover the two `SKILL.md` files, the two contract references, and the
+non-goal guidance this branch changed: the elicitation protocol's "Goals and
+non-goals" section and the `SKILL.md` "Anti-patterns to avoid" entry each have
+a retained-rule entry, so deleting or inverting the wording against inventing
+non-goals fails the checks. Three further reference documents carry operative
+guidance that no phrase guard covers:
+`tech-design-doc/references/document-anatomy.md`, `editing-checklist.md`, and
+`research-protocol.md`. They are unchanged by this branch, and guarding their
+wording is separate work. `field-evidence.md` is covered for packaging only,
+because it records rationale rather than obligations.
+
+The [users' guide](users-guide.md) and the
+[v0.2.0 migration guide](v0-2-0-migration-guide.md) describe how to use the
+skills rather than restating their obligations, so they are deliberately
+outside the retained-rule guards; the repository's Markdown gates are their
+only check. A future change that turns either into normative guidance should
+add a retained-rule entry instead of relying on that scope decision.
+
+These are the areas that remain unguarded.
 
 ______________________________________________________________________
 
