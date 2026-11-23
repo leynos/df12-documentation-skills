@@ -205,13 +205,17 @@ governing sentences from the shipped skills and reports one that is missing, so
 a rule cannot be deleted from a skill while the check keeps passing.
 
 The checker is invoked as
-`python scripts/check_workflow_boundary.py <check> RECORD...`, where `<check>`
-is `status`, `handoff`, `prohibitions`, or `permission`. `--skills-root`
-selects the directory holding the shipped skills and defaults to `skills/`
-beside the script. `status` reads each plan or revision record's `Status` line
-and Decision log; `handoff` reads its handoff section; `prohibitions` reads the
-proposed records for permissive compatibility sentences; `permission` reads the
-released-contract records for the affirmative admissibility statement. Every
+`python scripts/check_workflow_boundary.py <check> RECORD...`, for example
+`python scripts/check_workflow_boundary.py status c3/execplan.md.txt`.
+`<check>` is `status`, `handoff`, `prohibitions`, or `permission`, and each
+takes one or more `RECORD` paths. `--skills-root` selects the directory holding
+the shipped skills, defaults to `skills/` beside the script, and must precede
+the subcommand because it is an option of the top-level parser. `status` reads
+each plan or revision record's `Status` line and Decision log; `handoff` reads
+its handoff section; `prohibitions` reads the proposed records for permissive
+compatibility sentences; `permission` reads the released-contract records for
+the affirmative admissibility statement. Every check reads the supplied
+`RECORD` files and the skills directory selected by `--skills-root`. Every
 diagnostic is printed as `path: message`, except the permission check's
 missing-statement diagnostic, which names no path because it reports on the
 record set rather than on one file. The exit status is 1 when any diagnostic is

@@ -216,6 +216,14 @@ _DECISION_LOGS: dict[str, str] = {
         "  Rationale: the policy owner approved only the second proposal.\n"
         "  Date/Author: 2026-11-20, policy owner.\n"
     ),
+    "unrelated-anaphor": (
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: accept the proposal D99.\n"
+        "  Rationale: a different proposal was approved.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n"
+    ),
     "none": "\n## Decision log\n\n- D1. Renamed the module.\n",
 }
 
@@ -227,7 +235,12 @@ def _expected_status_problems(status: str, condition: str) -> list[str]:
         problems.append(f"unknown status {status}")
     if condition == "absent":
         problems.append("no Decision log")
-    elif condition in {"unaccepted", "future-acceptance", "partial-acceptance"}:
+    elif condition in {
+        "unaccepted",
+        "future-acceptance",
+        "partial-acceptance",
+        "unrelated-anaphor",
+    }:
         if status in {"ACTIVE", "COMPLETE"}:
             problems.append(
                 f"{status} with an unaccepted deviation in the Decision log"
@@ -253,6 +266,27 @@ def test_every_status_is_decided_against_every_decision_log(
 
     assert result.returncode == (1 if expected else 0), _diagnostics(result)
     assert _messages(result) == expected, _diagnostics(result)
+
+
+def test_an_unnamed_acceptance_clears_the_only_pending_deviation(
+    tmp_path: Path,
+) -> None:
+    """Identifier-free acceptance of the sole pending deviation clears it."""
+    record = _fixture(
+        tmp_path,
+        "Status: COMPLETE\n"
+        "\n## Decision log\n\n"
+        "- D1. Decision: rename the module. "
+        "Date/Author: 2026-11-19, authoring agent (proposed; not approved).\n\n"
+        "- D2. Decision: accept the proposal.\n"
+        "  Rationale: the owner approved it.\n"
+        "  Date/Author: 2026-11-20, policy owner.\n",
+    )
+
+    result = _run("status", record)
+
+    assert result.returncode == 0, _diagnostics(result)
+    assert result.stdout == "", _diagnostics(result)
 
 
 def test_one_decision_accepts_every_deviation_it_names(tmp_path: Path) -> None:

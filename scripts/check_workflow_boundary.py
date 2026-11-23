@@ -295,7 +295,9 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
     Only the clause that carries the acceptance cue can clear a deviation.
     Naming a deviation in another clause, such as "approve D2; retain D1 for
     separate review", records a different decision and leaves that deviation
-    pending.
+    pending. The anaphoric form, "accept the deviation", clears the sole pending
+    deviation only when the clause names no identifier at all, so an acceptance
+    of some other proposal cannot clear it.
     """
     clause = _DECISION_CLAUSE.search(entry)
     if clause is None:
@@ -303,6 +305,7 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
     statement = _normalise(clause.group("clause"))
     accepted: list[str] = []
     anaphor = False
+    named_any = False
     for acceptance in _ACCEPTANCE_CLAUSE_SPLIT.split(statement):
         if (
             _ACCEPTANCE_CUE.search(acceptance) is None
@@ -311,6 +314,7 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
             continue
         anaphor = anaphor or _DEVIATION_ANAPHOR.search(acceptance) is not None
         named = set(_DEVIATION_REFERENCE.findall(acceptance))
+        named_any = named_any or bool(named)
         accepted.extend(
             identifier
             for identifier in pending
@@ -318,9 +322,9 @@ def _accepted_ids(entry: str, pending: Sequence[str]) -> list[str]:
         )
     if accepted:
         return accepted
-    if len(pending) == 1 and anaphor:
-        return list(pending)
-    return []
+    if named_any or not anaphor:
+        return []
+    return list(pending) if len(pending) == 1 else []
 
 
 def _records_unaccepted_deviation(region: str) -> bool:
